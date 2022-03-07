@@ -15,17 +15,17 @@ import logging as log
 
 
 region_auth_hosts = {
-  # "default": os.getenv("REGION_HOST_AUTH", "http://localhost:8088/auth/api/v1/auth-nosql"),
-  "jp": os.getenv("JP_REGION_HOST_AUTH", "http://localhost:8088/auth/api/v1/auth-nosql"),
-  "ge": os.getenv("EU_REGION_HOST_AUTH", "http://localhost:8088/auth/api/v1/auth-nosql"),
-  "us": os.getenv("US_REGION_HOST_AUTH", "http://localhost:8088/auth/api/v1/auth-nosql"),
+  # "default": os.getenv("REGION_HOST_AUTH", "http://localhost:8082/auth/api/v1/auth-nosql"),
+  "jp": os.getenv("JP_REGION_HOST_AUTH", "http://localhost:8082/auth/api/v1/auth-nosql"),
+  "ge": os.getenv("EU_REGION_HOST_AUTH", "http://localhost:8082/auth/api/v1/auth-nosql"),
+  "us": os.getenv("US_REGION_HOST_AUTH", "http://localhost:8082/auth/api/v1/auth-nosql"),
 }
 
 region_match_hosts = {
-  # "default": os.getenv("REGION_HOST_MATCH", "http://localhost:8088/match/api/v1"),
-  "jp": os.getenv("JP_REGION_HOST_MATCH", "http://localhost:8088/match/api/v1"),
-  "ge": os.getenv("EU_REGION_HOST_MATCH", "http://localhost:8088/match/api/v1"),
-  "us": os.getenv("US_REGION_HOST_MATCH", "http://localhost:8088/match/api/v1"),
+  # "default": os.getenv("REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/match-nosql"),
+  "jp": os.getenv("JP_REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/match-nosql"),
+  "ge": os.getenv("EU_REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/match-nosql"),
+  "us": os.getenv("US_REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/match-nosql"),
 }
 
 
