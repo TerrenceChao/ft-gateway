@@ -9,6 +9,7 @@ from fastapi import APIRouter, \
   Cookie, Header, Path, Query, Body, Form, \
   File, UploadFile, status, \
   HTTPException
+from pydantic import EmailStr
 from ...db.nosql import schemas
 from ..res.response import res_success, res_err
 import logging as log
@@ -29,19 +30,21 @@ region_match_hosts = {
 }
 
 
-cache_host = os.getenv("CACHE_HOST", "localhost")
-cache_port = int(os.getenv("CACHE_PORT", "6379"))
-cache_user = os.getenv("CACHE_USERNAME", "myuser")
-cache_pass = os.getenv("CACHE_PASSWORD", "qwer1234")
+CACHE_HOST = os.getenv("CACHE_HOST", "localhost")
+CACHE_PORT = int(os.getenv("CACHE_PORT", "6379"))
+CACHE_USERNAME = os.getenv("CACHE_USERNAME", "myuser")
+CACHE_PASSWORD = os.getenv("CACHE_PASSWORD", "qwer1234")
+CONFIRM_CODE_TTL = int(os.getenv("CONFIRM_CODE_TTL", "300")) # default = 5 mins (300 secs)
+LOGIN_TTL = int(os.getenv("LOGIN_TTL", "1209600")) # default = 14 days (86400 * 14 secs)
 
 
 cache = Redis(
-  host=cache_host, 
-  port=cache_port, 
+  host=CACHE_HOST, 
+  port=CACHE_PORT, 
   decode_responses=True, 
   # ssl=True, 
-  # username=cache_user, 
-  # password=cache_pass,
+  # username=CACHE_USERNAME, 
+  # password=CACHE_PASSWORD,
 )
 
 log.basicConfig(level=log.INFO)
@@ -51,7 +54,9 @@ if cache.ping():
 
 def gen_confirm_code():
   code = int(time.time() ** 6 % 1000000)
-  return code if (code > 100000) else code + 100000
+  code = code if (code > 100000) else code + 100000
+  print(f"confirm_code: {code}")
+  return code
 
 
 router = APIRouter(
@@ -63,6 +68,7 @@ router = APIRouter(
 
 @router.get("/welcome")
 def get_public_key(region: str = Header(...), timestamp: int = 0):
+  region = region.lower()
   auth_host = region_auth_hosts[region]
 
   slot = timestamp % 100
@@ -77,10 +83,10 @@ def get_public_key(region: str = Header(...), timestamp: int = 0):
 
 
 @router.post("/signup")
-def signup(region: str = Header(...), email: str = Body(...), meta: str = Body(...)):
+def signup(region: str = Header(...), email: EmailStr = Body(...), meta: str = Body(...)):
+  region = region.lower()
   auth_host = region_auth_hosts[region]
-  user = cache.get(email)
-  if user != None:
+  if cache.get(email) != None:
     return res_err(msg="registered or registering")
 
   confirm_code = gen_confirm_code()
@@ -91,37 +97,44 @@ def signup(region: str = Header(...), email: str = Body(...), meta: str = Body(.
   })
   res = res.json()
 
-  if res["msg"] and res["msg"] == "email_sent":
-    cache.set(email, {
+  if res["msg"] == "email_sent":
+    email_playload = json.dumps({
       "email": email,
       "confirm_code": confirm_code,
       "meta": meta,
     })
+    cache.set(email, email_playload, ex=CONFIRM_CODE_TTL)
     return res_success()
 
+  elif res["msg"] != None:
+    return res_err(msg=res["msg"])
+
   else:
-    cache.set(email, {
+    email_playload = json.dumps({
       "region": res["region"],
       "role": res["role"],
     })
+    cache.set(email, email_playload)
     return res_err(msg="email registered")
 
 
 @router.post("/signup/conform")
-def confirm_signup(region: str = Header(...), email: str = Body(...), pubkey: str = Body(...), confirm_code: str = Body(...)):
+def confirm_signup(region: str = Header(...), email: EmailStr = Body(...), pubkey: str = Body(...), confirm_code: str = Body(...)):
+  region = region.lower()
   auth_host = region_auth_hosts[region]
-  user = cache.get(email)
+  user = json.loads(cache.get(email))
+  print("\n\nuser: ", user, type(user))
   if user == None:
     return res_err(msg="no signup data")
   
   if user == {}:
     return res_err(msg="registering")
   
-  if confirm_code != user["confirm_code"]:
+  if confirm_code != str(user["confirm_code"]):
     return res_err(msg="wrong confirm_code")
 
   # "registering": empty data, but TTL=30sec
-  cache.set(email, {}, ex=30) 
+  cache.set(email, "{}", ex=30) 
   payload = {
     "email": email,
     "meta": user["meta"],
@@ -130,6 +143,8 @@ def confirm_signup(region: str = Header(...), email: str = Body(...), pubkey: st
 
   res = requests.post(f"{auth_host}/signup", json=payload)
   res = res.json()
+  cache.set(email, json.dumps(res["data"]), ex=LOGIN_TTL)
+  
   return res
 
 
@@ -161,7 +176,7 @@ process:
             region: xxx
             current_region: xxx
             online: True
-            socketId: ??????(for region)
+            socketid: ??????(for region)
           }
         b) 回傳{email____region____role____role_id____token}
         c) {gateway} 透過 rold_id 找尋 match 中的資料，一併回傳前端
@@ -172,7 +187,7 @@ process:
             role_id: 12345678
             token: JWT
             online: True
-            socketId: ??????(for region)
+            socketid: ??????(for region)
           }
 
       N: 驗證失敗 {DB有資料 但密碼錯誤}, reject client
@@ -196,13 +211,13 @@ process:
 @router.post("/login")
 def login(
   current_region: str = Header(...),
-  region: str = Header(...),
-  email: str = Body(...),
+  email: EmailStr = Body(...),
   meta: str = Body(...),
   pubkey: str = Body(...)
 ):
-  auth_host = region_auth_hosts[region]
-  match_host = region_match_hosts[region]
+  current_region = current_region.lower()
+  auth_host = region_auth_hosts[current_region]
+  match_host = region_match_hosts[current_region]
   payload = {
     "email": email,
     "meta": meta,
@@ -211,6 +226,7 @@ def login(
 
   auth_res = requests.post(f"{auth_host}/login", json=payload)
   auth_res = auth_res.json()
+  auth_data = auth_res["data"]
 
   # found in DB
   if auth_res["msg"] == "error_pass":
@@ -222,6 +238,7 @@ def login(
   
   # found in S3, and region == "current_region"(在 meta, 解密後才會知道)(S3記錄:註冊在該auth_service卻找不到)
   if auth_res["msg"] == "register_fail":
+    print("\n\nhas record in S3, but no record in DB\n\n")
     return res_err(msg="register fail") # {log_level:嚴重問題}
   
   # found in S3, and region != "current_region"(在 meta, 解密後才會知道)(找錯地方)
@@ -232,41 +249,51 @@ def login(
     auth_host = region_auth_hosts[region]
     match_host = region_match_hosts[region]
     auth_res = requests.post(f"{auth_host}/login", json=payload)
+    auth_res = auth_res.json()
+    auth_data = auth_res["data"]
     
   # 驗證合法, save into cache
-  auth_res.update({ 
+  auth_data.update({
     "current_region": current_region,
-    "socketid": "xxx", # TODO: socketId???
+    "socketid": "xxx", # TODO: socketid???
     "online": True,
   })
-  cache.set(email, auth_res)
+  auth_payload = json.dumps(auth_data)
+  cache.set(email, auth_payload, ex=LOGIN_TTL)
   
   # 驗證合法 >> 取得 match service 資料
-  role_id = auth_res["role_id"]
+  role_id = auth_data["role_id"]
+  print(f"role_id: {role_id}")
+  
   match_res = requests.get(f"{match_host}/matchdata/{role_id}")
   match_res = match_res.json()
+  match_data = match_res["data"]
 
   return res_success(data={
-    "auth": auth_res,
-    "match": match_res,
+    "auth": auth_data,
+    "match": match_data,
   })
 
 
 @router.get("/logout")
-def logout(email: str = Body(...), token: str = Body(...)):
+def logout(email: EmailStr, token: str = Header(...)):
   user = cache.get(email)
-  if not user["token"]:
+  if not user:
+    return res_err(msg="logged out")
+  
+  user_payload = json.loads(user)
+  if not "token" in user_payload:
     return res_err(msg="logged out")
 
-  if user["token"] != token:
+  if user_payload["token"] != token:
     return res_err(msg="access denied")
 
-  for key in ["token", "socketId"]:
-    if user[key]:
-      del user[key]
+  # TODO: 是保留部分資訊，還是需要完全刪除 cache?
+  for key in ["token", "socketid", "role_id"]:
+    if key in user_payload:
+      del user_payload[key]
 
-  user["online"] = False
-    
-  cache.set(email, user)
+  user_payload["online"] = False
+  cache.set(email, json.dumps(user_payload), ex=LOGIN_TTL)
   return res_success()
     
