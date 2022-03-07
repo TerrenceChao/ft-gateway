@@ -262,10 +262,12 @@ def login(
   cache.set(email, auth_payload, ex=LOGIN_TTL)
   
   # 驗證合法 >> 取得 match service 資料
+  role = auth_data["role"]
   role_id = auth_data["role_id"]
-  print(f"role_id: {role_id}")
+  print(f"role: {role} role_id: {role_id}")
   
-  match_res = requests.get(f"{match_host}/matchdata/{role_id}")
+  match_res = requests.get(f"{match_host}/{role}/{role_id}/matchdata")
+  print("\n\nmatch_res: ", match_res)
   match_res = match_res.json()
   match_data = match_res["data"]
 
