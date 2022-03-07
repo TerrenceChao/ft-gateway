@@ -32,14 +32,13 @@ class Account(BaseModel):
   role_id: Optional[int] = None
   auth: BaseAuth
   
-  
+
 ## request
 class FTUser(BaseModel):
   email: EmailStr
   meta: Optional[str] = None # user's { "region/current_region", "role", pass } 透過 pubkey 編碼取得，可解密
   pubkey: Optional[str] = None
   confirm_code: Optional[str] = None
-  token: Optional[str] = None
   
 
 ## response

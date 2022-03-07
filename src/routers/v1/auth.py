@@ -1,4 +1,7 @@
-import json
+import os, time, json
+# from pyparsing import rest_of_line
+import requests
+from redis import Redis
 from typing import List, Dict, Any
 from unicodedata import name
 from fastapi import APIRouter, \
@@ -7,110 +10,124 @@ from fastapi import APIRouter, \
   File, UploadFile, status, \
   HTTPException
 from ...db.nosql import schemas
+from ..res.response import res_success, res_err
+import logging as log
+
+
+region_auth_hosts = {
+  # "default": os.getenv("REGION_HOST_AUTH", "http://localhost:8088/auth/api/v1/auth-nosql"),
+  "jp": os.getenv("JP_REGION_HOST_AUTH", "http://localhost:8088/auth/api/v1/auth-nosql"),
+  "ge": os.getenv("EU_REGION_HOST_AUTH", "http://localhost:8088/auth/api/v1/auth-nosql"),
+  "us": os.getenv("US_REGION_HOST_AUTH", "http://localhost:8088/auth/api/v1/auth-nosql"),
+}
+
+region_match_hosts = {
+  # "default": os.getenv("REGION_HOST_MATCH", "http://localhost:8088/match/api/v1"),
+  "jp": os.getenv("JP_REGION_HOST_MATCH", "http://localhost:8088/match/api/v1"),
+  "ge": os.getenv("EU_REGION_HOST_MATCH", "http://localhost:8088/match/api/v1"),
+  "us": os.getenv("US_REGION_HOST_MATCH", "http://localhost:8088/match/api/v1"),
+}
+
+
+cache_host = os.getenv("CACHE_HOST", "localhost")
+cache_port = int(os.getenv("CACHE_PORT", "6379"))
+cache_user = os.getenv("CACHE_USERNAME", "myuser")
+cache_pass = os.getenv("CACHE_PASSWORD", "qwer1234")
+
+
+cache = Redis(
+  host=cache_host, 
+  port=cache_port, 
+  decode_responses=True, 
+  # ssl=True, 
+  # username=cache_user, 
+  # password=cache_pass,
+)
+
+log.basicConfig(level=log.INFO)
+if cache.ping():
+    log.info("Connected to Redis")
+
+
+def gen_confirm_code():
+  code = int(time.time() ** 6 % 1000000)
+  return code if (code > 100000) else code + 100000
+
 
 router = APIRouter(
-  prefix="/auth-nosql",
+  prefix="/auth",
   tags=["auth"],
   responses={404: {"description": "Not found"}},
 )
 
 
-
-"""到註冊頁面時，取得的 public_key (auth)
-1. 將 public_key 存放在 cache
-2. 註冊時將透過此 public_key 將整個 payload 加密
-
-request:
-querystring => ts=1234567890123
-
-process:
-1. 透過 ts(timestamp) 從 cache 取得特定 public_key
-2. 若 cache 沒有, 從 {auth_service} 取得 public_key, 將 public_key 緩存
-
-Returns:
-    str: pubkey
-"""
 @router.get("/welcome")
-def get_public_key():
-  return "pubkey"
+def get_public_key(region: str = Header(...), timestamp: int = 0):
+  auth_host = region_auth_hosts[region]
+
+  slot = timestamp % 100
+  pubkey = cache.get(f"pubkey_{slot}")
+  if pubkey == None:
+    res = requests.get(f"{auth_host}/security/pubkey", params={ "ts": timestamp })
+    pubkey = res["data"]
+    cache.set(f"pubkey_{slot}", pubkey)
+  
+  return res_success(data=pubkey)
 
 
-"""signup
-request:
-1. 前端傳送 region 取得用戶註冊地
-2. 註冊時將透過 pubkey 將整個 payload 加密，再傳送; TODO:這時不會送 pubkey.
-    body: {
-      email: abc@mail.com
-      meta: encrypt({ "region", "role", pass }) 
-    }  TODO: no public_key in body
-
-process:
-1.  is the email in cache?
-    Y: email is registered or is registering. X)reject client
-    N: step 2
-2. ask {auth_service}, is the email registered?
-    Y: cache email's metadata(email,region,role_id). X)reject client
-    N: step 3
-3. generate confirm_code, binding with email in "cahce"
-    [cache]:
-      'abc@mail.com': {
-        email: abc@mail.com
-        meta: encrypt({ "region", "role", pass })
-        confirm_code: xxxxxx
-      }
-4. ask {auth_service} to send confirm_code by email
-5. response client {msg:success} 
-
-Returns:
-    str: 'success'
-"""
 @router.post("/signup")
-def signup(email: str = Body(...), meta: str = Body(...)):
-  user = schemas.FTUser(
-    email=email,
-    meta=meta,
-  )
-  pass
+def signup(region: str = Header(...), email: str = Body(...), meta: str = Body(...)):
+  auth_host = region_auth_hosts[region]
+  user = cache.get(email)
+  if user != None:
+    return res_err(msg="registered or registering")
+
+  confirm_code = gen_confirm_code()
+  res = requests.post(f"{auth_host}/sendcode/email", json={
+    "email": email,
+    "confirm_code": confirm_code,
+    "sendby": "no_exist", # email 不存在時寄送
+  })
+
+  if res["msg"] and res["msg"] == "email_sent":
+    cache.set(email, {
+      "email": email,
+      "confirm_code": confirm_code,
+      "meta": meta,
+    })
+    return res_success()
+
+  else:
+    cache.set(email, {
+      "region": res["region"],
+      "role": res["role"],
+    })
+    return res_err(msg="email registered")
 
 
-"""signup/conform
-request:
-1. body: { email, confirm_code, pubkey }
-
-process:
-1. 透過 cache 從 email payload 中驗證 confirm_code
-    Y: del confirm_code, TODO: send payload(as bellow) to {auth_service}
-      body: {
-        email: abc@mail.com
-        meta: encrypt({ "region", "role", pass })
-        pubkey: xxxxasdfasdfasdfasdf
-      }
-      TODO: 不等待 {auth_service} 回應，直接response client {msg:success} 
-      TODO: 此時 cache 剩下:
-        [cache]:
-          'abc@mail.com': {empty} TTL(30 secs)
-      TODO: Few secs later, client fetch token itself
-          
-    N: reject client
-      TODO: 此時 cache 剩下:
-        [cache]:
-          'abc@mail.com': {
-            email: abc@mail.com
-            meta: encrypt({ "region", "role", pass })
-            confirm_code: xxxxxx
-          }
-
-Returns:
-    str: 'success'
-"""
 @router.post("/signup/conform")
-def confirm_signup(email: str = Body(...), pubkey: str = Body(...), confirm_code: str = Body(...)):
-  user = schemas.FTUser(
-    email=email,
-    pubkey=pubkey,
-    confirm_code=confirm_code,
-  )
-  pass
+def confirm_signup(region: str = Header(...), email: str = Body(...), pubkey: str = Body(...), confirm_code: str = Body(...)):
+  auth_host = region_auth_hosts[region]
+  user = cache.get(email)
+  if user == None:
+    return res_err(msg="no signup data")
+  
+  if user == {}:
+    return res_err(msg="registering")
+  
+  if confirm_code != user["confirm_code"]:
+    return res_err(msg="wrong confirm_code")
+
+  # "registering": empty data, but TTL=30sec
+  cache.set(email, {}, ex=30) 
+  payload = {
+    "email": email,
+    "meta": user["meta"],
+    "pubkey": pubkey,
+  }
+
+  res = requests.post(f"{auth_host}/signup", json=payload)
+  return res
 
 
 """login
@@ -143,7 +160,7 @@ process:
             online: True
             socketId: ??????(for region)
           }
-        b) 回傳{region____role_id____token}
+        b) 回傳{email____region____role____role_id____token}
         c) {gateway} 透過 rold_id 找尋 match 中的資料，一併回傳前端
         TODO:{gateway}[cache]:
           'abc@mail.com': {
@@ -154,38 +171,97 @@ process:
             online: True
             socketId: ??????(for region)
           }
-          
+
+      N: 驗證失敗 {DB有資料 但密碼錯誤}, reject client
+
       N: 驗證失敗 {DB找不到資料}
         a) {auth_service} 去 S3 尋找 {email:region}, 
-              i) 如果 region == current_region >>>>>>> A.{表示根本沒註冊成功!!} B.{有可能 API 打錯 auth_service}
+              i) 連 S3 都沒有 >> 沒註冊過
+              
+              ii) 如果 region == current_region >>>>>>> A.{表示根本沒註冊成功!!} B.{有可能 API 打錯 auth_service}
                   回傳 {gateway}
                     res_body: {
                       msg: 'user not found' {log_level:嚴重問題...}
                     }
 
-              ii) 如果 region != current_region, 回傳 {gateway} 去別地方找 {重複login流程}
+              iii) 如果 region != current_region, 回傳 {gateway} 去別地方找 {重複login流程}
                     res_body: {
                       email: 'abc@mail.com',
                       region: xxxx
                     }
-        
-      N: 驗證失敗 {DB有資料 但密碼錯誤}, reject client
-
 """
 @router.post("/login")
-def login(email: str = Body(...), meta: str = Body(...), pubkey: str = Body(...)):
-  user = schemas.FTUser(
-    email=email,
-    meta=meta,
-    pubkey=pubkey,
-  )
-  pass
+def login(
+  current_region: str = Header(...),
+  region: str = Header(...),
+  email: str = Body(...),
+  meta: str = Body(...),
+  pubkey: str = Body(...)
+):
+  auth_host = region_auth_hosts[region]
+  match_host = region_match_hosts[region]
+  payload = {
+    "email": email,
+    "meta": meta,
+    "pubkey": pubkey,
+  }
+
+  auth_res = requests.post(f"{auth_host}/login", json=payload)
+
+  # found in DB
+  if auth_res["msg"] == "error_pass":
+    return res_err(msg="error_pass")
+
+  # not found in DB and S3
+  if auth_res["msg"] == "not_registered":
+    return res_err(msg="user not found") # 沒註冊過
+  
+  # found in S3, and region == "current_region"(在 meta, 解密後才會知道)(S3記錄:註冊在該auth_service卻找不到)
+  if auth_res["msg"] == "register_fail":
+    return res_err(msg="register fail") # {log_level:嚴重問題}
+  
+  # found in S3, and region != "current_region"(在 meta, 解密後才會知道)(找錯地方)
+  # S3 有記錄但該地區的 auth-service 沒記錄，auth 從 S3 找 region 後回傳
+  data = auth_res["data"]
+  if data["token"] == None:
+    region = data["region"] # 換其他 region 再請求一次
+    auth_host = region_auth_hosts[region]
+    match_host = region_match_hosts[region]
+    auth_res = requests.post(f"{auth_host}/login", json=payload)
+    
+  # 驗證合法, save into cache
+  auth_res.update({ 
+    "current_region": current_region,
+    "socketid": "xxx", # TODO: socketId???
+    "online": True,
+  })
+  cache.set(email, auth_res)
+  
+  # 驗證合法 >> 取得 match service 資料
+  role_id = auth_res["role_id"]
+  match_res = requests.get(f"{match_host}/matchdata/{role_id}")
+
+  return res_success(data={
+    "auth": auth_res,
+    "match": match_res,
+  })
 
 
 @router.get("/logout")
 def logout(email: str = Body(...), token: str = Body(...)):
-  user = schemas.FTUser(
-    email=email, 
-    token=token,
-  )
-  pass
+  user = cache.get(email)
+  if not user["token"]:
+    return res_err(msg="logged out")
+
+  if user["token"] != token:
+    return res_err(msg="access denied")
+
+  for key in ["token", "socketId"]:
+    if user[key]:
+      del user[key]
+
+  user["online"] = False
+    
+  cache.set(email, user)
+  return res_success()
+    
