@@ -69,6 +69,7 @@ def get_public_key(region: str = Header(...), timestamp: int = 0):
   pubkey = cache.get(f"pubkey_{slot}")
   if pubkey == None:
     res = requests.get(f"{auth_host}/security/pubkey", params={ "ts": timestamp })
+    res = res.json()
     pubkey = res["data"]
     cache.set(f"pubkey_{slot}", pubkey)
   
@@ -88,6 +89,7 @@ def signup(region: str = Header(...), email: str = Body(...), meta: str = Body(.
     "confirm_code": confirm_code,
     "sendby": "no_exist", # email 不存在時寄送
   })
+  res = res.json()
 
   if res["msg"] and res["msg"] == "email_sent":
     cache.set(email, {
@@ -127,6 +129,7 @@ def confirm_signup(region: str = Header(...), email: str = Body(...), pubkey: st
   }
 
   res = requests.post(f"{auth_host}/signup", json=payload)
+  res = res.json()
   return res
 
 
@@ -207,6 +210,7 @@ def login(
   }
 
   auth_res = requests.post(f"{auth_host}/login", json=payload)
+  auth_res = auth_res.json()
 
   # found in DB
   if auth_res["msg"] == "error_pass":
@@ -240,6 +244,7 @@ def login(
   # 驗證合法 >> 取得 match service 資料
   role_id = auth_res["role_id"]
   match_res = requests.get(f"{match_host}/matchdata/{role_id}")
+  match_res = match_res.json()
 
   return res_success(data={
     "auth": auth_res,
