@@ -63,5 +63,12 @@ class Cache:
         return result, err_msg
 
 
-if __name__ == '__main__':
-    Cache(redis=redis)
+def get_cache():
+    try:
+        cache = Cache()
+        yield cache
+    except Exception as e:
+        log.error(e.__str__())
+        raise
+    finally:
+        pass
