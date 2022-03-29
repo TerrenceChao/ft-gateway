@@ -14,11 +14,11 @@ class ServiceRequests:
     def __init__(self):
         pass
     
-    def get(self, url: str, params: Dict = None):
+    def get(self, url: str, params: Dict = None, headers: Dict = None):
         err_msg: str = None
         result = None
         try:
-            response = requests.get(url, params=params)
+            response = requests.get(url, params=params, headers=headers)
             result = response.json()
             if result["code"] != SUCCESS_CODE:
                 err_msg = result["msg"]
@@ -31,11 +31,11 @@ class ServiceRequests:
         return result, err_msg
         
     
-    def post(self, url: str, json: Dict):
+    def post(self, url: str, json: Dict, headers: Dict = None):
         err_msg: str = None
         result = None
         try:
-            response = requests.post(url, json=json)
+            response = requests.post(url, json=json, headers=headers)
             result = response.json()
             if result["code"] != SUCCESS_CODE:
                 err_msg = result["msg"]
@@ -48,11 +48,11 @@ class ServiceRequests:
         return result, err_msg
     
     
-    def put(self, url: str, json: Dict):
+    def put(self, url: str, json: Dict, headers: Dict = None):
         err_msg: str = None
         result = None
         try:
-            response = requests.put(url, json=json)
+            response = requests.put(url, json=json, headers=headers)
             result = response.json()
             if result["code"] != SUCCESS_CODE:
                 err_msg = result["msg"]

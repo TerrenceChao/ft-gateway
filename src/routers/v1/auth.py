@@ -65,7 +65,7 @@ def gen_confirm_code():
 
 router = APIRouter(
     prefix="/auth",
-    tags=["auth"],
+    tags=["Auth"],
     responses={404: {"description": "Not found"}},
 )
 
@@ -213,8 +213,6 @@ process:
                       region: xxxx
                     }
 """
-
-
 @router.post("/login")
 def login(
     current_region: str = Header(...),

@@ -12,12 +12,15 @@ from fastapi import FastAPI, Request, \
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
-from src.routers.v1 import auth
+from src.routers.v1 import auth, \
+    match_companies, match_teachers
 
 
 router_v1 = APIRouter(prefix="/api/v1")
 # TODO: other routers
 router_v1.include_router(auth.router)
+router_v1.include_router(match_companies.router)
+router_v1.include_router(match_teachers.router)
 
 
 STAGE = os.environ.get('STAGE')
