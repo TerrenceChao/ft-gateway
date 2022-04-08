@@ -25,7 +25,7 @@ log.basicConfig(level=log.INFO)
 
 router = APIRouter(
     prefix="/media",
-    tags=["media"],
+    tags=["Media"],
     responses={404: {"description": "Not found"}},
 )
 
@@ -52,3 +52,95 @@ async def upload_media_files_by_company(company_id: int):
 @router.put("/companies/{company_id}/echo")
 async def echo_by_company(company_id: int):
     pass
+
+
+
+
+
+
+
+"""teacher's media schema
+
+  data = {
+    "section_id": "~~",
+    "teacher_id": "~~",
+    "resume_id": "~~",
+    "order": 3,
+    "subject": "Educations",
+    "context": {
+      1: {...}, 
+      2: {...}, 
+      3: {...},
+    },
+    "media": {
+      1: {
+        "pic1(ordered)": {
+          "name": "xxx",
+          "hash": "md5(file)", # partition key?
+          "size": "16M",
+          "total_chunks": 28,
+          "progress": 23,
+          "status": "uploading/break/done",
+          "chunks": [
+            "xxxx",
+            "xxxx",
+            "xxxx",
+            "xxxx",
+            ...
+          ]
+        },
+        "pic2": {...},
+        "pic3": {...},
+      }, 
+      2: {...}, 
+      3: {...},
+    }
+  }
+"""
+@router.post("/media/teachers/{teacher_id}/uploading")
+def upload_media_files_by_teacher():
+    pass
+
+
+@router.post("/media/companies/{company_id}/uploading")
+def upload_media_files_by_company():
+    data = {
+        "company_id": "~~",
+        "name": "~~",
+        "logo": "~~",
+        "intro": "~~",
+        "overview": {
+            "title": "godaddy",
+            "founded": "600,000,000 USD",
+            "size": "600 people"
+        },
+        "sections": {
+            1: {
+                "subject": "Who We Rre",
+                "context": "We value ..."
+            },
+            2: {...},
+            3: {...},
+        },
+        "media": {
+            "pic1(ordered)": {
+                "name": "xxx",
+                "hash": "md5(file)",  # partition key?
+                "size": "16M",
+                "total_chunks": 28,
+                "progress": 23,
+                "status": "uploading/break/done",
+                "chunks": [
+                    "xxxx",
+                    "xxxx",
+                    "xxxx",
+                    "xxxx",
+                    ...
+                ]
+            },
+            "pic2": {...},
+            "pic3": {...},
+        }
+    }
+    pass
+
