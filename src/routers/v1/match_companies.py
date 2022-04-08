@@ -45,7 +45,7 @@ def create_profile(profile: schemas.CompanyProfile,
                    ):
     current_region = current_region.lower()
     match_host = region_match_hosts[current_region]
-    data, err = requests.post(url=f"{match_host}/companies",
+    data, err = requests.post(url=f"{match_host}/companies/",
                              json=profile.json())
     if err:
         return res_err(msg=err)
@@ -86,7 +86,11 @@ def get_followed_and_contact_resumes(company_id: int, resume_id: int, size: int,
     current_region = current_region.lower()
     match_host = region_match_hosts[current_region]
     data, err = requests.get(
-        url=f"{match_host}/companies/{company_id}/resumes/follow-and-apply")
+        url=f"{match_host}/companies/{company_id}/resumes/follow-and-apply",
+        params={
+            "resume_id": int(resume_id),
+            "size": int(size)
+        })
     if err:
         return res_err(msg=err)
 

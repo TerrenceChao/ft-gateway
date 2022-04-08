@@ -30,42 +30,54 @@ if redis.ping():
 class Cache:
     def __init__(self, redis: Redis):
         self.redis = redis
-
+        
     def get(self, key: str):
         err_msg: str = None
         result = None
 
         try:
             val = self.redis.get(key)
-            result = json.loads(val) if val[-1:0] == "}{" else val
+            if val == None:
+                return result, err_msg
+            
+            # print(val, "\n", val[0] == "{" and val[-1] =="}")
+            result = json.loads(val) if val[0] == "{" and val[-1] =="}" else val
 
         except Exception as e:
             err_msg = e.__str__()
+            log.error(err_msg)
 
         return result, err_msg
 
     def set(self, key: str, val: Any, ex: int = None):
         err_msg: str = None
-        result = 0
+        result = False
 
         try:
             if type(val) == dict:
+                print(val)
+                print(type(val))
                 val = json.dumps(val)
+                print(val)
+                print(type(val))
 
             if not ex:
                 self.redis.set(key, val)
             else:
                 self.redis.set(key, val, ex)
+                
+            result = True
 
         except Exception as e:
             err_msg = e.__str__()
+            log.error(err_msg)
 
         return result, err_msg
 
 
 def get_cache():
     try:
-        cache = Cache()
+        cache = Cache(redis)
         yield cache
     except Exception as e:
         log.error(e.__str__())

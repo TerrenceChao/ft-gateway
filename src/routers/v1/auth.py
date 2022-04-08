@@ -1,4 +1,5 @@
 import os
+import re
 import time
 import json
 # from pyparsing import rest_of_line
@@ -14,6 +15,8 @@ from fastapi import APIRouter, \
 from pydantic import EmailStr
 from ...db.nosql import auth_schemas
 from ..res.response import res_success, res_err
+from ...common.cache import get_cache
+from ...common.service_requests import get_service_requests
 import logging as log
 
 
@@ -37,23 +40,23 @@ CACHE_PORT = int(os.getenv("CACHE_PORT", "6379"))
 CACHE_USERNAME = os.getenv("CACHE_USERNAME", "myuser")
 CACHE_PASSWORD = os.getenv("CACHE_PASSWORD", "qwer1234")
 # default = 5 mins (300 secs)
-CONFIRM_CODE_TTL = int(os.getenv("CONFIRM_CODE_TTL", "300"))
-# default = 14 days (86400 * 14 secs)
-LOGIN_TTL = int(os.getenv("LOGIN_TTL", "1209600"))
+SHORT_TERM_TTL = int(os.getenv("SHORT_TERM_TTL", "300"))
+# default = 14 days (14 * 86400 secs)
+LONG_TERM_TTL = int(os.getenv("LONG_TERM_TTL", "1209600"))
 
 
-cache = Redis(
-    host=CACHE_HOST,
-    port=CACHE_PORT,
-    decode_responses=True,
-    # ssl=True,
-    # username=CACHE_USERNAME,
-    # password=CACHE_PASSWORD,
-)
+# cache = Redis(
+#     host=CACHE_HOST,
+#     port=CACHE_PORT,
+#     decode_responses=True,
+#     # ssl=True,
+#     # username=CACHE_USERNAME,
+#     # password=CACHE_PASSWORD,
+# )
 
 log.basicConfig(level=log.INFO)
-if cache.ping():
-    log.info("Connected to Redis")
+# if cache.ping():
+#     log.info("Connected to Redis")
 
 
 def gen_confirm_code():
@@ -71,65 +74,72 @@ router = APIRouter(
 
 
 @router.get("/welcome")
-def get_public_key(region: str = Header(...), timestamp: int = 0):
+def get_public_key(region: str = Header(...), timestamp: int = 0,
+                   requests=Depends(get_service_requests),
+                   cache=Depends(get_cache)
+                   ):
     region = region.lower()
     auth_host = region_auth_hosts[region]
 
     slot = timestamp % 100
-    pubkey = cache.get(f"pubkey_{slot}")
-    if pubkey == None:
-        res = requests.get(f"{auth_host}/security/pubkey",
-                           params={"ts": timestamp})
-        res = res.json()
-        pubkey = res["data"]
-        cache.set(f"pubkey_{slot}", pubkey)
+    pubkey, cache_err = cache.get(f"pubkey_{slot}")
+    if not pubkey or cache_err:
+        pubkey, err = requests.get(f"{auth_host}/security/pubkey", params={"ts": timestamp})
+        if err:
+            return res_err(msg="cannot get public_key")
+        else:
+            cache.set(f"pubkey_{slot}", pubkey)
 
     return res_success(data=pubkey)
 
 
 @router.post("/signup")
-def signup(region: str = Header(...), email: EmailStr = Body(...), meta: str = Body(...)):
-    region = region.lower()
-    auth_host = region_auth_hosts[region]
-    if cache.get(email) != None:
+def signup(region: str = Header(...), email: EmailStr = Body(...), meta: str = Body(...),
+           requests=Depends(get_service_requests),
+           cache=Depends(get_cache)
+           ):
+    data, cache_err = cache.get(email)
+    if data or cache_err:
         return res_err(msg="registered or registering")
 
+    print("\n\n\ndata?", data)
+    region = region.lower()
+    auth_host = region_auth_hosts[region]
     confirm_code = gen_confirm_code()
-    res = requests.post(f"{auth_host}/sendcode/email", json={
+    res, msg, err = requests.post2(f"{auth_host}/sendcode/email", json={
         "email": email,
         "confirm_code": confirm_code,
         "sendby": "no_exist",  # email 不存在時寄送
     })
-    res = res.json()
 
-    if res["msg"] == "email_sent":
-        email_playload = json.dumps({
+    if msg == "email_sent":
+        email_playload = {
             "email": email,
             "confirm_code": confirm_code,
             "meta": meta,
-        })
-        cache.set(email, email_playload, ex=CONFIRM_CODE_TTL)
+        }
+        cache.set(email, email_playload, ex=SHORT_TERM_TTL)
         return res_success()
 
-    elif res["msg"] != None:
-        return res_err(msg=res["msg"])
+    elif err:
+        return res_err(msg=err)
 
     else:
-        email_playload = json.dumps({
-            "region": res["region"],
-            "role": res["role"],
-        })
-        cache.set(email, email_playload)
+        cache.set(email, { "region": region }, SHORT_TERM_TTL)
         return res_err(msg="email registered")
 
 
 @router.post("/signup/conform")
-def confirm_signup(region: str = Header(...), email: EmailStr = Body(...), pubkey: str = Body(...), confirm_code: str = Body(...)):
+def confirm_signup(region: str = Header(...), email: EmailStr = Body(...), pubkey: str = Body(...), confirm_code: str = Body(...),
+                   requests=Depends(get_service_requests),
+                   cache=Depends(get_cache)
+                   ):
     region = region.lower()
     auth_host = region_auth_hosts[region]
-    user = json.loads(cache.get(email))
-    print("\n\nuser: ", user, type(user))
-    if user == None:
+    user, cache_err = cache.get(email)
+    print("\n\n\n\n\n~~~user\n", user, type(user))
+
+    if not user or cache_err:
         return res_err(msg="no signup data")
 
     if user == {}:
@@ -139,18 +149,22 @@ def confirm_signup(region: str = Header(...), email: EmailStr = Body(...), pubke
         return res_err(msg="wrong confirm_code")
 
     # "registering": empty data, but TTL=30sec
-    cache.set(email, "{}", ex=30)
+    cache.set(email, {}, ex=30)
     payload = {
         "email": email,
         "meta": user["meta"],
         "pubkey": pubkey,
     }
 
-    res = requests.post(f"{auth_host}/signup", json=payload)
-    res = res.json()
-    cache.set(email, json.dumps(res["data"]), ex=LOGIN_TTL)
+    res, err = requests.post(f"{auth_host}/signup", json=payload)
+    if err:
+        return res_err(msg=err)
 
-    return res
+    updated, cache_err = cache.set(email, res, ex=LONG_TERM_TTL)
+    if not updated or cache_err:
+        return res_err(msg="cannot cache user data")
+    else:    
+        return res_success(data=res)
 
 
 """login
@@ -213,12 +227,16 @@ process:
                       region: xxxx
                     }
 """
+
+
 @router.post("/login")
 def login(
     current_region: str = Header(...),
     email: EmailStr = Body(...),
     meta: str = Body(...),
-    pubkey: str = Body(...)
+    pubkey: str = Body(...),
+    requests=Depends(get_service_requests),
+    cache=Depends(get_cache)
 ):
     current_region = current_region.lower()
     auth_host = region_auth_hosts[current_region]
@@ -229,63 +247,59 @@ def login(
         "pubkey": pubkey,
     }
 
-    auth_res = requests.post(f"{auth_host}/login", json=payload)
-    auth_res = auth_res.json()
-    auth_data = auth_res["data"]
+    auth_res, err = requests.post(f"{auth_host}/login", json=payload)
 
     # found in DB
-    if auth_res["msg"] == "error_pass":
-        return res_err(msg="error_pass")
+    if err == "error_password":
+        return res_err(msg="error_password")
 
     # not found in DB and S3
-    if auth_res["msg"] == "not_registered":
+    if err == "not_registered":
         return res_err(msg="user not found")  # 沒註冊過
 
     # found in S3, and region == "current_region"(在 meta, 解密後才會知道)(S3記錄:註冊在該auth_service卻找不到)
-    if auth_res["msg"] == "register_fail":
+    if err == "register_fail":
         print("\n\nhas record in S3, but no record in DB\n\n")
         return res_err(msg="register fail")  # {log_level:嚴重問題}
 
     # found in S3, and region != "current_region"(在 meta, 解密後才會知道)(找錯地方)
     # S3 有記錄但該地區的 auth-service 沒記錄，auth 從 S3 找 region 後回傳
-    data = auth_res["data"]
-    if data["token"] == None:
-        region = data["region"]  # 換其他 region 再請求一次
+    if not "token" in auth_res:
+        print("\n\nno token in the region, request for another region")
+        region = auth_res["region"]  # 換其他 region 再請求一次
         auth_host = region_auth_hosts[region]
         match_host = region_match_hosts[region]
-        auth_res = requests.post(f"{auth_host}/login", json=payload)
-        auth_res = auth_res.json()
-        auth_data = auth_res["data"]
+        auth_res, err = requests.post(f"{auth_host}/login", json=payload)
+        if err:
+            return res_err(msg=err)
 
     # 驗證合法, save into cache
-    auth_data.update({
+    auth_res.update({
         "current_region": current_region,
         "socketid": "xxx",  # TODO: socketid???
         "online": True,
     })
-    auth_payload = json.dumps(auth_data)
-    cache.set(email, auth_payload, ex=LOGIN_TTL)
+    updated, cache_err = cache.set(email, auth_res, ex=LONG_TERM_TTL)
+    if not updated or cache_err:
+        return res_err(msg="set cache fail")
 
     # 驗證合法 >> 取得 match service 資料
-    role = auth_data["role"]
-    role_id = auth_data["role_id"]
-    print(f"role: {role} role_id: {role_id}")
-
-    match_res = requests.get(f"{match_host}/{role}/{role_id}/matchdata")
-    print("\n\nmatch_res: ", match_res)
-    match_res = match_res.json()
-    match_data = match_res["data"]
+    role, role_id = auth_res["role"], auth_res["role_id"]
+    match_res, err = requests.get(f"{match_host}/{role}/{role_id}/matchdata")
 
     return res_success(data={
-        "auth": auth_data,
-        "match": match_data,
+        "auth": auth_res,
+        "match": match_res if not err else None,
     })
 
 
 @router.get("/logout")
-def logout(email: EmailStr, token: str = Header(...)):
-    user = cache.get(email)
-    if not user:
+def logout(email: EmailStr, token: str = Header(...),
+           requests=Depends(get_service_requests),
+           cache=Depends(get_cache)
+           ):
+    user, cache_err = cache.get(email)
+    if not user or cache_err:
         return res_err(msg="logged out")
 
     user_payload = json.loads(user)
@@ -301,5 +315,9 @@ def logout(email: EmailStr, token: str = Header(...)):
             del user_payload[key]
 
     user_payload["online"] = False
-    cache.set(email, json.dumps(user_payload), ex=LOGIN_TTL)
+    # "LONG_TERM_TTL" for redirct notification
+    updated, cache_err = cache.set(email, user_payload, ex=LONG_TERM_TTL)
+    if not updated or cache_err:
+        return res_err(msg="set cache fail")
+    
     return res_success()

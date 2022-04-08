@@ -45,7 +45,7 @@ def create_profile(profile: schemas.TeacherProfile,
                    ):
     current_region = current_region.lower()
     match_host = region_match_hosts[current_region]
-    data, err = requests.post(url=f"{match_host}/teachers",
+    data, err = requests.post(url=f"{match_host}/teachers/",
                              json=profile.json())
     if err:
         return res_err(msg=err)
@@ -86,7 +86,11 @@ def get_followed_and_contact_jobs(teacher_id: int, job_id: int, size: int,
     current_region = current_region.lower()
     match_host = region_match_hosts[current_region]
     data, err = requests.get(
-        url=f"{match_host}/teachers/{teacher_id}/jobs/follow-and-apply")
+        url=f"{match_host}/teachers/{teacher_id}/jobs/follow-and-apply",
+        params={
+            "job_id": int(job_id),
+            "size": int(size)
+        })
     if err:
         return res_err(msg=err)
 
