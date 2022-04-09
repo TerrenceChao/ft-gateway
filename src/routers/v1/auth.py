@@ -102,7 +102,7 @@ def signup(region: str = Header(...), email: EmailStr = Body(...), meta: str = B
     if data or cache_err:
         return res_err(msg="registered or registering")
 
-    print("\n\n\ndata?", data)
+    print("\n\n\ndata?\n", data)
     region = region.lower()
     auth_host = region_auth_hosts[region]
     confirm_code = gen_confirm_code()
@@ -229,6 +229,14 @@ process:
 """
 
 
+"""_summary_
+
+目前機制：同一時間只允許同一使用者登入，不允許同一使用者在多個裝置/入口登入
+TODO: 登入時，其他裝置需要登出。
+
+未來機制：同一時間允許同一使用者在多個裝置/入口登入
+TODO: current_region 和其他 metadata 需改為多份
+"""
 @router.post("/login")
 def login(
     current_region: str = Header(...),
@@ -245,33 +253,38 @@ def login(
         "email": email,
         "meta": meta,
         "pubkey": pubkey,
+        "client_region": current_region,
     }
 
-    auth_res, err = requests.post(f"{auth_host}/login", json=payload)
+    auth_res, msg, err = requests.post2(f"{auth_host}/login", json=payload)
 
     # found in DB
-    if err == "error_password":
+    if msg == "error_password":
         return res_err(msg="error_password")
 
     # not found in DB and S3
-    if err == "not_registered":
+    if msg == "not_registered":
         return res_err(msg="user not found")  # 沒註冊過
 
     # found in S3, and region == "current_region"(在 meta, 解密後才會知道)(S3記錄:註冊在該auth_service卻找不到)
-    if err == "register_fail":
-        print("\n\nhas record in S3, but no record in DB\n\n")
+    if msg == "register_fail":
         return res_err(msg="register fail")  # {log_level:嚴重問題}
 
     # found in S3, and region != "current_region"(在 meta, 解密後才會知道)(找錯地方)
     # S3 有記錄但該地區的 auth-service 沒記錄，auth 從 S3 找 region 後回傳
-    if not "token" in auth_res:
-        print("\n\nno token in the region, request for another region")
+    if msg == "wrong_region":
+        print("\n\nhas record in S3, but no record in DB of the region")
+        print("no token in the region, request for another region")
         region = auth_res["region"]  # 換其他 region 再請求一次
         auth_host = region_auth_hosts[region]
         match_host = region_match_hosts[region]
         auth_res, err = requests.post(f"{auth_host}/login", json=payload)
         if err:
             return res_err(msg=err)
+        
+    if err:
+        return res_err(msg=err)
+
 
     # 驗證合法, save into cache
     auth_res.update({
@@ -299,24 +312,20 @@ def logout(email: EmailStr, token: str = Header(...),
            cache=Depends(get_cache)
            ):
     user, cache_err = cache.get(email)
-    if not user or cache_err:
+    if not user or not "token" in user or cache_err:
         return res_err(msg="logged out")
 
-    user_payload = json.loads(user)
-    if not "token" in user_payload:
-        return res_err(msg="logged out")
-
-    if user_payload["token"] != token:
+    if user["token"] != token:
         return res_err(msg="access denied")
 
     # TODO: 是保留部分資訊，還是需要完全刪除 cache?
     for key in ["token", "socketid", "role_id"]:
-        if key in user_payload:
-            del user_payload[key]
+        if key in user:
+            del user[key]
 
-    user_payload["online"] = False
+    user["online"] = False
     # "LONG_TERM_TTL" for redirct notification
-    updated, cache_err = cache.set(email, user_payload, ex=LONG_TERM_TTL)
+    updated, cache_err = cache.set(email, user, ex=LONG_TERM_TTL)
     if not updated or cache_err:
         return res_err(msg="set cache fail")
     
