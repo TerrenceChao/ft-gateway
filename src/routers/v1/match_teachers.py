@@ -46,7 +46,7 @@ def create_profile(profile: schemas.TeacherProfile,
     current_region = current_region.lower()
     match_host = region_match_hosts[current_region]
     data, err = requests.post(url=f"{match_host}/teachers/",
-                             json=profile.json())
+                             json=profile.dict())
     if err:
         return res_err(msg=err)
 
