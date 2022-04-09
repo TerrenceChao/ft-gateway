@@ -3,8 +3,6 @@ import re
 import time
 import json
 # from pyparsing import rest_of_line
-import requests
-from redis import Redis
 from typing import List, Dict, Any
 from unicodedata import name
 from fastapi import APIRouter, \
@@ -35,28 +33,13 @@ region_match_hosts = {
 }
 
 
-CACHE_HOST = os.getenv("CACHE_HOST", "localhost")
-CACHE_PORT = int(os.getenv("CACHE_PORT", "6379"))
-CACHE_USERNAME = os.getenv("CACHE_USERNAME", "myuser")
-CACHE_PASSWORD = os.getenv("CACHE_PASSWORD", "qwer1234")
 # default = 5 mins (300 secs)
 SHORT_TERM_TTL = int(os.getenv("SHORT_TERM_TTL", "300"))
 # default = 14 days (14 * 86400 secs)
 LONG_TERM_TTL = int(os.getenv("LONG_TERM_TTL", "1209600"))
 
 
-# cache = Redis(
-#     host=CACHE_HOST,
-#     port=CACHE_PORT,
-#     decode_responses=True,
-#     # ssl=True,
-#     # username=CACHE_USERNAME,
-#     # password=CACHE_PASSWORD,
-# )
-
 log.basicConfig(level=log.INFO)
-# if cache.ping():
-#     log.info("Connected to Redis")
 
 
 def gen_confirm_code():
