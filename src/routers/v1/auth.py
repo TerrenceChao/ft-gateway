@@ -1,10 +1,7 @@
 import os
-import re
 import time
 import json
-# from pyparsing import rest_of_line
 from typing import List, Dict, Any
-from unicodedata import name
 from fastapi import APIRouter, \
     Request, Depends, \
     Cookie, Header, Path, Query, Body, Form, \
@@ -49,6 +46,14 @@ def gen_confirm_code():
     return code
 
 
+"""
+    1. get public key
+    2. signup
+    3. signup & confirm
+    4. login
+    5. logout
+        
+"""
 router = APIRouter(
     prefix="/auth",
     tags=["Auth"],

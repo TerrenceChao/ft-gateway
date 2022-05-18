@@ -17,18 +17,19 @@ import logging as log
 
 
 region_search_hosts = {
-    # "default": os.getenv("REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/search"),
-    "jp": os.getenv("JP_REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/search"),
-    "ge": os.getenv("EU_REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/search"),
-    "us": os.getenv("US_REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/search"),
+    # "default": os.getenv("REGION_HOST_SEARCH", "http://localhost:8083/match/api/v1/search"),
+    "jp": os.getenv("JP_REGION_HOST_SEARCH", "http://localhost:8083/match/api/v1/search"),
+    "ge": os.getenv("EU_REGION_HOST_SEARCH", "http://localhost:8083/match/api/v1/search"),
+    "us": os.getenv("US_REGION_HOST_SEARCH", "http://localhost:8083/match/api/v1/search"),
 }
+
 
 log.basicConfig(level=log.INFO)
 
 
 router = APIRouter(
     prefix="/search",
-    tags=["Search Resumes & Jobs"],
+    tags=["Search Jobs & Resumes"],
     # dependencies=[Depends(get_token_header)],
     responses={404: {"description": "Not found"}},
 )
@@ -60,6 +61,14 @@ def get_resumes(rid: int,
     return res_success(data=data)
 
 
+@router.get("/resumes/{rid}")
+def get_resume_by_id(rid: int,
+                     current_region: str = Header(...),
+                     requests=Depends(get_service_requests),
+):
+    return "todo feature"
+
+
 @router.get("/jobs")
 def get_jobs(jid: int,
              limit: int,
@@ -84,3 +93,11 @@ def get_jobs(jid: int,
         return res_err(msg=err)
     
     return res_success(data=data)
+
+
+@router.get("/jobs/{jid}")
+def get_job_by_id(jid: int,
+                  current_region: str = Header(...),
+                  requests=Depends(get_service_requests),
+):
+    return "todo feature"

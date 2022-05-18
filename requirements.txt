@@ -29,3 +29,4 @@ typing_extensions==4.0.1
 urllib3==1.25.11
 uvicorn==0.17.1
 sqs-queue==0.6.2
+pydantic==1.9.0
