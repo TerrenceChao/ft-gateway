@@ -3,25 +3,20 @@ import time
 import json
 import requests
 from typing import List, Dict, Any
-from unicodedata import name
 from fastapi import APIRouter, \
     Request, Depends, \
     Cookie, Header, Path, Query, Body, Form, \
     File, UploadFile, status, \
     HTTPException
+from ...exceptions.match_except import ClientException, \
+    NotFoundException, \
+    ServerException
 from ...db.nosql import match_teachers_schemas as schemas
-from ..res.response import res_success, res_err
-from ...common.cache import get_cache
+from ..res.response import res_success
 from ...common.service_requests import get_service_requests
+from ...common.region_hosts import get_match_region_host
 import logging as log
 
-
-region_match_hosts = {
-    # "default": os.getenv("REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/match-nosql"),
-    "jp": os.getenv("JP_REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/match-nosql"),
-    "ge": os.getenv("EU_REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/match-nosql"),
-    "us": os.getenv("US_REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/match-nosql"),
-}
 
 log.basicConfig(level=log.INFO)
 
@@ -33,22 +28,24 @@ router = APIRouter(
 )
 
 
+def get_match_host(current_region: str = Header(...)):
+    return get_match_region_host(region=current_region)
+
+
 """[此 API 在一開始註冊時會用到]
 Returns:
     [Company]: [description]
 """
-@router.post("/")
+@router.post("/", status_code=201)
 def create_profile(profile: schemas.TeacherProfile,
-                   current_region: str = Header(...),
+                   match_host=Depends(get_match_host),
                    requests=Depends(get_service_requests),
                    # cache=Depends(get_cache)
                    ):
-    current_region = current_region.lower()
-    match_host = region_match_hosts[current_region]
     data, err = requests.post(url=f"{match_host}/teachers/",
                              json=profile.dict())
     if err:
-        return res_err(msg=err)
+        raise ServerException(msg=err)
 
     return res_success(data=data)
 
@@ -63,28 +60,24 @@ B. 可同時使用多個 resumes. 針對不同 com/job 投遞不同 resume
 """
 @router.put("/{teacher_id}/resumes/{resume_id}/enable/{enable}")
 def enable_resume(teacher_id: int, resume_id: int, enable: bool,
-                  current_region: str = Header(...),
+                  match_host=Depends(get_match_host),
                   requests=Depends(get_service_requests),
                   # cache=Depends(get_cache)
                   ):
-    current_region = current_region.lower()
-    match_host = region_match_hosts[current_region]
     data, err = requests.put(
         url=f"{match_host}/teachers/{teacher_id}/resumes/{resume_id}/enable/{enable}")
     if err:
-        return res_err(msg=err)
+        raise ServerException(msg=err)
 
     return res_success(data=data)
 
 
 @router.get("/{teacher_id}/jobs/follow-and-apply")
 def get_followed_and_contact_jobs(teacher_id: int, job_id: int, size: int,
-                                  current_region: str = Header(...),
+                                  match_host=Depends(get_match_host),
                                   requests=Depends(get_service_requests),
                                   # cache=Depends(get_cache)
                                   ):
-    current_region = current_region.lower()
-    match_host = region_match_hosts[current_region]
     data, err = requests.get(
         url=f"{match_host}/teachers/{teacher_id}/jobs/follow-and-apply",
         params={
@@ -92,7 +85,7 @@ def get_followed_and_contact_jobs(teacher_id: int, job_id: int, size: int,
             "size": int(size)
         })
     if err:
-        return res_err(msg=err)
+        raise ServerException(msg=err)
 
     return res_success(data=data)
 
@@ -100,19 +93,17 @@ def get_followed_and_contact_jobs(teacher_id: int, job_id: int, size: int,
 # TODO: job_info: Dict >> job_info 是 FollowJob.job_info (Dict/JSON)
 @router.put("/{teacher_id}/jobs/{job_id}/follow/{follow}")
 def upsert_follow_job(teacher_id: int, job_id: int, follow: bool, job_info: Dict = Body(None),
-                      current_region: str = Header(...),
+                      match_host=Depends(get_match_host),
                       requests=Depends(get_service_requests),
                       # cache=Depends(get_cache)
                       ):
-    current_region = current_region.lower()
-    match_host = region_match_hosts[current_region]
     # TODO: why "job_info"??? it's an upsert operation
     data, err = requests.put(
         url=f"{match_host}/teachers/{teacher_id}/jobs/{job_id}/follow/{follow}",
         json=job_info)
     
     if err:
-        return res_err(msg=err)
+        raise ServerException(msg=err)
 
     return res_success(data=data)
 
@@ -120,7 +111,7 @@ def upsert_follow_job(teacher_id: int, job_id: int, follow: bool, job_info: Dict
 # TODO: ?? 有需要批次更新 jobs 再實現
 @router.put("/{teacher_id}/jobs/follow")
 def upsert_follow_jobs(teacher_id: int, jobsInfo: List[schemas.FollowJob] = Body(...),
-                       current_region: str = Header(...),
+                       match_host=Depends(get_match_host),
                        requests=Depends(get_service_requests),
                        # cache=Depends(get_cache)
                        ):
@@ -130,18 +121,16 @@ def upsert_follow_jobs(teacher_id: int, jobsInfo: List[schemas.FollowJob] = Body
 
 @router.get("/{teacher_id}/resumes/brief")
 def get_brief_resumes(teacher_id: int,
-                      current_region: str = Header(...),
+                      match_host=Depends(get_match_host),
                       requests=Depends(get_service_requests),
                       # cache=Depends(get_cache)
                       ):
-    current_region = current_region.lower()
-    match_host = region_match_hosts[current_region]
     data, err = requests.get(
         url=f"{match_host}/teachers/{teacher_id}/resumes/brief")
     
     print(data)
     if err:
-        return res_err(msg=err)
+        raise ServerException(msg=err)
 
     return res_success(data=data)
 
@@ -161,12 +150,10 @@ def job_request_body(register_region: str = Header(None), current_region: str = 
 # TODO: job_info: Dict >> job_info 是 "ContactJob".job_info (Dict/JSON, 是 Contact!!)
 @router.put("/{teacher_id}/resumes/{resume_id}/jobs/{job_id}/apply")
 def apply_job(teacher_id: int, resume_id: int, job_id: int, body=Depends(job_request_body),
-              # current_region: str = Header(...),
               requests=Depends(get_service_requests),
               # cache=Depends(get_cache)
               ):
-    current_region = current_region.lower()
-    match_host = region_match_hosts[current_region]
+    match_host = get_match_region_host(region=body["current_region"])
     contact_job, err = requests.put(
         url=f"{match_host}/teachers/{teacher_id}/resumes/{resume_id}/jobs/{job_id}/apply",
         json={
@@ -178,7 +165,7 @@ def apply_job(teacher_id: int, resume_id: int, job_id: int, body=Depends(job_req
             "current_region": body["current_region"]
         })
     if err:
-        return res_err(msg=err)
+        raise ServerException(msg=err)
 
     return res_success(data=contact_job)
 
@@ -186,12 +173,10 @@ def apply_job(teacher_id: int, resume_id: int, job_id: int, body=Depends(job_req
 # TODO: job_info: Dict >> job_info 是 "ContactJob".job_info (Dict/JSON, 是 Contact!!)
 @router.put("/{teacher_id}/resumes/{resume_id}/jobs/{job_id}/reply")
 def reply_job(teacher_id: int, resume_id: int, job_id: int, body=Depends(job_request_body),
-              # current_region: str = Header(...),
               requests=Depends(get_service_requests),
               # cache=Depends(get_cache)
               ):
-    current_region = current_region.lower()
-    match_host = region_match_hosts[current_region]
+    match_host = get_match_region_host(region=body["current_region"])
     contact_job, err = requests.put(
         url=f"{match_host}/teachers/{teacher_id}/resumes/{resume_id}/jobs/{job_id}/reply",
         json={
@@ -203,7 +188,7 @@ def reply_job(teacher_id: int, resume_id: int, job_id: int, body=Depends(job_req
             "current_region": body["current_region"]
         })
     if err:
-        return res_err(msg=err)
+        raise ServerException(msg=err)
 
     return res_success(data=contact_job)
 
@@ -212,10 +197,10 @@ def reply_job(teacher_id: int, resume_id: int, job_id: int, body=Depends(job_req
 # TODO: job_info: Dict >> job_info 是 "ContactJob".job_info (Dict/JSON, 是 Contact!!)
 @router.put("/{teacher_id}/resumes/{resume_id}/jobs/{job_id}/apply/remote")
 def remote_apply_job(teacher_id: int, resume_id: int, job_id: int, body=Depends(job_request_body),
-                     # current_region: str = Header(...),
                      requests=Depends(get_service_requests),
                      # cache=Depends(get_cache)
                      ):
+    match_host = get_match_region_host(region=body["current_region"])
     pass
 
 
@@ -223,10 +208,10 @@ def remote_apply_job(teacher_id: int, resume_id: int, job_id: int, body=Depends(
 # TODO: job_info: Dict >> job_info 是 "ContactJob".job_info (Dict/JSON, 是 Contact!!)
 @router.put("/{teacher_id}/resumes/{resume_id}/jobs/{job_id}/reply/remote")
 def remote_reply_job(teacher_id: int, resume_id: int, job_id: int, body=Depends(job_request_body),
-                     # current_region: str = Header(...),
                      requests=Depends(get_service_requests),
                      # cache=Depends(get_cache)
                      ):
+    match_host = get_match_region_host(region=body["current_region"])
     pass
 
 
@@ -239,32 +224,28 @@ def remote_reply_job(teacher_id: int, resume_id: int, job_id: int, body=Depends(
 
 @router.get("/{teacher_id}/resumes/{resume_id}")
 def get_resume(teacher_id: int, resume_id: int,
-               current_region: str = Header(...),
+               match_host=Depends(get_match_host),
                requests=Depends(get_service_requests),
                # cache=Depends(get_cache)
                ):
-    current_region = current_region.lower()
-    match_host = region_match_hosts[current_region]
     data, err = requests.get(
         url=f"{match_host}/teachers/{teacher_id}/resumes/{resume_id}")
     if err:
-        return res_err(msg=err)
+        raise ServerException(msg=err)
 
     return res_success(data=data)
 
 
 # TODO: 未來如果允許使用多個 resumes, 須考慮 idempotent
-@router.post("/{teacher_id}/resumes")
+@router.post("/{teacher_id}/resumes", status_code=201)
 def create_resume(
     teacher_id: int,
     profile: schemas.TeacherProfile = Body(None, embed=True),  # Nullable
     resume: schemas.Resume = Body(..., embed=True),
-    current_region: str = Header(...),
+    match_host=Depends(get_match_host),
     requests=Depends(get_service_requests),
     # cache=Depends(get_cache)
 ):
-    current_region = current_region.lower()
-    match_host = region_match_hosts[current_region]
     data, err = requests.post(
         url=f"{match_host}/teachers/{teacher_id}/resumes",
         json={
@@ -272,7 +253,7 @@ def create_resume(
             "resume": resume.dict()
         })
     if err:
-        return res_err(msg=err)
+        raise ServerException(msg=err)
 
     return res_success(data=data)
 
@@ -284,15 +265,13 @@ def update_resume(
     resume_id: int,
     profile: schemas.TeacherProfile = Body(None, embed=True),  # Nullable
     resume: schemas.Resume = Body(None, embed=True),  # Nullable
-    current_region: str = Header(...),
+    match_host=Depends(get_match_host),
     requests=Depends(get_service_requests),
     # cache=Depends(get_cache)
 ):
     if profile == None and resume == None:
-        return res_err(msg="at least one of the profile and resume is required")
+        raise ClientException(msg="at least one of the profile or resume is required")
 
-    current_region = current_region.lower()
-    match_host = region_match_hosts[current_region]
     data, err = requests.put(
         url=f"{match_host}/teachers/{teacher_id}/resumes/{resume_id}",
         json={
@@ -300,7 +279,7 @@ def update_resume(
             "resume": resume.dict()
         })
     if err:
-        return res_err(msg=err)
+        raise ServerException(msg=err)
 
     return res_success(data=data)
 
@@ -308,15 +287,13 @@ def update_resume(
 @router.get("/{teacher_id}/matchdata")
 def get_matchdata(
     teacher_id: int,
-    current_region: str = Header(...),
+    match_host=Depends(get_match_host),
     requests=Depends(get_service_requests),
     # cache=Depends(get_cache)
 ):
-    current_region = current_region.lower()
-    match_host = region_match_hosts[current_region]
     data, err = requests.get(
         url=f"{match_host}/teachers/{teacher_id}/matchdata")
     if err:
-        return res_err(msg=err)
+        raise ServerException(msg=err)
 
     return res_success(data=data)
