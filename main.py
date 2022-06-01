@@ -16,26 +16,24 @@ from src.routers.v1 import auth, \
     match_companies, match_teachers, \
     search, media
 
+from src.routers.v2 import auth as authv2
+from src.routers.res.response import res_err
+from src.exceptions import auth_except
+from src.common.region_hosts import RegionException
 
-router_v1 = APIRouter(prefix="/api/v1")
-# TODO: other routers
-router_v1.include_router(auth.router)
-router_v1.include_router(match_companies.router)
-router_v1.include_router(match_teachers.router)
-router_v1.include_router(search.router)
-router_v1.include_router(media.router)
+
 
 
 STAGE = os.environ.get('STAGE')
 root_path = '/' if not STAGE else f'/{STAGE}'
 app = FastAPI(title="ForeignTeacher: Gateway", root_path=root_path)
-app.include_router(router_v1)
+
+
 
 
 class BusinessEception(Exception):
     def __init__(self, term: str):
         self.term = term
-
 
 @app.exception_handler(BusinessEception)
 async def business_exception_handler(request: Request, exc: BusinessEception):
@@ -46,6 +44,38 @@ async def business_exception_handler(request: Request, exc: BusinessEception):
             "msg": f"Oops! {exc.term} is a wrong phrase. Guess again?"
         }
     )
+
+
+@app.exception_handler(RegionException)
+async def region_exception_handler(request: Request, exc: RegionException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=res_err(msg=exc.msg)
+    )
+    
+
+auth_except.include_app(app)
+
+
+
+
+router_v1 = APIRouter(prefix="/api/v1")
+# TODO: other routers
+router_v1.include_router(auth.router)
+router_v1.include_router(match_companies.router)
+router_v1.include_router(match_teachers.router)
+router_v1.include_router(search.router)
+router_v1.include_router(media.router)
+
+
+router_v2 = APIRouter(prefix="/api/v2")
+router_v2.include_router(authv2.router)
+
+
+
+
+app.include_router(router_v1)
+app.include_router(router_v2)
 
 
 @app.get("/gateway/{term}")

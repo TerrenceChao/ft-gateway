@@ -8,26 +8,17 @@ from fastapi import APIRouter, \
     File, UploadFile, status, \
     HTTPException
 from pydantic import EmailStr
+from ...exceptions.auth_except import ClientException, \
+    UnauthorizedException, \
+    NotFoundException, \
+    DuplicateUserException, \
+    ServerException
 from ...db.nosql import auth_schemas
-from ..res.response import res_success, res_err
+from ..res.response import res_success
 from ...common.cache import get_cache
 from ...common.service_requests import get_service_requests
+from ...common.region_hosts import get_auth_region_host, get_match_region_host
 import logging as log
-
-
-region_auth_hosts = {
-    # "default": os.getenv("REGION_HOST_AUTH", "http://localhost:8082/auth/api/v1/auth-nosql"),
-    "jp": os.getenv("JP_REGION_HOST_AUTH", "http://localhost:8082/auth/api/v1/auth-nosql"),
-    "ge": os.getenv("EU_REGION_HOST_AUTH", "http://localhost:8082/auth/api/v1/auth-nosql"),
-    "us": os.getenv("US_REGION_HOST_AUTH", "http://localhost:8082/auth/api/v1/auth-nosql"),
-}
-
-region_match_hosts = {
-    # "default": os.getenv("REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/match-nosql"),
-    "jp": os.getenv("JP_REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/match-nosql"),
-    "ge": os.getenv("EU_REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/match-nosql"),
-    "us": os.getenv("US_REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/match-nosql"),
-}
 
 
 # default = 5 mins (300 secs)
@@ -42,7 +33,7 @@ log.basicConfig(level=log.INFO)
 def gen_confirm_code():
     code = int(time.time() ** 6 % 1000000)
     code = code if (code > 100000) else code + 100000
-    print(f"confirm_code: {code}")
+    log.info(f"confirm_code: {code}")
     return code
 
 
@@ -61,38 +52,43 @@ router = APIRouter(
 )
 
 
+def get_auth_host(region: str = Header(...)):
+    return get_auth_region_host(region=region)
+
+def get_match_host(region: str = Header(...)):
+    return get_match_region_host(region=region)
+
+
 @router.get("/welcome")
-def get_public_key(region: str = Header(...), timestamp: int = 0,
+def get_public_key(timestamp: int = 0,
+                   auth_host=Depends(get_auth_host),
                    requests=Depends(get_service_requests),
                    cache=Depends(get_cache)
                    ):
-    region = region.lower()
-    auth_host = region_auth_hosts[region]
-
     slot = timestamp % 100
     pubkey, cache_err = cache.get(f"pubkey_{slot}")
     if not pubkey or cache_err:
         pubkey, err = requests.get(f"{auth_host}/security/pubkey", params={"ts": timestamp})
         if err:
-            return res_err(msg="cannot get public_key")
+            raise ServerException(msg="cannot get public_key")
         else:
             cache.set(f"pubkey_{slot}", pubkey)
 
     return res_success(data=pubkey)
 
 
-@router.post("/signup")
+# "meta": "{\"region\":\"jp\",\"role\":\"teacher\",\"pass\":\"secret\"}"
+@router.post("/signup", status_code=201)
 def signup(region: str = Header(...), email: EmailStr = Body(...), meta: str = Body(...),
+           auth_host=Depends(get_auth_host),
            requests=Depends(get_service_requests),
            cache=Depends(get_cache)
            ):
     data, cache_err = cache.get(email)
     if data or cache_err:
-        return res_err(msg="registered or registering")
+        raise DuplicateUserException(msg="registered or registering")
 
-    print("\n\n\ndata?\n", data)
-    region = region.lower()
-    auth_host = region_auth_hosts[region]
+    log.info("\n\n\ndata?\n", data)
     confirm_code = gen_confirm_code()
     res, msg, err = requests.post2(f"{auth_host}/sendcode/email", json={
         "email": email,
@@ -110,31 +106,30 @@ def signup(region: str = Header(...), email: EmailStr = Body(...), meta: str = B
         return res_success()
 
     elif err:
-        return res_err(msg=err)
+        raise ServerException(msg=err)
 
     else:
         cache.set(email, { "region": region }, SHORT_TERM_TTL)
-        return res_err(msg="email registered")
+        raise DuplicateUserException(msg="email registered")
 
 
-@router.post("/signup/conform")
-def confirm_signup(region: str = Header(...), email: EmailStr = Body(...), pubkey: str = Body(...), confirm_code: str = Body(...),
+@router.post("/signup/conform", status_code=201)
+def confirm_signup(email: EmailStr = Body(...), pubkey: str = Body(...), confirm_code: str = Body(...),                
+                   auth_host=Depends(get_auth_host),
                    requests=Depends(get_service_requests),
                    cache=Depends(get_cache)
                    ):
-    region = region.lower()
-    auth_host = region_auth_hosts[region]
     user, cache_err = cache.get(email)
-    print("\n\n\n\n\n~~~user\n", user, type(user))
+    log.info("\n\n\n\n\n~~~user\n", user, type(user))
 
     if not user or cache_err:
-        return res_err(msg="no signup data")
+        raise NotFoundException(msg="no signup data")
 
     if user == {}:
-        return res_err(msg="registering")
+        raise DuplicateUserException(msg="registering")
 
     if confirm_code != str(user["confirm_code"]):
-        return res_err(msg="wrong confirm_code")
+        raise ClientException(msg="wrong confirm_code")
 
     # "registering": empty data, but TTL=30sec
     cache.set(email, {}, ex=30)
@@ -146,11 +141,11 @@ def confirm_signup(region: str = Header(...), email: EmailStr = Body(...), pubke
 
     res, err = requests.post(f"{auth_host}/signup", json=payload)
     if err:
-        return res_err(msg=err)
+        raise ServerException(msg=err)
 
     updated, cache_err = cache.set(email, res, ex=LONG_TERM_TTL)
     if not updated or cache_err:
-        return res_err(msg="cannot cache user data")
+        raise ServerException(msg="cannot cache user data")
     else:    
         return res_success(data=res)
 
@@ -225,18 +220,17 @@ TODO: 登入時，其他裝置需要登出。
 未來機制：同一時間允許同一使用者在多個裝置/入口登入
 TODO: current_region 和其他 metadata 需改為多份
 """
-@router.post("/login")
+@router.post("/login", status_code=201)
 def login(
     current_region: str = Header(...),
     email: EmailStr = Body(...),
     meta: str = Body(...),
     pubkey: str = Body(...),
+    auth_host=Depends(get_auth_host),
+    match_host=Depends(get_match_host),
     requests=Depends(get_service_requests),
     cache=Depends(get_cache)
 ):
-    current_region = current_region.lower()
-    auth_host = region_auth_hosts[current_region]
-    match_host = region_match_hosts[current_region]
     payload = {
         "email": email,
         "meta": meta,
@@ -248,30 +242,30 @@ def login(
 
     # found in DB
     if msg == "error_password":
-        return res_err(msg="error_password")
+        raise ClientException(msg="error_password")
 
     # not found in DB and S3
     if msg == "not_registered":
-        return res_err(msg="user not found")  # 沒註冊過
+        raise NotFoundException(msg="user not found")  # 沒註冊過
 
     # found in S3, and region == "current_region"(在 meta, 解密後才會知道)(S3記錄:註冊在該auth_service卻找不到)
     if msg == "register_fail":
-        return res_err(msg="register fail")  # {log_level:嚴重問題}
+        raise ServerException(msg="register fail")  # {log_level:嚴重問題}
 
     # found in S3, and region != "current_region"(在 meta, 解密後才會知道)(找錯地方)
     # S3 有記錄但該地區的 auth-service 沒記錄，auth 從 S3 找 region 後回傳
     if msg == "wrong_region":
-        print("\n\nhas record in S3, but no record in DB of the region")
-        print("no token in the region, request for another region")
+        log.info("\n\nhas record in S3, but no record in DB of the region")
+        log.info("no token in the region, request for another region")
         region = auth_res["region"]  # 換其他 region 再請求一次
-        auth_host = region_auth_hosts[region]
-        match_host = region_match_hosts[region]
+        auth_host = get_auth_region_host(region)
+        match_host = get_match_region_host(region)
         auth_res, err = requests.post(f"{auth_host}/login", json=payload)
         if err:
-            return res_err(msg=err)
+            raise ServerException(msg=err)
         
     if err:
-        return res_err(msg=err)
+        raise ServerException(msg=err)
 
 
     # 驗證合法, save into cache
@@ -282,7 +276,7 @@ def login(
     })
     updated, cache_err = cache.set(email, auth_res, ex=LONG_TERM_TTL)
     if not updated or cache_err:
-        return res_err(msg="set cache fail")
+        raise ServerException(msg="set cache fail")
 
     # 驗證合法 >> 取得 match service 資料
     role, role_id = auth_res["role"], auth_res["role_id"]
@@ -294,17 +288,20 @@ def login(
     })
 
 
-@router.get("/logout")
+@router.post("/logout", status_code=201)
 def logout(email: EmailStr, token: str = Header(...),
-           requests=Depends(get_service_requests),
            cache=Depends(get_cache)
            ):
     user, cache_err = cache.get(email)
-    if not user or not "token" in user or cache_err:
-        return res_err(msg="logged out")
+    if cache_err:
+        raise ServerException(msg="cache fail")
+    
+    if not user or not "token" in user:
+        return res_success(msg="logged out")
 
     if user["token"] != token:
-        return res_err(msg="access denied")
+        raise UnauthorizedException(msg="access denied")
+    
 
     # TODO: 是保留部分資訊，還是需要完全刪除 cache?
     for key in ["token", "socketid", "role_id"]:
@@ -315,6 +312,6 @@ def logout(email: EmailStr, token: str = Header(...),
     # "LONG_TERM_TTL" for redirct notification
     updated, cache_err = cache.set(email, user, ex=LONG_TERM_TTL)
     if not updated or cache_err:
-        return res_err(msg="set cache fail")
+        raise ServerException(msg="set cache fail")
     
     return res_success()
