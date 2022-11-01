@@ -41,7 +41,7 @@ class Cache:
             if val == None:
                 return result, err_msg
             
-            # print(val, "\n", val[0] == "{" and val[-1] =="}")
+            # log.info(val, "\n", val[0] == "{" and val[-1] =="}")
             result = json.loads(val) if val[0] == "{" and val[-1] =="}" else val
 
         except Exception as e:
@@ -56,11 +56,9 @@ class Cache:
 
         try:
             if type(val) == dict:
-                print(val)
-                print(type(val))
+                log.debug(f'type:%s, val:%s', type(val), str(val))
                 val = json.dumps(val)
-                print(val)
-                print(type(val))
+                log.debug(f'type:%s, val:%s', type(val), str(val))
 
             if not ex:
                 self.redis.set(key, val)
