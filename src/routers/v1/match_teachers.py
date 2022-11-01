@@ -17,8 +17,7 @@ from ...common.service_requests import get_service_requests
 from ...common.region_hosts import get_match_region_host
 import logging as log
 
-
-log.basicConfig(level=log.INFO)
+log.basicConfig(filemode='w', level=log.INFO)
 
 
 router = APIRouter(
@@ -108,15 +107,15 @@ def upsert_follow_job(teacher_id: int, job_id: int, follow: bool, job_info: Dict
     return res_success(data=data)
 
 
-# TODO: ?? 有需要批次更新 jobs 再實現
-@router.put("/{teacher_id}/jobs/follow")
-def upsert_follow_jobs(teacher_id: int, jobsInfo: List[schemas.FollowJob] = Body(...),
-                       match_host=Depends(get_match_host),
-                       requests=Depends(get_service_requests),
-                       # cache=Depends(get_cache)
-                       ):
-    # TODO: for remote batch update; job's'Info 是多個 FollowJob
-    pass
+# # TODO: ?? 有需要批次更新 jobs 再實現
+# @router.put("/{teacher_id}/jobs/follow")
+# def upsert_follow_jobs(teacher_id: int, jobsInfo: List[schemas.FollowJob] = Body(...),
+#                        match_host=Depends(get_match_host),
+#                        requests=Depends(get_service_requests),
+#                        # cache=Depends(get_cache)
+#                        ):
+#     # TODO: for remote batch update; job's'Info 是多個 FollowJob
+#     pass
 
 
 @router.get("/{teacher_id}/resumes/brief")
@@ -128,7 +127,7 @@ def get_brief_resumes(teacher_id: int,
     data, err = requests.get(
         url=f"{match_host}/teachers/{teacher_id}/resumes/brief")
     
-    print(data)
+    log.info(data)
     if err:
         raise ServerException(msg=err)
 
@@ -193,26 +192,26 @@ def reply_job(teacher_id: int, resume_id: int, job_id: int, body=Depends(job_req
     return res_success(data=contact_job)
 
 
-# TODO: remote event bus
-# TODO: job_info: Dict >> job_info 是 "ContactJob".job_info (Dict/JSON, 是 Contact!!)
-@router.put("/{teacher_id}/resumes/{resume_id}/jobs/{job_id}/apply/remote")
-def remote_apply_job(teacher_id: int, resume_id: int, job_id: int, body=Depends(job_request_body),
-                     requests=Depends(get_service_requests),
-                     # cache=Depends(get_cache)
-                     ):
-    match_host = get_match_region_host(region=body["current_region"])
-    pass
+# # TODO: remote event bus
+# # TODO: job_info: Dict >> job_info 是 "ContactJob".job_info (Dict/JSON, 是 Contact!!)
+# @router.put("/{teacher_id}/resumes/{resume_id}/jobs/{job_id}/apply/remote")
+# def remote_apply_job(teacher_id: int, resume_id: int, job_id: int, body=Depends(job_request_body),
+#                      requests=Depends(get_service_requests),
+#                      # cache=Depends(get_cache)
+#                      ):
+#     match_host = get_match_region_host(region=body["current_region"])
+#     pass
 
 
-# TODO: remote event bus
-# TODO: job_info: Dict >> job_info 是 "ContactJob".job_info (Dict/JSON, 是 Contact!!)
-@router.put("/{teacher_id}/resumes/{resume_id}/jobs/{job_id}/reply/remote")
-def remote_reply_job(teacher_id: int, resume_id: int, job_id: int, body=Depends(job_request_body),
-                     requests=Depends(get_service_requests),
-                     # cache=Depends(get_cache)
-                     ):
-    match_host = get_match_region_host(region=body["current_region"])
-    pass
+# # TODO: remote event bus
+# # TODO: job_info: Dict >> job_info 是 "ContactJob".job_info (Dict/JSON, 是 Contact!!)
+# @router.put("/{teacher_id}/resumes/{resume_id}/jobs/{job_id}/reply/remote")
+# def remote_reply_job(teacher_id: int, resume_id: int, job_id: int, body=Depends(job_request_body),
+#                      requests=Depends(get_service_requests),
+#                      # cache=Depends(get_cache)
+#                      ):
+#     match_host = get_match_region_host(region=body["current_region"])
+#     pass
 
 
 # # TODO: deprecated

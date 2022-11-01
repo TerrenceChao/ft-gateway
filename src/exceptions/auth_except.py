@@ -3,8 +3,8 @@ from fastapi.responses import JSONResponse
 from ..routers.res.response import res_err
 import logging as log
 
+log.basicConfig(filemode='w', level=log.INFO)
 
-log.basicConfig(level=log.ERROR)
 
 class ErrorLogger:
     def __init__(self, msg: str):

@@ -1,12 +1,10 @@
 import os
-import logging
+import logging as log
 from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse
 from ..routers.res.response import res_err
 
-
-log = logging.getLogger()
-log.setLevel(logging.ERROR)
+log.basicConfig(filemode='w', level=log.INFO)
 
 
 auth_region_hosts = {
@@ -37,8 +35,6 @@ def get_auth_region_host(region: str):
     except Exception as e:
         log.error(e.__str__())
         raise RegionException(region=region)
-    finally:
-        pass
 
 def get_match_region_host(region: str):
     try:
@@ -47,7 +43,5 @@ def get_match_region_host(region: str):
     except Exception as e:
         log.error(e.__str__())
         raise RegionException(region=region)
-    finally:
-        pass
 
 

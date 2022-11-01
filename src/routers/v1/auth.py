@@ -14,11 +14,14 @@ from ...exceptions.auth_except import ClientException, \
     DuplicateUserException, \
     ServerException
 from ...db.nosql import auth_schemas
+from ..req.auth_req import SignupVO, SignupConfirmVO, LoginVO 
 from ..res.response import res_success
 from ...common.cache import get_cache
 from ...common.service_requests import get_service_requests
 from ...common.region_hosts import get_auth_region_host, get_match_region_host
 import logging as log
+
+log.basicConfig(filemode='w', level=log.INFO)
 
 
 # default = 5 mins (300 secs)
@@ -27,7 +30,6 @@ SHORT_TERM_TTL = int(os.getenv("SHORT_TERM_TTL", "300"))
 LONG_TERM_TTL = int(os.getenv("LONG_TERM_TTL", "1209600"))
 
 
-log.basicConfig(level=log.INFO)
 
 
 def gen_confirm_code():
@@ -79,16 +81,18 @@ def get_public_key(timestamp: int = 0,
 
 # "meta": "{\"region\":\"jp\",\"role\":\"teacher\",\"pass\":\"secret\"}"
 @router.post("/signup", status_code=201)
-def signup(region: str = Header(...), email: EmailStr = Body(...), meta: str = Body(...),
+def signup(region: str = Header(...), body: SignupVO = Body(...),
            auth_host=Depends(get_auth_host),
            requests=Depends(get_service_requests),
            cache=Depends(get_cache)
            ):
+    email = body.email
+    meta = body.meta
     data, cache_err = cache.get(email)
     if data or cache_err:
+        log.error(f'cache data:{data}, err:{cache_err}')
         raise DuplicateUserException(msg="registered or registering")
 
-    log.info("\n\n\ndata?\n", data)
     confirm_code = gen_confirm_code()
     res, msg, err = requests.post2(f"{auth_host}/sendcode/email", json={
         "email": email,
@@ -114,11 +118,14 @@ def signup(region: str = Header(...), email: EmailStr = Body(...), meta: str = B
 
 
 @router.post("/signup/conform", status_code=201)
-def confirm_signup(email: EmailStr = Body(...), pubkey: str = Body(...), confirm_code: str = Body(...),                
+def confirm_signup(body: SignupConfirmVO = Body(...),                
                    auth_host=Depends(get_auth_host),
                    requests=Depends(get_service_requests),
                    cache=Depends(get_cache)
                    ):
+    email = body.email
+    confirm_code = body.confirm_code
+    pubkey = body.pubkey
     user, cache_err = cache.get(email)
     log.info("\n\n\n\n\n~~~user\n", user, type(user))
 
@@ -135,7 +142,7 @@ def confirm_signup(email: EmailStr = Body(...), pubkey: str = Body(...), confirm
     cache.set(email, {}, ex=30)
     payload = {
         "email": email,
-        "meta": user["meta"],
+        "meta": user["meta"], # "meta": "{\"region\":\"jp\",\"role\":\"teacher\",\"pass\":\"secret\"}"
         "pubkey": pubkey,
     }
 
@@ -223,22 +230,14 @@ TODO: current_region 和其他 metadata 需改為多份
 @router.post("/login", status_code=201)
 def login(
     current_region: str = Header(...),
-    email: EmailStr = Body(...),
-    meta: str = Body(...),
-    pubkey: str = Body(...),
+    body: LoginVO = Body(...),
     auth_host=Depends(get_auth_host),
     match_host=Depends(get_match_host),
     requests=Depends(get_service_requests),
     cache=Depends(get_cache)
 ):
-    payload = {
-        "email": email,
-        "meta": meta,
-        "pubkey": pubkey,
-        "client_region": current_region,
-    }
-
-    auth_res, msg, err = requests.post2(f"{auth_host}/login", json=payload)
+    body.current_region = current_region
+    auth_res, msg, err = requests.post2(f"{auth_host}/login", json=body.json())
 
     # found in DB
     if msg == "error_password":
@@ -289,7 +288,7 @@ def login(
 
 
 @router.post("/logout", status_code=201)
-def logout(email: EmailStr, token: str = Header(...),
+def logout(token: str = Header(...), email: EmailStr = Body(...), 
            cache=Depends(get_cache)
            ):
     user, cache_err = cache.get(email)

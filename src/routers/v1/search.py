@@ -15,16 +15,15 @@ from ...common.cache import get_cache
 from ...common.service_requests import get_service_requests
 import logging as log
 
+log.basicConfig(filemode='w', level=log.INFO)
+
 
 region_search_hosts = {
     # "default": os.getenv("REGION_HOST_SEARCH", "http://localhost:8083/match/api/v1/search"),
     "jp": os.getenv("JP_REGION_HOST_SEARCH", "http://localhost:8083/match/api/v1/search"),
-    "ge": os.getenv("EU_REGION_HOST_SEARCH", "http://localhost:8083/match/api/v1/search"),
+    "ge": os.getenv("GE_REGION_HOST_SEARCH", "http://localhost:8083/match/api/v1/search"),
     "us": os.getenv("US_REGION_HOST_SEARCH", "http://localhost:8083/match/api/v1/search"),
 }
-
-
-log.basicConfig(level=log.INFO)
 
 
 router = APIRouter(

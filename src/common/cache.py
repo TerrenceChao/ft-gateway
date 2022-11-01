@@ -6,6 +6,8 @@ from typing import Any
 from redis import Redis
 import logging as log
 
+log.basicConfig(filemode='w', level=log.INFO)
+
 
 cache_host = os.getenv("CACHE_HOST", "localhost")
 cache_port = int(os.getenv("CACHE_PORT", "6379"))
@@ -22,7 +24,6 @@ redis = Redis(
     # password=cache_pass,
 )
 
-log.basicConfig(level=log.INFO)
 if redis.ping():
     log.info("Connected to Redis")
 

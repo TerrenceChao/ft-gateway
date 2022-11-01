@@ -1,10 +1,8 @@
 import requests
-import logging
+import logging as log
 from typing import Dict
 
-
-log = logging.getLogger()
-log.setLevel(logging.ERROR)
+log.basicConfig(filemode='w', level=log.INFO)
 
 
 SUCCESS_CODE = "0"
@@ -15,7 +13,7 @@ class ServiceRequests:
         pass
     
     def get(self, url: str, params: Dict = None, headers: Dict = None):
-        err_msg: str = None
+        err: str = None
         result = None
         try:
             response = requests.get(url, params=params, headers=headers)
@@ -23,21 +21,21 @@ class ServiceRequests:
             if "detail" in result:
                 return None, result["detail"]
             
-            print(result)
+            log.info(result)
             if result["code"] != SUCCESS_CODE:
-                err_msg = result["msg"]
+                err = result["msg"]
                 
             result = result["data"]
             
         except Exception as e:
-            err_msg = e.__str__()
-            log.error(err_msg)
+            err = e.__str__()
+            log.error(f'get request error, url:{url}, params:{params}, headers:{headers}, err:{err}')
             
-        return result, err_msg
+        return result, err
         
     
     def post(self, url: str, json: Dict, headers: Dict = None):
-        err_msg: str = None
+        err: str = None
         result = None
         try:
             response = requests.post(url, json=json, headers=headers)
@@ -46,15 +44,16 @@ class ServiceRequests:
                 return None, result["detail"]
             
             if result["code"] != SUCCESS_CODE:
-                err_msg = result["msg"]
+                err = result["msg"]
                 
             result = result["data"]
             
         except Exception as e:
-            err_msg = e.__str__()
-            log.error(err_msg)
+            err = e.__str__()
+            log.error(f'post request error, url:{url}, json:{json}, headers:{headers}, err:{err}')
+
             
-        return result, err_msg
+        return result, err
     
 
     """
@@ -78,13 +77,13 @@ class ServiceRequests:
             
         except Exception as e:
             err = e.__str__()
-            log.error(err)
+            log.info(f'post2 request error, url:{url}, json:{json}, headers:{headers}, err:{err}')
             
         return result, msg, err
     
     
     def put(self, url: str, json: Dict = None, headers: Dict = None):
-        err_msg: str = None
+        err: str = None
         result = None
         try:
             response = requests.put(url, json=json, headers=headers)
@@ -93,15 +92,15 @@ class ServiceRequests:
                 return None, result["detail"]
             
             if result["code"] != SUCCESS_CODE:
-                err_msg = result["msg"]
+                err = result["msg"]
                 
             result = result["data"]
             
         except Exception as e:
-            err_msg = e.__str__()
-            log.error(err_msg)
+            err = e.__str__()
+            log.info(f'put request error, url:{url}, json:{json}, headers:{headers}, err:{err}')
             
-        return result, err_msg
+        return result, err
     
 
 def get_service_requests():
