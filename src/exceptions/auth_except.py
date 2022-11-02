@@ -50,7 +50,7 @@ def __duplicate_user_exception_handler(request: Request, exc: DuplicateUserExcep
     return JSONResponse(status_code=exc.status_code, content=res_err(msg=exc.msg))
 
 def __server_exception_handler(request: Request, exc: ServerException):
-    return JSONResponse(status_code=exc.status_code, content=res_err(msg="unknow server error"))
+    return JSONResponse(status_code=exc.status_code, content=res_err(msg=exc.msg))
 
 
 

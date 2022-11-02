@@ -15,21 +15,19 @@ class ServiceRequests:
     def get(self, url: str, params: Dict = None, headers: Dict = None):
         err: str = None
         result = None
+        response = None
         try:
             response = requests.get(url, params=params, headers=headers)
             result = response.json()
-            if "detail" in result:
-                return None, result["detail"]
+            if self.__err(result):
+                return None, self.__err_resp(result)
             
             log.info(result)
-            if result["code"] != SUCCESS_CODE:
-                err = result["msg"]
-                
             result = result["data"]
             
         except Exception as e:
             err = e.__str__()
-            log.error(f'get request error, url:{url}, params:{params}, headers:{headers}, err:{err}')
+            log.error(f"get request error, url:{url}, params:{params}, headers:{headers}, resp:{response}, err:{err}")
             
         return result, err
         
@@ -37,20 +35,18 @@ class ServiceRequests:
     def post(self, url: str, json: Dict, headers: Dict = None):
         err: str = None
         result = None
+        response = None
         try:
             response = requests.post(url, json=json, headers=headers)
             result = response.json()
-            if "detail" in result:
-                return None, result["detail"]
-            
-            if result["code"] != SUCCESS_CODE:
-                err = result["msg"]
+            if self.__err(result):
+                return None, self.__err_resp(result)
                 
             result = result["data"]
             
         except Exception as e:
             err = e.__str__()
-            log.error(f'post request error, url:{url}, json:{json}, headers:{headers}, err:{err}')
+            log.error(f"post request error, url:{url}, req:{json}, headers:{headers}, resp:{response}, err:{err}")
 
             
         return result, err
@@ -63,21 +59,19 @@ class ServiceRequests:
         err: str = None
         msg: str = None
         result = None
+        response = None
         try:
             response = requests.post(url, json=json, headers=headers)
             result = response.json()
-            if "detail" in result:
-                return None, result["detail"]
+            if self.__err(result):
+                return None, None, self.__err_resp(result)
             
-            if result["code"] != SUCCESS_CODE:
-                err = result["msg"]
-                
             msg = result["msg"]
             result = result["data"]
             
         except Exception as e:
             err = e.__str__()
-            log.info(f'post2 request error, url:{url}, json:{json}, headers:{headers}, err:{err}')
+            log.error(f"post2 request error, url:{url}, req:{json}, headers:{headers}, resp:{response}, err:{err}")
             
         return result, msg, err
     
@@ -85,23 +79,32 @@ class ServiceRequests:
     def put(self, url: str, json: Dict = None, headers: Dict = None):
         err: str = None
         result = None
+        response = None
         try:
             response = requests.put(url, json=json, headers=headers)
             result = response.json()
-            if "detail" in result:
-                return None, result["detail"]
-            
-            if result["code"] != SUCCESS_CODE:
-                err = result["msg"]
+            if self.__err(result):
+                return None, self.__err_resp(result)
                 
             result = result["data"]
             
         except Exception as e:
             err = e.__str__()
-            log.info(f'put request error, url:{url}, json:{json}, headers:{headers}, err:{err}')
+            log.error(f"put request error, url:{url}, req:{json}, headers:{headers}, resp:{response}, err:{err}")
             
         return result, err
     
+    def __err(self, resp_json):
+        return not "code" in resp_json or resp_json["code"] != SUCCESS_CODE
+    
+    def __err_resp(self, resp_json):
+        if "detail" in resp_json:
+            return str(resp_json["detail"])
+        if "msg" in resp_json:
+            return str(resp_json["msg"])
+        
+        return "service reqeust error"
+
 
 def get_service_requests():
     try:

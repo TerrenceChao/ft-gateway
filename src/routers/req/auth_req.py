@@ -27,7 +27,7 @@ class SignupConfirmVO(BaseModel):
         }
         
 class LoginVO(BaseModel):
-    current_region: str = None,
+    client_region: str = None, # this.header, auth-service.body
     email: EmailStr
     meta: str
     pubkey: str = None

@@ -90,7 +90,7 @@ def signup(region: str = Header(...), body: SignupVO = Body(...),
     meta = body.meta
     data, cache_err = cache.get(email)
     if data or cache_err:
-        log.error(f'cache data:{data}, err:{cache_err}')
+        log.error(f"cache data:{data}, err:{cache_err}")
         raise DuplicateUserException(msg="registered or registering")
 
     confirm_code = gen_confirm_code()
@@ -99,7 +99,7 @@ def signup(region: str = Header(...), body: SignupVO = Body(...),
         "confirm_code": confirm_code,
         "sendby": "no_exist",  # email 不存在時寄送
     })
-
+    
     if msg == "email_sent":
         email_playload = {
             "email": email,
@@ -108,10 +108,11 @@ def signup(region: str = Header(...), body: SignupVO = Body(...),
         }
         cache.set(email, email_playload, ex=SHORT_TERM_TTL)
         return res_success()
-
+    
     elif err:
+        log.error(f"req /sendcode/email error, err:{err}")
         raise ServerException(msg=err)
-
+    
     else:
         cache.set(email, { "region": region }, SHORT_TERM_TTL)
         raise DuplicateUserException(msg="email registered")
@@ -127,7 +128,7 @@ def confirm_signup(body: SignupConfirmVO = Body(...),
     confirm_code = body.confirm_code
     pubkey = body.pubkey
     user, cache_err = cache.get(email)
-    log.info("\n\n\n\n\n~~~user\n", user, type(user))
+    log.info("type:%s, user:%s" % (type(user), user))
 
     if not user or cache_err:
         raise NotFoundException(msg="no signup data")
@@ -236,9 +237,10 @@ def login(
     requests=Depends(get_service_requests),
     cache=Depends(get_cache)
 ):
-    body.current_region = current_region
-    auth_res, msg, err = requests.post2(f"{auth_host}/login", json=body.json())
+    body.client_region = current_region
+    auth_res, msg, err = requests.post2(f"{auth_host}/login", json=body.dict())
 
+    email = body.email
     # found in DB
     if msg == "error_password":
         raise ClientException(msg="error_password")
@@ -259,7 +261,7 @@ def login(
         region = auth_res["region"]  # 換其他 region 再請求一次
         auth_host = get_auth_region_host(region)
         match_host = get_match_region_host(region)
-        auth_res, err = requests.post(f"{auth_host}/login", json=payload)
+        auth_res, err = requests.post(f"{auth_host}/login", json=body.json())
         if err:
             raise ServerException(msg=err)
         

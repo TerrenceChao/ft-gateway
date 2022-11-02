@@ -56,9 +56,9 @@ class Cache:
 
         try:
             if type(val) == dict:
-                log.debug(f'type:%s, val:%s', type(val), str(val))
+                log.debug(f'type:%s, val:%s' % (type(val), str(val)))
                 val = json.dumps(val)
-                log.debug(f'type:%s, val:%s', type(val), str(val))
+                log.debug(f'type:%s, val:%s' % (type(val), str(val)))
 
             if not ex:
                 self.redis.set(key, val)
