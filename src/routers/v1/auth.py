@@ -107,7 +107,11 @@ def signup(region: str = Header(...), body: SignupVO = Body(...),
             "meta": meta,
         }
         cache.set(email, email_playload, ex=SHORT_TERM_TTL)
-        return res_success()
+        # TODO remove the res here('confirm_code') during production
+        res = {
+            "for_testing_only": confirm_code
+        }
+        return res_success(data=res)
     
     elif err:
         log.error(f"req /sendcode/email error, err:{err}")
