@@ -13,6 +13,7 @@ from ...exceptions.match_except import ClientException, \
     ServerException
 from ...db.nosql import match_companies_schemas as schemas
 from ..res.response import res_success
+from ...common.utils.auth_util import verify_token
 from ...common.service_requests import get_service_requests
 from ...common.region_hosts import get_match_region_host
 import logging as log
@@ -23,6 +24,7 @@ log.basicConfig(filemode='w', level=log.INFO)
 router = APIRouter(
     prefix="/match/companies",
     tags=["Match Companies"],
+    dependencies=[Depends(verify_token)],
     responses={404: {"description": "Not found"}},
 )
 

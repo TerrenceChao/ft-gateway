@@ -16,6 +16,7 @@ from ...exceptions.auth_except import ClientException, \
 from ...db.nosql import auth_schemas
 from ..req.auth_req import SignupVO, SignupConfirmVO, LoginVO 
 from ..res.response import res_success
+from ...common.utils.auth_util import gen_token
 from ...common.cache import get_cache
 from ...common.service_requests import get_service_requests
 from ...common.region_hosts import get_auth_region_host, get_match_region_host
@@ -122,7 +123,7 @@ def signup(region: str = Header(...), body: SignupVO = Body(...),
         raise DuplicateUserException(msg="email registered")
 
 
-@router.post("/signup/conform", status_code=201)
+@router.post("/signup/confirm", status_code=201)
 def confirm_signup(body: SignupConfirmVO = Body(...),                
                    auth_host=Depends(get_auth_host),
                    requests=Depends(get_service_requests),
@@ -158,7 +159,11 @@ def confirm_signup(body: SignupConfirmVO = Body(...),
     updated, cache_err = cache.set(email, res, ex=LONG_TERM_TTL)
     if not updated or cache_err:
         raise ServerException(msg="cannot cache user data")
-    else:    
+    else:
+        # gen jwt token
+        token = gen_token(res, ["email", "region", "role_id"])
+        res.update({ "token": token })
+        
         return res_success(data=res)
 
 
@@ -287,6 +292,10 @@ def login(
     role, role_id = auth_res["role"], auth_res["role_id"]
     match_res, err = requests.get(f"{match_host}/{role}/{role_id}/matchdata")
 
+    # gen jwt token
+    token = gen_token(auth_res, ["email", "region", "role_id"])
+    auth_res.update({ "token": token })
+    
     return res_success(data={
         "auth": auth_res,
         "match": match_res if not err else None,
