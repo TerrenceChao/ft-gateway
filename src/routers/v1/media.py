@@ -120,7 +120,7 @@ router = APIRouter(
     }
 
 """
-@router.post("/teachers/{teacher_id}/resumes/{resume_id}/sections/{section_id}/files")
+@router.post("/teachers/{teacher_id}/resumes/{resume_id}/sections/{section_id}/files", status_code=201)
 async def upload_files_by_teacher(
     teacher_id: int,
     resume_id: int,
@@ -223,7 +223,7 @@ async def upload_files_by_teacher(
     }
     
 """
-@router.post("/companies/{company_id}/files")
+@router.post("/companies/{company_id}/files", status_code=201)
 async def upload_files_by_company(
     company_id: int,
     # files: List[UploadFile],

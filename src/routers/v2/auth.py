@@ -55,19 +55,19 @@ def get_match_host(region: str = Header(...)):
     return get_match_region_host(region=region)
 
 
-@router.post("/email/change")
+@router.post("/email/change", status_code=201)
 def change_account_email():
     pass
 
 
-@router.post("/password/change")
+@router.post("/password/change", status_code=201)
 def change_password():
     pass
 
 
 
 
-@router.post("/password/forgot")
+@router.post("/password/forgot", status_code=201)
 def forgot_password():
     pass
 
