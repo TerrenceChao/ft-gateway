@@ -19,6 +19,7 @@ class ServiceRequests:
         try:
             response = requests.get(url, params=params, headers=headers)
             result = response.json()
+            log.info(f"url:{url}, resp-data:{result}")
             if self.__err(result):
                 return None, self.__err_resp(result)
             
@@ -39,6 +40,7 @@ class ServiceRequests:
         try:
             response = requests.post(url, json=json, headers=headers)
             result = response.json()
+            log.info(f"url:{url}, resp-data:{result}")
             if self.__err(result):
                 return None, self.__err_resp(result)
                 
@@ -63,6 +65,7 @@ class ServiceRequests:
         try:
             response = requests.post(url, json=json, headers=headers)
             result = response.json()
+            log.info(f"url:{url}, resp-data:{result}")
             if self.__err(result):
                 return None, None, self.__err_resp(result)
             
@@ -83,6 +86,7 @@ class ServiceRequests:
         try:
             response = requests.put(url, json=json, headers=headers)
             result = response.json()
+            log.info(f"url:{url}, resp-data:{result}")
             if self.__err(result):
                 return None, self.__err_resp(result)
                 
@@ -102,7 +106,10 @@ class ServiceRequests:
             return str(resp_json["detail"])
         if "msg" in resp_json:
             return str(resp_json["msg"])
+        if "message" in resp_json:
+            return str(resp_json["message"])
         
+        log.error(f"cannot find err msg, resp_json:{resp_json}")
         return "service reqeust error"
 
 

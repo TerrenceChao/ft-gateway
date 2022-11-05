@@ -9,14 +9,14 @@ log.basicConfig(filemode='w', level=log.INFO)
 
 auth_region_hosts = {
     # "default": os.getenv("REGION_HOST_AUTH", "http://localhost:8082/auth/api/v1/auth-nosql"),
-    "jp": os.getenv("JP_REGION_HOST_AUTH", "https://r5z8wgq0kd.execute-api.ap-northeast-1.amazonaws.com/dev/auth/api/v1/auth-nosql"),
+    "jp": os.getenv("JP_REGION_HOST_AUTH", "http://localhost:8082/auth/api/v1/auth-nosql"),
     "ge": os.getenv("GE_REGION_HOST_AUTH", "http://localhost:8082/auth/api/v1/auth-nosql"),
     "us": os.getenv("US_REGION_HOST_AUTH", "http://localhost:8082/auth/api/v1/auth-nosql"),
 }
 
 match_region_hosts = {
     # "default": os.getenv("REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/match-nosql"),
-    "jp": os.getenv("JP_REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/match-nosql"),
+    "jp": os.getenv("JP_REGION_HOST_MATCH", "http://localhost:8082/match/api/v1/auth-nosql"),
     "ge": os.getenv("GE_REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/match-nosql"),
     "us": os.getenv("US_REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/match-nosql"),
 }
