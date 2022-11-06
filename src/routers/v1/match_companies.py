@@ -12,8 +12,8 @@ from ...exceptions.match_except import ClientException, \
     NotFoundException, \
     ServerException
 from ...db.nosql import match_companies_schemas as schemas
+from ..req.authorization import AuthMatchRoute, token_required, verify_token_by_company_profile
 from ..res.response import res_success
-from ...common.utils.auth_util import verify_token
 from ...common.service_requests import get_service_requests
 from ...common.region_hosts import get_match_region_host
 import logging as log
@@ -24,7 +24,8 @@ log.basicConfig(filemode='w', level=log.INFO)
 router = APIRouter(
     prefix="/match/companies",
     tags=["Match Companies"],
-    dependencies=[Depends(verify_token)],
+    dependencies=[Depends(token_required)],
+    route_class=AuthMatchRoute,
     responses={404: {"description": "Not found"}},
 )
 
@@ -41,7 +42,8 @@ Returns:
 def create_profile(profile: schemas.CompanyProfile,
                    match_host=Depends(get_match_host),
                    requests=Depends(get_service_requests),
-                   # cache=Depends(get_cache)
+                   # cache=Depends(get_cache),
+                   verify=Depends(verify_token_by_company_profile),
                    ):
     data, err = requests.post(url=f"{match_host}/companies/",
                              json=profile.dict())

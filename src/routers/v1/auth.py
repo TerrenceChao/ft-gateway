@@ -16,7 +16,7 @@ from ...exceptions.auth_except import ClientException, \
 from ...db.nosql import auth_schemas
 from ..req.auth_req import SignupVO, SignupConfirmVO, LoginVO 
 from ..res.response import res_success
-from ...common.utils.auth_util import gen_token
+from ..req.authorization import gen_token
 from ...common.cache import get_cache
 from ...common.service_requests import get_service_requests
 from ...common.region_hosts import get_auth_region_host, get_match_region_host
@@ -161,7 +161,7 @@ def confirm_signup(body: SignupConfirmVO = Body(...),
         raise ServerException(msg="cannot cache user data")
     else:
         # gen jwt token
-        token = gen_token(res, ["email", "region", "role_id"])
+        token = gen_token(res, ["region", "role_id", "role"])
         res.update({ "token": token })
         
         return res_success(data=res)
@@ -293,7 +293,7 @@ def login(
     match_res, err = requests.get(f"{match_host}/{role}/{role_id}/matchdata")
 
     # gen jwt token
-    token = gen_token(auth_res, ["email", "region", "role_id"])
+    token = gen_token(auth_res, ["region", "role_id", "role"])
     auth_res.update({ "token": token })
     
     return res_success(data={
