@@ -51,6 +51,74 @@ def create_profile(profile: schemas.TeacherProfile,
     return res_success(data=data)
 
 
+# TODO: 未來如果允許使用多個 resumes, 須考慮 idempotent
+@router.post("/{teacher_id}/resumes", status_code=201)
+def create_resume(
+    teacher_id: int,
+    profile: schemas.TeacherProfile = Body(None, embed=True),  # Nullable
+    resume: schemas.Resume = Body(..., embed=True),
+    match_host=Depends(get_match_host),
+    requests=Depends(get_service_requests),
+    # cache=Depends(get_cache)
+):
+    data, err = requests.post(
+        url=f"{match_host}/teachers/{teacher_id}/resumes",
+        json={
+            "profile": None if profile == None else profile.dict(),
+            "resume": resume.dict()
+        })
+    if err:
+        raise ServerException(msg=err)
+
+    return res_success(data=data)
+
+
+@router.get("/{teacher_id}/resumes/{resume_id}")
+def get_resume(teacher_id: int, resume_id: int,
+               match_host=Depends(get_match_host),
+               requests=Depends(get_service_requests),
+               # cache=Depends(get_cache)
+               ):
+    data, err = requests.get(
+        url=f"{match_host}/teachers/{teacher_id}/resumes/{resume_id}")
+    if err:
+        raise ServerException(msg=err)
+
+    return res_success(data=data)
+
+
+# # TODO: deprecated
+# @router.get("/{teacher_id}/resumes")
+# def get_resumes(teacher_id: int):
+#   pass
+
+
+# TODO: 未來如果允許使用多個 resumes, 須考慮 idempotent
+@router.put("/{teacher_id}/resumes/{resume_id}")
+def update_resume(
+    teacher_id: int,
+    resume_id: int,
+    profile: schemas.TeacherProfile = Body(None, embed=True),  # Nullable
+    resume: schemas.Resume = Body(None, embed=True),  # Nullable
+    match_host=Depends(get_match_host),
+    requests=Depends(get_service_requests),
+    # cache=Depends(get_cache)
+):
+    if profile == None and resume == None:
+        raise ClientException(msg="at least one of the profile or resume is required")
+
+    data, err = requests.put(
+        url=f"{match_host}/teachers/{teacher_id}/resumes/{resume_id}",
+        json={
+            "profile": profile.dict(),
+            "resume": resume.dict()
+        })
+    if err:
+        raise ServerException(msg=err)
+
+    return res_success(data=data)
+
+
 """[可見度]
 TODO: 未來如果允許使用多個 resumes:
 A. 可以將 resumes 設定為一主多備 (只採用一個，其他為備用)
@@ -67,42 +135,6 @@ def enable_resume(teacher_id: int, resume_id: int, enable: bool,
                   ):
     data, err = requests.put(
         url=f"{match_host}/teachers/{teacher_id}/resumes/{resume_id}/enable/{enable}")
-    if err:
-        raise ServerException(msg=err)
-
-    return res_success(data=data)
-
-
-@router.get("/{teacher_id}/jobs/follow-and-apply")
-def get_followed_and_contact_jobs(teacher_id: int, job_id: int, size: int,
-                                  match_host=Depends(get_match_host),
-                                  requests=Depends(get_service_requests),
-                                  # cache=Depends(get_cache)
-                                  ):
-    data, err = requests.get(
-        url=f"{match_host}/teachers/{teacher_id}/jobs/follow-and-apply",
-        params={
-            "job_id": int(job_id),
-            "size": int(size)
-        })
-    if err:
-        raise ServerException(msg=err)
-
-    return res_success(data=data)
-
-
-# TODO: job_info: Dict >> job_info 是 FollowJob.job_info (Dict/JSON)
-@router.put("/{teacher_id}/jobs/{job_id}/follow/{follow}")
-def upsert_follow_job(teacher_id: int, job_id: int, follow: bool, job_info: Dict = Body(None),
-                      match_host=Depends(get_match_host),
-                      requests=Depends(get_service_requests),
-                      # cache=Depends(get_cache)
-                      ):
-    # TODO: why "job_info"??? it's an upsert operation
-    data, err = requests.put(
-        url=f"{match_host}/teachers/{teacher_id}/jobs/{job_id}/follow/{follow}",
-        json=job_info)
-    
     if err:
         raise ServerException(msg=err)
 
@@ -128,8 +160,11 @@ def get_brief_resumes(teacher_id: int,
                       ):
     data, err = requests.get(
         url=f"{match_host}/teachers/{teacher_id}/resumes/brief")
-    
     log.info(data)
+    
+    
+    
+    
     if err:
         raise ServerException(msg=err)
 
@@ -216,42 +251,17 @@ def reply_job(teacher_id: int, resume_id: int, job_id: int, body=Depends(job_req
 #     pass
 
 
-# # TODO: deprecated
-# @router.get("/{teacher_id}/resumes")
-# def get_resumes(teacher_id: int):
-#   pass
-
-
-
-@router.get("/{teacher_id}/resumes/{resume_id}")
-def get_resume(teacher_id: int, resume_id: int,
-               match_host=Depends(get_match_host),
-               requests=Depends(get_service_requests),
-               # cache=Depends(get_cache)
-               ):
+@router.get("/{teacher_id}/jobs/follow-and-apply")
+def get_followed_and_contact_jobs(teacher_id: int, job_id: int, size: int,
+                                  match_host=Depends(get_match_host),
+                                  requests=Depends(get_service_requests),
+                                  # cache=Depends(get_cache)
+                                  ):
     data, err = requests.get(
-        url=f"{match_host}/teachers/{teacher_id}/resumes/{resume_id}")
-    if err:
-        raise ServerException(msg=err)
-
-    return res_success(data=data)
-
-
-# TODO: 未來如果允許使用多個 resumes, 須考慮 idempotent
-@router.post("/{teacher_id}/resumes", status_code=201)
-def create_resume(
-    teacher_id: int,
-    profile: schemas.TeacherProfile = Body(None, embed=True),  # Nullable
-    resume: schemas.Resume = Body(..., embed=True),
-    match_host=Depends(get_match_host),
-    requests=Depends(get_service_requests),
-    # cache=Depends(get_cache)
-):
-    data, err = requests.post(
-        url=f"{match_host}/teachers/{teacher_id}/resumes",
-        json={
-            "profile": None if profile == None else profile.dict(),
-            "resume": resume.dict()
+        url=f"{match_host}/teachers/{teacher_id}/jobs/follow-and-apply",
+        params={
+            "job_id": int(job_id),
+            "size": int(size)
         })
     if err:
         raise ServerException(msg=err)
@@ -259,26 +269,18 @@ def create_resume(
     return res_success(data=data)
 
 
-# TODO: 未來如果允許使用多個 resumes, 須考慮 idempotent
-@router.put("/{teacher_id}/resumes/{resume_id}")
-def update_resume(
-    teacher_id: int,
-    resume_id: int,
-    profile: schemas.TeacherProfile = Body(None, embed=True),  # Nullable
-    resume: schemas.Resume = Body(None, embed=True),  # Nullable
-    match_host=Depends(get_match_host),
-    requests=Depends(get_service_requests),
-    # cache=Depends(get_cache)
-):
-    if profile == None and resume == None:
-        raise ClientException(msg="at least one of the profile or resume is required")
-
+# TODO: job_info: Dict >> job_info 是 FollowJob.job_info (Dict/JSON)
+@router.put("/{teacher_id}/jobs/{job_id}/follow/{follow}")
+def upsert_follow_job(teacher_id: int, job_id: int, follow: bool, job_info: Dict = Body(None),
+                      match_host=Depends(get_match_host),
+                      requests=Depends(get_service_requests),
+                      # cache=Depends(get_cache)
+                      ):
+    # TODO: why "job_info"??? it's an upsert operation
     data, err = requests.put(
-        url=f"{match_host}/teachers/{teacher_id}/resumes/{resume_id}",
-        json={
-            "profile": profile.dict(),
-            "resume": resume.dict()
-        })
+        url=f"{match_host}/teachers/{teacher_id}/jobs/{job_id}/follow/{follow}",
+        json=job_info)
+    
     if err:
         raise ServerException(msg=err)
 

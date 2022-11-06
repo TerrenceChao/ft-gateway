@@ -3,7 +3,8 @@ import json
 from datetime import date, datetime
 from typing import List
 import jwt
-from fastapi import Header, Body, HTTPException
+from fastapi import Header, Body, Path
+from ...exceptions.auth_except import UnauthorizedException
 
 
 # JWT_SECRET = os.getenv("TOKEN_EXPIRE_TIME", "zaq1xsw2")
@@ -33,4 +34,4 @@ def verify_token(token: str = Header(...), role_id: str = Header(...)):
     secret = __get_secret_by_header(role_id)
     data = jwt.decode(jwt=token, key=secret, algorithms=["HS256"])
     if not "role_id" in data or int(data["role_id"]) != int(role_id):
-        raise HTTPException(status_code=400, detail="invalid user")
+        raise UnauthorizedException(msg="invalid user")
