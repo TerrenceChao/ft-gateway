@@ -12,6 +12,7 @@ from fastapi import FastAPI, Request, \
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
+from fastapi.middleware.cors import CORSMiddleware
 from src.routers.v1 import auth, \
     match_companies, match_teachers, \
     search, media
@@ -28,7 +29,15 @@ STAGE = os.environ.get('STAGE')
 root_path = '/' if not STAGE else f'/{STAGE}'
 app = FastAPI(title="ForeignTeacher: Gateway", root_path=root_path)
 
-
+if STAGE == "dev":
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+        
 
 
 class BusinessEception(Exception):
