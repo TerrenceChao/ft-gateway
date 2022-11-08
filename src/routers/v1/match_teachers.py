@@ -80,6 +80,27 @@ def create_resume(
     return res_success(data=data)
 
 
+# TODO: 當 route pattern 一樣時，明確的 route 要先執行("/{teacher_id}/resumes/brief")，
+# 然後才是有變數的 ("/{teacher_id}/resumes/{resume_id}")
+@router.get("/{teacher_id}/resumes/brief")
+def get_brief_resumes(teacher_id: int,
+                      match_host=Depends(get_match_host),
+                      requests=Depends(get_service_requests),
+                      # cache=Depends(get_cache)
+                      ):
+    data, err = requests.get(
+        url=f"{match_host}/teachers/{teacher_id}/resumes/brief")
+    # log.info(data)
+    
+    
+    
+    
+    if err:
+        raise ServerException(msg=err)
+
+    return res_success(data=data)
+
+
 @router.get("/{teacher_id}/resumes/{resume_id}")
 def get_resume(teacher_id: int, resume_id: int,
                match_host=Depends(get_match_host),
@@ -158,26 +179,6 @@ def enable_resume(teacher_id: int, resume_id: int, enable: bool,
 #                        ):
 #     # TODO: for remote batch update; job's'Info 是多個 FollowJob
 #     pass
-
-
-@router.get("/{teacher_id}/resumes/brief")
-def get_brief_resumes(teacher_id: int,
-                      match_host=Depends(get_match_host),
-                      requests=Depends(get_service_requests),
-                      # cache=Depends(get_cache)
-                      ):
-    data, err = requests.get(
-        url=f"{match_host}/teachers/{teacher_id}/resumes/brief")
-    log.info(data)
-    
-    
-    
-    
-    if err:
-        raise ServerException(msg=err)
-
-    return res_success(data=data)
-
 
 
 

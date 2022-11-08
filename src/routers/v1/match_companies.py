@@ -80,6 +80,27 @@ def create_job(
     return res_success(data=data)
 
 
+# TODO: 當 route pattern 一樣時，明確的 route 要先執行("/{company_id}/jobs/brief")，
+# 然後才是有變數的 ("/{company_id}/jobs/{job_id}")
+@router.get("/{company_id}/jobs/brief")
+def get_brief_jobs(company_id: int, job_id: int = Query(None), size: int = Query(None),
+                   match_host=Depends(get_match_host),
+                   requests=Depends(get_service_requests),
+                   # cache=Depends(get_cache)
+                   ):
+    data, err = requests.get(
+        url=f"{match_host}/companies/{company_id}/jobs/brief",
+        params={
+            "job_id": int(job_id) if job_id else 0,
+            "size": int(size) if size else 10,
+        })
+    # log.info(data)
+    if err:
+        raise ServerException(msg=err)
+
+    return res_success(data=data)
+
+
 @router.get("/{company_id}/jobs/{job_id}")
 def get_job(company_id: int, job_id: int,
             match_host=Depends(get_match_host),
@@ -158,26 +179,6 @@ def enable_job(company_id: int, job_id: int, enable: bool,
 #                           ):
 #     # TODO: for remote batch update; resume's'Info 是多個 FollowResume
 #     pass
-
-
-@router.get("/{company_id}/jobs/brief")
-def get_brief_jobs(company_id: int, job_id: int = Query(None), size: int = Query(None),
-                   match_host=Depends(get_match_host),
-                   requests=Depends(get_service_requests),
-                   # cache=Depends(get_cache)
-                   ):
-    data, err = requests.get(
-        url=f"{match_host}/companies/{company_id}/jobs/brief",
-        params={
-            "job_id": int(job_id),
-            "size": int(size)
-        })
-    log.info(data)
-    if err:
-        raise ServerException(msg=err)
-
-    return res_success(data=data)
-
 
 
 
