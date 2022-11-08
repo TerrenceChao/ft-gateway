@@ -47,6 +47,12 @@ class TeacherProfile(BaseModel):
     avator: Optional[str] = None
     brief_intro: Optional[str] = None
     is_verified: bool
+    
+    
+# for response model
+class UpsertTeacherProfileResume(BaseModel):
+    profile: TeacherProfile = None
+    resume: Resume
 
 
 class Teacher(TeacherProfile):

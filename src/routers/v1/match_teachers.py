@@ -14,6 +14,7 @@ from ...exceptions.match_except import ClientException, \
 from ...db.nosql import match_teachers_schemas as schemas
 from ..req.authorization import AuthMatchRoute, token_required, verify_token_by_teacher_profile
 from ..res.response import res_success
+from ..res.match_res import response_vo
 from ...common.service_requests import get_service_requests
 from ...common.region_hosts import get_match_region_host
 import logging as log
@@ -38,7 +39,9 @@ def get_match_host(current_region: str = Header(...)):
 Returns:
     [Company]: [description]
 """
-@router.post("/", status_code=201)
+@router.post("/", 
+             response_model=response_vo("t_create_profile", schemas.TeacherProfile), 
+             status_code=201)
 def create_profile(profile: schemas.TeacherProfile,
                    match_host=Depends(get_match_host),
                    requests=Depends(get_service_requests),
@@ -54,7 +57,9 @@ def create_profile(profile: schemas.TeacherProfile,
 
 
 # TODO: 未來如果允許使用多個 resumes, 須考慮 idempotent
-@router.post("/{teacher_id}/resumes", status_code=201)
+@router.post("/{teacher_id}/resumes", 
+             response_model=response_vo("t_create_resume", schemas.UpsertTeacherProfileResume), 
+             status_code=201)
 def create_resume(
     teacher_id: int,
     profile: schemas.TeacherProfile = Body(None, embed=True),  # Nullable
@@ -96,7 +101,8 @@ def get_resume(teacher_id: int, resume_id: int,
 
 
 # TODO: 未來如果允許使用多個 resumes, 須考慮 idempotent
-@router.put("/{teacher_id}/resumes/{resume_id}")
+@router.put("/{teacher_id}/resumes/{resume_id}", 
+             response_model=response_vo("t_update_resume", schemas.UpsertTeacherProfileResume))
 def update_resume(
     teacher_id: int,
     resume_id: int,

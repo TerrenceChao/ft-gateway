@@ -55,6 +55,12 @@ class CompanyProfile(BaseModel):
         }
 
 
+# for response model
+class UpsertCompanyProfileJob(BaseModel):
+    profile: CompanyProfile = None
+    resume: Job
+
+
 class Company(CompanyProfile):
     jobs: Optional[List[Job]] = None
     follow_resumes: Optional[List[FollowResume]] = None

@@ -14,6 +14,7 @@ from ...exceptions.match_except import ClientException, \
 from ...db.nosql import match_companies_schemas as schemas
 from ..req.authorization import AuthMatchRoute, token_required, verify_token_by_company_profile
 from ..res.response import res_success
+from ..res.match_res import response_vo
 from ...common.service_requests import get_service_requests
 from ...common.region_hosts import get_match_region_host
 import logging as log
@@ -38,7 +39,9 @@ def get_match_host(current_region: str = Header(...)):
 Returns:
     [Company]: [description]
 """
-@router.post("/", status_code=201)
+@router.post("/",
+             response_model=response_vo("c_create_profile", schemas.CompanyProfile), 
+             status_code=201)
 def create_profile(profile: schemas.CompanyProfile,
                    match_host=Depends(get_match_host),
                    requests=Depends(get_service_requests),
@@ -54,7 +57,9 @@ def create_profile(profile: schemas.CompanyProfile,
 
 
 # TODO: 未來如果允許使用多個 jobs, 須考慮 idempotent
-@router.post("/{company_id}/jobs", status_code=201)
+@router.post("/{company_id}/jobs",
+             response_model=response_vo("c_create_job", schemas.UpsertCompanyProfileJob), 
+             status_code=201)
 def create_job(
     company_id: int,
     profile: schemas.CompanyProfile = Body(None, embed=True),  # Nullable
@@ -96,7 +101,8 @@ def get_job(company_id: int, job_id: int,
 
 
 # TODO: 未來如果允許使用多個 resumes, 須考慮 idempotent
-@router.put("/{company_id}/jobs/{job_id}")
+@router.put("/{company_id}/jobs/{job_id}",
+            response_model=response_vo("c_update_job", schemas.UpsertCompanyProfileJob))
 def update_job(
     company_id: int,
     job_id: int,
