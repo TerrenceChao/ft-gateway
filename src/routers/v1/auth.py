@@ -289,8 +289,11 @@ def login(
         raise ServerException(msg="set cache fail")
 
     # 驗證合法 >> 取得 match service 資料
+    paths = {"company":"companies", "teacher": "teachers"}
     role, role_id = auth_res["role"], auth_res["role_id"]
-    match_res, err = requests.get(f"{match_host}/{role}/{role_id}/matchdata")
+    role_path = paths[role]
+    size = body.prefetch or 3
+    match_res, err = requests.get(f"{match_host}/{role_path}/{role_id}/matchdata?size={size}")
 
     # gen jwt token
     token = gen_token(auth_res, ["region", "role_id", "role"])

@@ -30,12 +30,14 @@ class LoginVO(BaseModel):
     client_region: str = None, # this.header, auth-service.body
     email: EmailStr
     meta: str
+    prefetch: int = None
     pubkey: str = None
     class Config:
         schema_extra = {
             "example": {
                 "email": "user@example.com",
                 "meta": "{\"region\":\"jp\",\"role\":\"teacher\",\"pass\":\"secret\"}",
+                "prefetch": None,
                 "pubkey": "the-pubkey"
             }
         }
