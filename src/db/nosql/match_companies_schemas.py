@@ -58,7 +58,7 @@ class CompanyProfile(BaseModel):
 # for response model
 class UpsertCompanyProfileJob(BaseModel):
     profile: CompanyProfile = None
-    resume: Job
+    job: Job
 
 
 class Company(CompanyProfile):
