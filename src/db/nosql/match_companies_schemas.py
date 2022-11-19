@@ -41,7 +41,7 @@ class CompanyProfile(BaseModel):
     intro: str
     overview: Dict  # size, founded, revenue, ... etc (json)
     sections: List[Dict]  # who, what, where, ... etc (json array)
-    photos: Optional[Dict] = None
+    photos: Optional[List] = None
 
     def dynamo_serialize(self):
         return {
