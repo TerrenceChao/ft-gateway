@@ -15,8 +15,9 @@ from ...db.nosql import match_teachers_schemas as schemas
 from ..req.authorization import AuthMatchRoute, token_required, verify_token_by_teacher_profile
 from ..res.response import res_success
 from ..res.match_res import response_vo
-from ...common.service_requests import get_service_requests
+from ...common.service_requests import get_service_requests, ServiceRequests
 from ...common.region_hosts import get_match_region_host
+from ...services.match.teacher_service import TeacherService
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
@@ -33,6 +34,9 @@ router = APIRouter(
 
 def get_match_host(current_region: str = Header(...)):
     return get_match_region_host(region=current_region)
+
+
+_teacher_service = TeacherService(ServiceRequests())
 
 
 """[此 API 在一開始註冊時會用到]
@@ -56,6 +60,27 @@ def create_profile(profile: schemas.TeacherProfile,
     return res_success(data=data)
 
 
+@router.get("/{teacher_id}", response_model=response_vo("t_get_profile", schemas.SoftTeacherProfile))
+def get_profile(teacher_id: int, match_host=Depends(get_match_host)):
+    data, err = _teacher_service.get_profile(host=match_host, teacher_id=teacher_id)
+    if err:
+        raise ServerException(msg=err)
+
+    return res_success(data=data)
+
+
+@router.put("/{teacher_id}", response_model=response_vo("t_update_profile", schemas.SoftTeacherProfile))
+def update_profile(teacher_id: int, 
+                   profile: schemas.SoftTeacherProfile = Body(...),
+                   match_host=Depends(get_match_host),
+):
+    data, err = _teacher_service.update_profile(host=match_host, teacher_id=teacher_id, profile=profile)
+    if err:
+        raise ServerException(msg=err)
+
+    return res_success(data=data)
+
+
 # TODO: 未來如果允許使用多個 resumes, 須考慮 idempotent
 @router.post("/{teacher_id}/resumes", 
              response_model=response_vo("t_create_resume", schemas.UpsertTeacherProfileResume), 
@@ -72,7 +97,7 @@ def create_resume(
         url=f"{match_host}/teachers/{teacher_id}/resumes",
         json={
             "profile": None if profile == None else profile.dict(),
-            "resume": resume.dict()
+            "resume": resume.dict(),
         })
     if err:
         raise ServerException(msg=err)
@@ -127,8 +152,8 @@ def get_resume(teacher_id: int, resume_id: int,
 def update_resume(
     teacher_id: int,
     resume_id: int,
-    profile: schemas.TeacherProfile = Body(None, embed=True),  # Nullable
-    resume: schemas.Resume = Body(None, embed=True),  # Nullable
+    profile: schemas.SoftTeacherProfile = Body(None, embed=True),  # Nullable
+    resume: schemas.SoftResume = Body(None, embed=True),  # Nullable
     match_host=Depends(get_match_host),
     requests=Depends(get_service_requests),
     # cache=Depends(get_cache)
@@ -139,8 +164,8 @@ def update_resume(
     data, err = requests.put(
         url=f"{match_host}/teachers/{teacher_id}/resumes/{resume_id}",
         json={
-            "profile": profile.dict(),
-            "resume": resume.dict()
+            "profile": None if profile == None else profile.dict(),
+            "resume": resume.dict(),
         })
     if err:
         raise ServerException(msg=err)
@@ -164,6 +189,15 @@ def enable_resume(teacher_id: int, resume_id: int, enable: bool,
                   ):
     data, err = requests.put(
         url=f"{match_host}/teachers/{teacher_id}/resumes/{resume_id}/enable/{enable}")
+    if err:
+        raise ServerException(msg=err)
+
+    return res_success(data=data)
+
+
+@router.delete("/{teacher_id}/resumes/{resume_id}")
+def delete_resume(teacher_id: int, resume_id: int, match_host=Depends(get_match_host)):
+    data, err = _teacher_service.delete_resume(host=match_host, teacher_id=teacher_id, resume_id=resume_id)
     if err:
         raise ServerException(msg=err)
 

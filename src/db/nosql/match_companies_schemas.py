@@ -34,6 +34,17 @@ class Job(BaseModel):
     enable: bool = True
 
 
+class SoftJob(BaseModel):
+    jid: Optional[int] = None
+    cid: int
+    title: Optional[str]
+    region: Optional[str]
+    salary: Optional[str]
+    job_desc: Optional[Dict]
+    others: Optional[Dict] = None  # extra data, photos
+    enable: Optional[bool] = True
+
+
 class CompanyProfile(BaseModel):
     cid: int
     name: str
@@ -41,24 +52,23 @@ class CompanyProfile(BaseModel):
     intro: str
     overview: Dict  # size, founded, revenue, ... etc (json)
     sections: List[Dict]  # who, what, where, ... etc (json array)
-    photos: Optional[List] = None
+    photos: Optional[List[Dict]] = None
 
-    def dynamo_serialize(self):
-        return {
-            "cid": {"N": str(self.cid)},
-            "name": {"S": str(self.name)},
-            "logo": {"S": str(self.logo)},
-            "intro": {"S": str(self.intro)},
-            "overview": {"S": json.dumps(self.overview)},
-            "sections": {"S": json.dumps(self.sections)},
-            "photos": {"S": json.dumps(self.photos)}
-        }
+
+class SoftCompanyProfile(BaseModel):
+    cid: int
+    name: Optional[str]
+    logo: Optional[str] = None
+    intro: Optional[str]
+    overview: Optional[Dict]  # size, founded, revenue, ... etc (json)
+    sections: Optional[List[Dict]]  # who, what, where, ... etc (json array)
+    photos: Optional[List[Dict]] = None
 
 
 # for response model
 class UpsertCompanyProfileJob(BaseModel):
-    profile: CompanyProfile = None
-    job: Job
+    profile: SoftCompanyProfile = None
+    job: SoftJob
 
 
 class Company(CompanyProfile):

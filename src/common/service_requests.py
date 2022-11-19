@@ -97,7 +97,29 @@ class ServiceRequests:
             log.error(f"put request error, url:{url}, req:{json}, headers:{headers}, resp:{response}, err:{err}")
             
         return result, err
-    
+
+
+    def delete(self, url: str, headers: Dict = None):
+        err: str = None
+        result = None
+        response = None
+        try:
+            response = requests.delete(url, headers=headers)
+            result = response.json()
+            log.info(f"url:{url}, resp-data:{result}")
+            if self.__err(result):
+                return None, self.__err_resp(result)
+            
+            log.info(result)
+            result = result["data"]
+            
+        except Exception as e:
+            err = e.__str__()
+            log.error(f"delete request error, url:{url}, params:{params}, headers:{headers}, resp:{response}, err:{err}")
+            
+        return result, err
+
+
     def __err(self, resp_json):
         return not "code" in resp_json or resp_json["code"] != SUCCESS_CODE
     

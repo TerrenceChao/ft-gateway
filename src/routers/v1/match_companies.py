@@ -15,8 +15,9 @@ from ...db.nosql import match_companies_schemas as schemas
 from ..req.authorization import AuthMatchRoute, token_required, verify_token_by_company_profile
 from ..res.response import res_success
 from ..res.match_res import response_vo
-from ...common.service_requests import get_service_requests
+from ...common.service_requests import get_service_requests, ServiceRequests
 from ...common.region_hosts import get_match_region_host
+from ...services.match.company_service import CompanyService
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
@@ -33,6 +34,9 @@ router = APIRouter(
 
 def get_match_host(current_region: str = Header(...)):
     return get_match_region_host(region=current_region)
+
+
+_company_service = CompanyService(ServiceRequests())
 
 
 """[此 API 在一開始註冊時會用到]
@@ -56,6 +60,27 @@ def create_profile(profile: schemas.CompanyProfile,
     return res_success(data=data)
 
 
+@router.get("/{company_id}", response_model=response_vo("c_get_profile", schemas.CompanyProfile))
+def get_profile(company_id: int, match_host=Depends(get_match_host)):
+    data, err = _company_service.get_profile(host=match_host, company_id=company_id)
+    if err:
+        raise ServerException(msg=err)
+
+    return res_success(data=data)
+
+
+@router.put("/{company_id}", response_model=response_vo("c_update_profile", schemas.CompanyProfile))
+def update_profile(company_id: int,
+                   profile: schemas.SoftCompanyProfile = Body(...),
+                   match_host=Depends(get_match_host),
+):
+    data, err = _company_service.update_profile(host=match_host, company_id=company_id, profile=profile)
+    if err:
+        raise ServerException(msg=err)
+
+    return res_success(data=data)
+
+
 # TODO: 未來如果允許使用多個 jobs, 須考慮 idempotent
 @router.post("/{company_id}/jobs",
              response_model=response_vo("c_create_job", schemas.UpsertCompanyProfileJob), 
@@ -72,7 +97,7 @@ def create_job(
         url=f"{match_host}/companies/{company_id}/jobs",
         json={
             "profile": None if profile == None else profile.dict(),
-            "job": job.dict()
+            "job": job.dict(),
         })
     if err:
         raise ServerException(msg=err)
@@ -127,8 +152,8 @@ def get_job(company_id: int, job_id: int,
 def update_job(
     company_id: int,
     job_id: int,
-    profile: schemas.CompanyProfile = Body(None, embed=True),  # Nullable
-    job: schemas.Job = Body(None, embed=True),  # Nullable,
+    profile: schemas.SoftCompanyProfile = Body(None, embed=True),  # Nullable
+    job: schemas.SoftJob = Body(None, embed=True),  # Nullable,
     match_host=Depends(get_match_host),
     requests=Depends(get_service_requests),
     # cache=Depends(get_cache)
@@ -139,8 +164,8 @@ def update_job(
     data, err = requests.put(
         url=f"{match_host}/companies/{company_id}/jobs/{job_id}",
         json={
-            "profile": profile.dict(),
-            "job": job.dict()
+            "profile": None if profile == None else profile.dict(),
+            "job": job.dict(),
         })
     if err:
         raise ServerException(msg=err)
@@ -164,6 +189,15 @@ def enable_job(company_id: int, job_id: int, enable: bool,
                ):
     data, err = requests.put(
         url=f"{match_host}/companies/{company_id}/jobs/{job_id}/enable/{enable}")
+    if err:
+        raise ServerException(msg=err)
+
+    return res_success(data=data)
+
+
+@router.delete("/{company_id}/jobs/{job_id}")
+def delete_job(company_id: int, job_id: int, match_host=Depends(get_match_host)):
+    data, err = _company_service.delete_job(host=match_host, company_id=company_id, job_id=job_id)
     if err:
         raise ServerException(msg=err)
 

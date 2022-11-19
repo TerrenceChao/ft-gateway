@@ -1,6 +1,6 @@
 import json
 from typing import Dict, List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 
 class ContactJob(BaseModel):
@@ -40,19 +40,36 @@ class Resume(BaseModel):
     sections: Optional[List[ResumeSection]] = None
 
 
+class SoftResume(BaseModel):
+    rid: Optional[int] = None
+    tid: int
+    intro: Optional[str] = None
+    enable: Optional[bool]
+    sections: Optional[List[ResumeSection]] = None
+
+
 class TeacherProfile(BaseModel):
     tid: int
     fullname: str
-    email: str
+    email: EmailStr
     avator: Optional[str] = None
     brief_intro: Optional[str] = None
     is_verified: bool
-    
-    
+
+
+class SoftTeacherProfile(BaseModel):
+    tid: int
+    fullname: Optional[str]
+    email: Optional[EmailStr]
+    avator: Optional[str] = None
+    brief_intro: Optional[str] = None
+    is_verified: Optional[bool]
+
+
 # for response model
 class UpsertTeacherProfileResume(BaseModel):
-    profile: TeacherProfile = None
-    resume: Resume
+    profile: SoftTeacherProfile = None
+    resume: SoftResume
 
 
 class Teacher(TeacherProfile):
