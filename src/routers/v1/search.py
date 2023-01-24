@@ -1,59 +1,37 @@
-import os
-import time
-import json
-import requests
 from typing import List, Dict, Any
 from unicodedata import name
 from fastapi import APIRouter, \
     Request, Depends, \
-    Cookie, Header, Path, Query, Body, Form, \
-    File, UploadFile, status, \
+    Header, Path, Query, Body, Form, \
     HTTPException
 from ...db.nosql import match_companies_schemas as schemas
 from ..res.response import res_success, res_err
-from ...common.cache import get_cache
 from ...common.service_requests import get_service_requests
+from ...common.region_hosts import get_search_region_host
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
 
+def get_search_host(region: str = Header(...)):
+    return get_search_region_host(region=region)
 
-region_search_hosts = {
-    # "default": os.getenv("REGION_HOST_SEARCH", "http://localhost:8083/match/api/v1/search"),
-    "jp": os.getenv("JP_REGION_HOST_SEARCH", "http://localhost:8083/match/api/v1/search"),
-    "ge": os.getenv("GE_REGION_HOST_SEARCH", "http://localhost:8083/match/api/v1/search"),
-    "us": os.getenv("US_REGION_HOST_SEARCH", "http://localhost:8083/match/api/v1/search"),
-}
 
 
 router = APIRouter(
     prefix="/search",
     tags=["Search Jobs & Resumes"],
-    # dependencies=[Depends(get_token_header)],
     responses={404: {"description": "Not found"}},
 )
 
 
 @router.get("/resumes")
-def get_resumes(rid: int,
-                limit: int,
+def get_resumes(limit: int,
                 orderby: str,
                 q: Any = Query(None),
-                current_region: str = Header(...),
+                search_host=Depends(get_search_host),
                 requests=Depends(get_service_requests),
 ):
-    current_region = current_region.lower()
-    match_host = region_search_hosts[current_region]
-    data, err = requests.get(
-        url=f"{match_host}/resumes",
-        params={
-            "rid": rid,
-            "limit": limit,
-            "orderby": orderby,
-            "q": q,
-        }
-    )
-    
+    data, err = requests.get(f"{search_host}/resumes")
     if err:
         return res_err(msg=err)
     
@@ -62,32 +40,24 @@ def get_resumes(rid: int,
 
 @router.get("/resumes/{rid}")
 def get_resume_by_id(rid: int,
-                     current_region: str = Header(...),
-                     requests=Depends(get_service_requests),
+                    search_host=Depends(get_search_host),
+                    requests=Depends(get_service_requests),
 ):
-    return "todo feature"
+    data, err = requests.get(f"{search_host}/resumes/{rid}")
+    if err:
+        return res_err(msg=err)
+    
+    return res_success(data=data)
 
 
 @router.get("/jobs")
-def get_jobs(jid: int,
-             limit: int,
-             orderby: str,
-             q: str = Query(None),
-             current_region: str = Header(...),
-             requests=Depends(get_service_requests),
+def get_jobs(limit: int,
+            orderby: str,
+            q: Any = Query(None),
+            search_host=Depends(get_search_host),
+            requests=Depends(get_service_requests),
 ):
-    current_region = current_region.lower()
-    match_host = region_search_hosts[current_region]
-    data, err = requests.get(
-        url=f"{match_host}/jobs",
-        params={
-            "jid": jid,
-            "limit": limit,
-            "orderby": orderby,
-            "q": q,
-        }
-    )
-    
+    data, err = requests.get(f"{search_host}/jobs")
     if err:
         return res_err(msg=err)
     
@@ -96,7 +66,11 @@ def get_jobs(jid: int,
 
 @router.get("/jobs/{jid}")
 def get_job_by_id(jid: int,
-                  current_region: str = Header(...),
-                  requests=Depends(get_service_requests),
+                search_host=Depends(get_search_host),
+                requests=Depends(get_service_requests),
 ):
-    return "todo feature"
+    data, err = requests.get(f"{search_host}/jobs/{jid}")
+    if err:
+        return res_err(msg=err)
+    
+    return res_success(data=data)

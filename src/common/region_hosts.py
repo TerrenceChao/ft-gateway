@@ -21,6 +21,13 @@ match_region_hosts = {
     "us": os.getenv("US_REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/match-nosql"),
 }
 
+search_region_hosts = {
+    # "default": os.getenv("REGION_HOST_SEARCH", "http://localhost:8083/match/api/v1/search"),
+    "jp": os.getenv("JP_REGION_HOST_SEARCH", "http://localhost:8083/match/api/v1/search"),
+    "ge": os.getenv("GE_REGION_HOST_SEARCH", "http://localhost:8083/match/api/v1/search"),
+    "us": os.getenv("US_REGION_HOST_SEARCH", "http://localhost:8083/match/api/v1/search"),
+}
+
 
 class RegionException(HTTPException):
     def __init__(self, region: str):
@@ -44,4 +51,11 @@ def get_match_region_host(region: str):
         log.error(e.__str__())
         raise RegionException(region=region)
 
+def get_search_region_host(region: str):
+    try:
+        region = region.lower()
+        return search_region_hosts[region]
+    except Exception as e:
+        log.error(e.__str__())
+        raise RegionException(region=region)
 
