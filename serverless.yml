@@ -75,6 +75,8 @@ functions:
         - "!.serverless/**"
         - "!.venv/**"
         - "!node_modules/**"
+        - "!integration/**"
+        - "!test/**"
         - "!__pycache__/**"
         - "!**/__pycache__/**"
 
