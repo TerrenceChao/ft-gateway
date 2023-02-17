@@ -29,15 +29,14 @@ STAGE = os.environ.get('STAGE')
 root_path = '/' if not STAGE else f'/{STAGE}'
 app = FastAPI(title="ForeignTeacher: Gateway", root_path=root_path)
 
-if STAGE == "dev":
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=False,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-        
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class BusinessEception(Exception):
@@ -61,7 +60,7 @@ async def region_exception_handler(request: Request, exc: RegionException):
         status_code=exc.status_code,
         content=res_err(msg=exc.msg)
     )
-    
+
 
 auth_except.include_app(app)
 match_except.include_app(app)
