@@ -217,10 +217,11 @@ def delete_job(company_id: int, job_id: int, match_host=Depends(get_match_host))
 
 
 
-def resume_request_body(register_region: str = Header(None), current_region: str = Header(...), resume: Dict = Body(...), jobInfo: Dict = Body(...)):
+def resume_request_body(register_region: str = Header(None), current_region: str = Header(...), will: bool = Body(...), resume: Dict = Body(...), jobInfo: Dict = Body(...)):
     return {
         "register_region": register_region,
         "current_region": current_region,
+        "will": will,
         "resume": resume,
         "jobInfo": jobInfo
     }
@@ -236,12 +237,13 @@ def apply_resume(company_id: int, job_id: int, resume_id: int, body=Depends(resu
     contact_resume, err = requests.put(
         url=f"{match_host}/companies/{company_id}/jobs/{job_id}/resumes/{resume_id}/apply",
         json={
+            "will": body["will"],
             "resume": body["resume"],
-            "jobInfo": body["jobInfo"]
+            "jobInfo": body["jobInfo"],
         },
         headers={
             "register_region": body["register_region"],
-            "current_region": body["current_region"]
+            "current_region": body["current_region"],
         })
     if err:
         raise ServerException(msg=err)
@@ -259,12 +261,13 @@ def reply_resume(company_id: int, job_id: int, resume_id: int, body=Depends(resu
     contact_resume, err = requests.put(
         url=f"{match_host}/companies/{company_id}/jobs/{job_id}/resumes/{resume_id}/reply",
         json={
+            "will": body["will"],
             "resume": body["resume"],
-            "jobInfo": body["jobInfo"]
+            "jobInfo": body["jobInfo"],
         },
         headers={
             "register_region": body["register_region"],
-            "current_region": body["current_region"]
+            "current_region": body["current_region"],
         })
     if err:
         raise ServerException(msg=err)
