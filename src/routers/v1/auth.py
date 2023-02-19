@@ -17,7 +17,7 @@ from ...db.nosql import auth_schemas
 from ..req.auth_req import SignupVO, SignupConfirmVO, LoginVO 
 from ..res.response import res_success
 from ..req.authorization import gen_token
-from ...common.cache import get_cache
+from ...common.cache.dynamodb_cache import get_cache
 from ...common.service_requests import get_service_requests
 from ...common.region_hosts import get_auth_region_host, get_match_region_host
 import logging as log

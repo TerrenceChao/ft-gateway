@@ -4,6 +4,7 @@ import json
 import re
 from typing import Any
 from redis import Redis
+from .cache import Cache
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
@@ -28,7 +29,7 @@ if redis.ping():
     log.info("Connected to Redis")
 
 
-class Cache:
+class RedisCache(Cache):
     def __init__(self, redis: Redis):
         self.redis = redis
         
@@ -76,7 +77,7 @@ class Cache:
 
 def get_cache():
     try:
-        cache = Cache(redis)
+        cache = RedisCache(redis)
         yield cache
     except Exception as e:
         log.error(e.__str__())
