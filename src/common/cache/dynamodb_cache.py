@@ -32,8 +32,6 @@ class DynamoDbCache(Cache):
             if "Item" in res:
                 val = res["Item"]["value"]
                 result = json.loads(val) if val[0] == "{" and val[-1] =="}" else val
-            else:
-                err_msg = "value not found"
 
         except Exception as e:
             err_msg = e.__str__()
