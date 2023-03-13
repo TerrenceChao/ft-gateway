@@ -11,6 +11,7 @@ from fastapi import APIRouter, \
 from ...exceptions.match_except import ClientException, \
     NotFoundException, \
     ServerException
+from ...common.enums.apply import Apply
 from ...db.nosql import match_teachers_schemas as schemas
 from ..req.authorization import AuthMatchRoute, token_required, verify_token_by_teacher_profile
 from ..res.response import res_success
@@ -217,11 +218,12 @@ def delete_resume(teacher_id: int, resume_id: int, match_host=Depends(get_match_
 
 
 
-def job_request_body(register_region: str = Header(None), current_region: str = Header(...), will: bool = Body(...), job: Dict = Body(...), resumeInfo: Dict = Body(...)):
+def job_request_body(register_region: str = Header(None), current_region: str = Header(...), my_status: Apply = Body(None), status: Apply = Body(None), job: Dict = Body(...), resumeInfo: Dict = Body(...)):
     return {
         "register_region": register_region,
         "current_region": current_region,
-        "will": will,
+        "my_status": my_status,
+        "status": status,
         "job": job,
         "resumeInfo": resumeInfo
     }
@@ -237,7 +239,8 @@ def apply_job(teacher_id: int, resume_id: int, job_id: int, body=Depends(job_req
     contact_job, err = requests.put(
         url=f"{match_host}/teachers/{teacher_id}/resumes/{resume_id}/jobs/{job_id}/apply",
         json={
-            "will": body["will"],
+            "my_status": body["my_status"],
+            "status": body["status"],
             "job": body["job"],
             "resumeInfo": body["resumeInfo"],
         },
@@ -261,7 +264,8 @@ def reply_job(teacher_id: int, resume_id: int, job_id: int, body=Depends(job_req
     contact_job, err = requests.put(
         url=f"{match_host}/teachers/{teacher_id}/resumes/{resume_id}/jobs/{job_id}/reply",
         json={
-            "will": body["will"],
+            "my_status": body["my_status"],
+            "status": body["status"],
             "job": body["job"],
             "resumeInfo": body["resumeInfo"],
         },

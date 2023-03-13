@@ -11,6 +11,7 @@ from fastapi import APIRouter, \
 from ...exceptions.match_except import ClientException, \
     NotFoundException, \
     ServerException
+from ...common.enums.apply import Apply
 from ...db.nosql import match_companies_schemas as schemas
 from ..req.authorization import AuthMatchRoute, token_required, verify_token_by_company_profile
 from ..res.response import res_success
@@ -217,11 +218,12 @@ def delete_job(company_id: int, job_id: int, match_host=Depends(get_match_host))
 
 
 
-def resume_request_body(register_region: str = Header(None), current_region: str = Header(...), will: bool = Body(...), resume: Dict = Body(...), jobInfo: Dict = Body(...)):
+def resume_request_body(register_region: str = Header(None), current_region: str = Header(...), my_status: Apply = Body(None), status: Apply = Body(None), resume: Dict = Body(...), jobInfo: Dict = Body(...)):
     return {
         "register_region": register_region,
         "current_region": current_region,
-        "will": will,
+        "my_status": my_status,
+        "status": status,
         "resume": resume,
         "jobInfo": jobInfo
     }
@@ -237,7 +239,8 @@ def apply_resume(company_id: int, job_id: int, resume_id: int, body=Depends(resu
     contact_resume, err = requests.put(
         url=f"{match_host}/companies/{company_id}/jobs/{job_id}/resumes/{resume_id}/apply",
         json={
-            "will": body["will"],
+            "my_status": body["my_status"],
+            "status": body["status"],
             "resume": body["resume"],
             "jobInfo": body["jobInfo"],
         },
@@ -261,7 +264,8 @@ def reply_resume(company_id: int, job_id: int, resume_id: int, body=Depends(resu
     contact_resume, err = requests.put(
         url=f"{match_host}/companies/{company_id}/jobs/{job_id}/resumes/{resume_id}/reply",
         json={
-            "will": body["will"],
+            "my_status": body["my_status"],
+            "status": body["status"],
             "resume": body["resume"],
             "jobInfo": body["jobInfo"],
         },

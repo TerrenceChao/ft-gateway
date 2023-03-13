@@ -1,6 +1,7 @@
 import json
 from typing import Dict, List, Optional
 from pydantic import BaseModel
+from ...common.enums.apply import Apply
 
 
 class ContactResume(BaseModel):
@@ -9,6 +10,8 @@ class ContactResume(BaseModel):
     jid: int  # NOT ForeignKey
     enable: bool
     read: bool
+    status: Optional[Apply] = Apply.PENDING
+    my_status: Optional[Apply] = Apply.PENDING
     resume_info: Dict
 
 
