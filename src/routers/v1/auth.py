@@ -95,13 +95,13 @@ def signup(region: str = Header(...), body: SignupVO = Body(...),
         raise DuplicateUserException(msg="registered or registering")
 
     confirm_code = gen_confirm_code()
-    res, msg, err = requests.post2(f"{auth_host}/sendcode/email", json={
+    auth_res, msg, err = requests.post2(f"{auth_host}/sendcode/email", json={
         "email": email,
         "confirm_code": confirm_code,
         "sendby": "no_exist",  # email 不存在時寄送
     })
     
-    if msg == "email_sent":
+    if auth_res == "email_sent" and msg == "ok":
         email_playload = {
             "email": email,
             "confirm_code": confirm_code,
@@ -135,7 +135,7 @@ def confirm_signup(body: SignupConfirmVO = Body(...),
     user, cache_err = cache.get(email)
     log.info("type:%s, user:%s" % (type(user), user))
 
-    if not user or cache_err:
+    if not user or not "confirm_code" in user or cache_err:
         raise NotFoundException(msg="no signup data")
 
     if user == {}:
