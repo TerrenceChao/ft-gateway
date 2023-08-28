@@ -246,7 +246,7 @@ def login(
     requests=Depends(get_service_requests),
     cache=Depends(get_cache)
 ):
-    body.client_region = current_region
+    body.current_region = current_region
     auth_res, msg, err = requests.post2(f"{auth_host}/login", json=body.dict())
 
     email = body.email

@@ -27,7 +27,7 @@ class SignupConfirmVO(BaseModel):
         }
         
 class LoginVO(BaseModel):
-    client_region: str = None, # this.header, auth-service.body
+    current_region: str = None, # this.header, auth-service.body
     email: EmailStr
     meta: str
     prefetch: int = None
