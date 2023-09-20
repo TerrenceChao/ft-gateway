@@ -1,5 +1,5 @@
 from typing import Any, Dict, Union
-from ...common.service_requests import ServiceRequests
+from ...services.service_requests import ServiceRequests
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)

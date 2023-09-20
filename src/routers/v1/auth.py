@@ -19,19 +19,13 @@ from ..res.response import res_success
 from ..req.authorization import gen_token
 from ...configs.constants import PATHS, PREFETCH
 from ...common.cache.dynamodb_cache import get_cache
-from ...common.service_requests import get_service_requests
+from ...services.service_requests import get_service_requests
 from ...configs.region_hosts import get_auth_region_host, get_match_region_host
 from ...configs.conf import SHORT_TERM_TTL, LONG_TERM_TTL
+from ...utils.util import gen_confirm_code
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
-
-
-def gen_confirm_code():
-    code = int(time.time() ** 6 % 1000000)
-    code = code if (code > 100000) else code + 100000
-    log.info(f"confirm_code: {code}")
-    return code
 
 
 """

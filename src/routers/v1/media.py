@@ -14,7 +14,7 @@ from ..res.response import res_success
 from ...configs.constants import SERIAL_KEY
 from ...common.cache.cache import Cache
 from ...common.cache.dynamodb_cache import get_cache
-from ...common.service_requests import ServiceRequests
+from ...services.service_requests import ServiceRequests
 from ...configs.region_hosts import get_media_region_host
 from ...services.media.media_service import MediaService
 from ...exceptions.auth_except import ServerException, ClientException, ForbiddenException

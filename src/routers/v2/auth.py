@@ -15,7 +15,7 @@ from ...exceptions.auth_except import ClientException, \
     ServerException
 from ...db.nosql import auth_schemas
 from ..res.response import res_success
-from ...common.service_requests import get_service_requests
+from ...services.service_requests import get_service_requests
 from ...configs.region_hosts import get_auth_region_host, get_match_region_host
 from ...configs.conf import SHORT_TERM_TTL, LONG_TERM_TTL
 import logging as log

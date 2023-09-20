@@ -3,11 +3,11 @@ from functools import lru_cache
 from pydantic import BaseSettings
 
 # cache
-## dynamodb
+# dynamodb
 LOCAL_DB = "http://localhost:8000"
 DYNAMODB_URL = os.getenv("DYNAMODB_URL", LOCAL_DB)
 TABLE_CACHE = os.getenv("TABLE_CACHE", "cache")
-## redis
+# redis
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
 REDIS_USER = os.getenv("REDIS_USERNAME", None)
@@ -32,6 +32,7 @@ AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY", None)
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", None)
 
 
+# check README.md for more details
 class Settings(BaseSettings):
     class Config:
         env_file = ".env"
@@ -41,4 +42,3 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings():
     return Settings()
-

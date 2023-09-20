@@ -6,7 +6,7 @@ from fastapi import APIRouter, \
     HTTPException
 from ...db.nosql import match_companies_schemas as schemas
 from ..res.response import res_success, res_err
-from ...common.service_requests import get_service_requests
+from ...services.service_requests import get_service_requests
 from ...configs.region_hosts import get_search_region_host
 import logging as log
 
