@@ -1,14 +1,9 @@
-import io
-import os
-import boto3
-from boto3.s3.transfer import TransferConfig
 from fastapi import APIRouter, \
     Depends, \
     Cookie, Header, Path, Query, Body, Form, \
     File, UploadFile, status
 from starlette.requests import Request
 from starlette.responses import Response, StreamingResponse
-from pydantic import EmailStr
 from ..req.authorization import AuthMatchRoute, token_required
 from ..res.response import res_success
 from ...repositories.cache import Cache
@@ -18,26 +13,10 @@ from ...services.service_requests import ServiceRequests
 from ...configs.constants import PATHS
 from ...configs.region_hosts import get_media_region_host
 from ...configs.exceptions import ServerException, ClientException, ForbiddenException
-from ...configs.conf import FT_BUCKET, MULTIPART_THRESHOLD, MAX_CONCURRENCY, MULTIPART_CHUNKSIZE, \
-    AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY
 from ...utils.util import get_serial_num
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
-
-
-mediaConfig = TransferConfig(multipart_threshold=MULTIPART_THRESHOLD,
-                             max_concurrency=MAX_CONCURRENCY,
-                             multipart_chunksize=MULTIPART_CHUNKSIZE,
-                             use_threads=True)
-session = boto3.Session(
-    aws_access_key_id=AWS_ACCESS_KEY,
-    aws_secret_access_key=AWS_SECRET_ACCESS_KEY
-)
-s3 = session.resource("s3")
-log.info(s3)
-s3client = session.client("s3")
-log.info(s3client)
 
 
 router = APIRouter(
@@ -65,10 +44,11 @@ def upload_params(role: str,
                   cache: Cache = Depends(get_cache),
                   ):
     if not role in PATHS.keys():
-        raise ClientException(msg="The 'role' should be 'teacher' or 'company'")
+        raise ClientException(
+            msg="The 'role' should be 'teacher' or 'company'")
 
     serial_num = get_serial_num(cache=cache, role_id=role_id)
-    result, err = _media_service.get_upload_params(
+    result = _media_service.get_upload_params(
         host=media_host,
         params={
             "serial_num": serial_num,
@@ -77,8 +57,6 @@ def upload_params(role: str,
             "filename": filename,
             "mime_type": mime_type,
         })
-    if err:
-        raise ServerException(msg="get upload params error")
 
     return res_success(data=result)
 
@@ -91,21 +69,16 @@ def remove(role: str,
            cache: Cache = Depends(get_cache),
            ):
     if not role in PATHS.keys():
-        raise ClientException(msg="The 'role' should be 'teacher' or 'company'")
+        raise ClientException(
+            msg="The 'role' should be 'teacher' or 'company'")
 
     serial_num = get_serial_num(cache=cache, role_id=role_id)
-    result, msg, err, status_code = _media_service.delete_file(
+    result = _media_service.delete_file(
         host=media_host,
         params={
             "serial_num": serial_num,
             "object_key": object_key,
         })
-
-    if err:
-        raise ServerException(msg="delete file error")
-
-    if status_code == status.HTTP_403_FORBIDDEN:
-        raise ForbiddenException(msg=msg)
 
     return res_success(data=result)
 
@@ -177,43 +150,6 @@ def remove(role: str,
 """
 
 
-@router.post("/teachers/{teacher_id}/resumes/{resume_id}/sections/{section_id}/files", status_code=201)
-async def upload_files_by_teacher(
-    teacher_id: int,
-    resume_id: int,
-    section_id: int,
-    # files: List[UploadFile],
-    file: UploadFile,
-    email: EmailStr = Body(...),
-):
-
-    # TODO: call "match_service" first, check storage usage (storage space)
-
-    # form = await request.form()
-    # filename = form["file"].filename
-    # contents = await form["file"].read()
-    # log.info(contents)
-    # s3client.upload_fileobj(io.BytesIO(b'abcdefg'), 'foreign-teacher', 'upload_files')
-    # response = StreamingResponse(buff, media_type='text/plain')
-    # log.info(type(request.stream()))
-    log.info(email)
-
-    buff = await file.read()
-    s3client.upload_fileobj(
-        Fileobj=io.BytesIO(buff),
-        Bucket=FT_BUCKET,
-        Key=f'{email}/{teacher_id}/{resume_id}/{section_id}/{file.filename}',
-        Config=mediaConfig
-    )
-
-    log.info(len(buff))
-
-    return {
-        "name": file.filename,
-        "content_type": file.content_type,
-    }
-
-
 """company's media schema
 
     data = {
@@ -279,30 +215,3 @@ async def upload_files_by_teacher(
     }
     
 """
-
-
-@router.post("/companies/{company_id}/files", status_code=201)
-async def upload_files_by_company(
-    company_id: int,
-    # files: List[UploadFile],
-    file: UploadFile,
-    email: EmailStr = Body(...),
-):
-    # TODO: call "match_service" first, check storage usage (storage space)
-
-    log.info(email)
-
-    buff = await file.read()
-    s3client.upload_fileobj(
-        Fileobj=io.BytesIO(buff),
-        Bucket=FT_BUCKET,
-        Key=f'{email}/{company_id}/{file.filename}',
-        Config=mediaConfig
-    )
-
-    log.info(len(buff))
-
-    return {
-        "name": file.filename,
-        "content_type": file.content_type,
-    }
