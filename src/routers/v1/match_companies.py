@@ -11,7 +11,7 @@ from fastapi import APIRouter, \
 from ...exceptions.match_except import ClientException, \
     NotFoundException, \
     ServerException
-from ...common.enums.apply import Apply
+from ...configs.constants import Apply
 from ...db.nosql import match_companies_schemas as schemas
 from ..req.authorization import AuthMatchRoute, token_required, verify_token_by_company_profile
 from ..res.response import res_success

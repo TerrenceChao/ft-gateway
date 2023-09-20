@@ -5,6 +5,8 @@ create venv
 `python3 -m venv venv`
 launch venv
 `source ./venv/bin/activate`
+lauch app
+`python3.8 -m uvicorn main:app --reload --port 8001`
 
 ### BaseSettings
 **BaseSettings** is a foundational class for configuring settings provided by pydantic. It offers elegant configuration validation and default value setting capabilities. Here are some scenarios based on large-scale projects where **BaseSettings** is particularly useful:

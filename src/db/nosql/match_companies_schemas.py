@@ -1,7 +1,7 @@
 import json
 from typing import Dict, List, Optional
 from pydantic import BaseModel
-from ...common.enums.apply import Apply
+from ...configs.constants import Apply
 
 
 class ContactResume(BaseModel):

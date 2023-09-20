@@ -11,7 +11,7 @@ from starlette.responses import Response, StreamingResponse
 from pydantic import EmailStr
 from ..req.authorization import AuthMatchRoute, token_required
 from ..res.response import res_success
-from ...common.constants import SERIAL_KEY
+from ...configs.constants import SERIAL_KEY
 from ...common.cache.cache import Cache
 from ...common.cache.dynamodb_cache import get_cache
 from ...common.service_requests import ServiceRequests
