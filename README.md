@@ -54,3 +54,48 @@ If your application has only a few simple configuration variables and doesn't re
 No Need for Configuration Files: If you prefer not to maintain additional configuration files or if your application's configuration can be entirely set via environment variables, os.getenv may be sufficient.
 
 In summary, both configuration files and using os.getenv have their purposes. For complex configuration needs and projects that require more structure and validation, it's advisable to use configuration files. For simpler scenarios, using os.getenv may be more lightweight. You can choose the appropriate approach based on your project's requirements.
+
+### Domain Driven Design (DDD)
+it's a project structure sample based on DDD
+```
+project/
+|-- src/
+|   |-- application/
+|   |   |-- services/
+|   |   |   |-- teacher_service.py
+|   |   |   |-- school_service.py
+|   |   |-- use_cases/
+|   |   |   |-- apply_for_job.py
+|   |   |   |-- save_teacher_profile.py
+|   |   |   |-- save_school_job.py
+|   |-- domain/
+|   |   |-- teacher/
+|   |   |   |-- entities/
+|   |   |   |   |-- teacher.py
+|   |   |   |-- value_objects/
+|   |   |   |   |-- resume.py
+|   |   |   |   |-- favorite_job.py
+|   |   |   |   |-- sent_mail.py
+|   |   |   |-- repositories/
+|   |   |   |   |-- teacher_repository.py
+|   |   |   |-- services/
+|   |   |   |   |-- teacher_profile_service.py
+|   |   |-- school/
+|   |   |   |-- entities/
+|   |   |   |   |-- school.py
+|   |   |   |-- value_objects/
+|   |   |   |   |-- job_listing.py
+|   |   |   |   |-- favorite_teacher.py
+|   |   |   |   |-- sent_mail.py
+|   |   |   |-- repositories/
+|   |   |   |   |-- school_repository.py
+|   |   |   |-- services/
+|   |   |   |   |-- job_listing_service.py
+|   |-- infrastructure/
+|   |   |-- persistence/
+|   |   |   |-- teacher_repository_impl.py
+|   |   |   |-- school_repository_impl.py
+|-- main.py
+|-- config.py
+|-- requirements.txt
+```
