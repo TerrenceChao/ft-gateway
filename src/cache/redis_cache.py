@@ -4,24 +4,11 @@ import json
 import re
 from typing import Any
 from redis import Redis
-from .cache import Cache
-from ...configs.conf import REDIS_HOST, REDIS_PORT, REDIS_USER, REDIS_PASS
+from ..repositories.cache import Cache
+from ..configs.redis import redis
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
-
-
-redis = Redis(
-    host=REDIS_HOST,
-    port=REDIS_PORT,
-    decode_responses=True,
-    # ssl=True,
-    # username=REDIS_USER,
-    # password=REDIS_PASS,
-)
-
-if redis.ping():
-    log.info("Connected to Redis")
 
 
 class RedisCache(Cache):

@@ -12,8 +12,8 @@ from pydantic import EmailStr
 from ..req.authorization import AuthMatchRoute, token_required
 from ..res.response import res_success
 from ...configs.constants import SERIAL_KEY
-from ...common.cache.cache import Cache
-from ...common.cache.dynamodb_cache import get_cache
+from ...repositories.cache import Cache
+from ...cache.dynamodb_cache import get_cache
 from ...services.service_requests import ServiceRequests
 from ...configs.region_hosts import get_media_region_host
 from ...services.media.media_service import MediaService

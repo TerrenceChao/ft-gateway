@@ -3,15 +3,12 @@ import time
 import json
 from datetime import datetime, timedelta
 from typing import Any
-import boto3
-from .cache import Cache
-from ...configs.conf import DYNAMODB_URL, TABLE_CACHE
+from ..repositories.cache import Cache
+from ..configs.dynamodb import dynamodb
+from ..configs.conf import DYNAMODB_URL, TABLE_CACHE
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
-
-
-dynamodb = boto3.resource("dynamodb")
 
 
 class DynamoDbCache(Cache):

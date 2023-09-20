@@ -18,7 +18,7 @@ from ..req.auth_req import SignupVO, SignupConfirmVO, LoginVO
 from ..res.response import res_success
 from ..req.authorization import gen_token
 from ...configs.constants import PATHS, PREFETCH
-from ...common.cache.dynamodb_cache import get_cache
+from ...cache.dynamodb_cache import get_cache
 from ...services.service_requests import get_service_requests
 from ...configs.region_hosts import get_auth_region_host, get_match_region_host
 from ...configs.conf import SHORT_TERM_TTL, LONG_TERM_TTL
