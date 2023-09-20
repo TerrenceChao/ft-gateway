@@ -11,16 +11,16 @@ from starlette.responses import Response, StreamingResponse
 from pydantic import EmailStr
 from ..req.authorization import AuthMatchRoute, token_required
 from ..res.response import res_success
-from ...configs.constants import SERIAL_KEY
 from ...repositories.cache import Cache
 from ...cache.dynamodb_cache import get_cache
-from ...services.service_requests import ServiceRequests
-from ...configs.region_hosts import get_media_region_host
 from ...services.media.media_service import MediaService
-from ...utils.util import get_serial_num
+from ...services.service_requests import ServiceRequests
+from ...configs.constants import PATHS
+from ...configs.region_hosts import get_media_region_host
 from ...configs.exceptions import ServerException, ClientException, ForbiddenException
 from ...configs.conf import FT_BUCKET, MULTIPART_THRESHOLD, MAX_CONCURRENCY, MULTIPART_CHUNKSIZE, \
     AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY
+from ...utils.util import get_serial_num
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
@@ -64,7 +64,7 @@ def upload_params(role: str,
                   media_host: str = Depends(get_media_host),
                   cache: Cache = Depends(get_cache),
                   ):
-    if role != 'teachers' and role != 'companies':
+    if not role in PATHS.keys():
         raise ClientException(msg="The 'role' should be 'teacher' or 'company'")
 
     serial_num = get_serial_num(cache=cache, role_id=role_id)
@@ -72,7 +72,7 @@ def upload_params(role: str,
         host=media_host,
         params={
             "serial_num": serial_num,
-            "role": role,
+            "role": PATHS[role],
             "role_id": role_id,
             "filename": filename,
             "mime_type": mime_type,
@@ -90,7 +90,7 @@ def remove(role: str,
            media_host: str = Depends(get_media_host),
            cache: Cache = Depends(get_cache),
            ):
-    if role != 'teachers' and role != 'companies':
+    if not role in PATHS.keys():
         raise ClientException(msg="The 'role' should be 'teacher' or 'company'")
 
     serial_num = get_serial_num(cache=cache, role_id=role_id)

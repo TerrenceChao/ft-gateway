@@ -49,10 +49,10 @@ def get_role_id(url_path: str) -> Union[int, None]:
         return None
 
 def get_role(url_path: str):
-    if "/companies" in url_path:
+    if "/companies" in url_path or "/company" in url_path:
         return "company"
     
-    if "/teachers" in url_path:
+    if "/teachers" in url_path or "/teacher" in url_path:
         return "teacher"
     
     raise NotFoundException(msg="invalid role")
@@ -70,10 +70,10 @@ def __valid_role(data: dict, url_path: str):
     
     role = data["role"]
     if role == "company":
-        return "/companies" in url_path
+        return "/companies" in url_path or "/company" in url_path
     
     if role == "teacher":
-        return "/teachers" in url_path
+        return "/teachers" in url_path or "/teacher" in url_path
     
     return False
 
