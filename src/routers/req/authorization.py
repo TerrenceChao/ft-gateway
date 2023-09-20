@@ -8,7 +8,7 @@ from fastapi.routing import APIRoute
 from ...db.nosql import match_companies_schemas as com_schema, \
     match_teachers_schemas as teacher_schema
 from ...configs.conf import JWT_SECRET, TOKEN_EXPIRE_TIME
-from ...exceptions.auth_except import ServerException, UnauthorizedException, NotFoundException
+from ...configs.exceptions import ServerException, UnauthorizedException, NotFoundException
 import logging as log
 
 log.basicConfig(level=log.INFO)

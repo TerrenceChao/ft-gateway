@@ -1,6 +1,6 @@
 from typing import Any, List, Dict
 from ...db.nosql import match_companies_schemas as schemas
-from ...exceptions.match_except import ClientException, \
+from ...configs.exceptions import ClientException, \
     NotFoundException, \
     ServerException
 from ...routers.res.response import res_success

@@ -8,7 +8,7 @@ from fastapi import APIRouter, \
     File, status, \
     HTTPException
 from pydantic import EmailStr
-from ...exceptions.auth_except import ClientException, \
+from ...configs.exceptions import ClientException, \
     UnauthorizedException, \
     NotFoundException, \
     DuplicateUserException, \

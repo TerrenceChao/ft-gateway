@@ -17,7 +17,7 @@ from ...common.cache.dynamodb_cache import get_cache
 from ...services.service_requests import ServiceRequests
 from ...configs.region_hosts import get_media_region_host
 from ...services.media.media_service import MediaService
-from ...exceptions.auth_except import ServerException, ClientException, ForbiddenException
+from ...configs.exceptions import ServerException, ClientException, ForbiddenException
 from ...configs.conf import FT_BUCKET, MULTIPART_THRESHOLD, MAX_CONCURRENCY, MULTIPART_CHUNKSIZE, \
     AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY
 import logging as log

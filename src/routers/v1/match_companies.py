@@ -8,7 +8,7 @@ from fastapi import APIRouter, \
     Cookie, Header, Path, Query, Body, Form, \
     File, UploadFile, status, \
     HTTPException
-from ...exceptions.match_except import ClientException, \
+from ...configs.exceptions import ClientException, \
     NotFoundException, \
     ServerException
 from ...configs.constants import Apply

@@ -19,7 +19,7 @@ from src.routers.v1 import auth, \
 
 from src.routers.v2 import auth as authv2
 from src.routers.res.response import res_err
-from src.exceptions import auth_except, match_except
+from src.configs import exceptions
 from src.configs.region_hosts import RegionException
 
 
@@ -62,8 +62,7 @@ async def region_exception_handler(request: Request, exc: RegionException):
     )
 
 
-auth_except.include_app(app)
-match_except.include_app(app)
+exceptions.include_app(app)
 
 
 
