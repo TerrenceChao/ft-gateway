@@ -17,6 +17,7 @@ from ...db.nosql import auth_schemas
 from ..req.auth_req import SignupVO, SignupConfirmVO, LoginVO 
 from ..res.response import res_success
 from ..req.authorization import gen_token
+from ...common.constants import PATHS, PREFETCH
 from ...common.cache.dynamodb_cache import get_cache
 from ...common.service_requests import get_service_requests
 from ...common.region_hosts import get_auth_region_host, get_match_region_host
@@ -156,7 +157,8 @@ def confirm_signup(body: SignupConfirmVO = Body(...),
     if err:
         raise ServerException(msg=err)
 
-    updated, cache_err = cache.set(email, res, ex=LONG_TERM_TTL)
+    role_id_key = str(res["role_id"])
+    updated, cache_err = cache.set(role_id_key, res, ex=LONG_TERM_TTL)
     if not updated or cache_err:
         raise ServerException(msg="cannot cache user data")
     else:
@@ -284,16 +286,16 @@ def login(
         "socketid": "xxx",  # TODO: socketid???
         "online": True,
     })
-    updated, cache_err = cache.set(email, auth_res, ex=LONG_TERM_TTL)
+
+    role_id_key = str(auth_res["role_id"])
+    updated, cache_err = cache.set(role_id_key, auth_res, ex=LONG_TERM_TTL)
     if not updated or cache_err:
         raise ServerException(msg="set cache fail")
 
     # 驗證合法 >> 取得 match service 資料
-    paths = {"company":"companies", "teacher": "teachers"}
-    role, role_id = auth_res["role"], auth_res["role_id"]
-    role_path = paths[role]
-    size = body.prefetch or 3
-    match_res, err = requests.get(f"{match_host}/{role_path}/{role_id}/matchdata?size={size}")
+    role_path = PATHS[auth_res["role"]]
+    size = body.prefetch or PREFETCH
+    match_res, err = requests.get(f"{match_host}/{role_path}/{role_id_key}/matchdata?size={size}")
 
     # gen jwt token
     token = gen_token(auth_res, ["region", "role_id", "role"])
@@ -306,10 +308,11 @@ def login(
 
 
 @router.post("/logout", status_code=201)
-def logout(token: str = Header(...), email: EmailStr = Body(...), 
+def logout(token: str = Header(...), role_id: int = Body(..., embed=True), 
            cache=Depends(get_cache)
            ):
-    user, cache_err = cache.get(email)
+    role_id_key = str(role_id)
+    user, cache_err = cache.get(role_id_key)
     if cache_err:
         raise ServerException(msg="cache fail")
     
@@ -327,7 +330,7 @@ def logout(token: str = Header(...), email: EmailStr = Body(...),
 
     user["online"] = False
     # "LONG_TERM_TTL" for redirct notification
-    updated, cache_err = cache.set(email, user, ex=LONG_TERM_TTL)
+    updated, cache_err = cache.set(role_id_key, user, ex=LONG_TERM_TTL)
     if not updated or cache_err:
         raise ServerException(msg="set cache fail")
     

@@ -1,20 +1,23 @@
 import io
 import os
-import time
-import json
-from typing import List, Dict, Any
+import boto3
+from boto3.s3.transfer import TransferConfig
 from fastapi import APIRouter, \
     Depends, \
     Cookie, Header, Path, Query, Body, Form, \
-    File, UploadFile, status, \
-    HTTPException
+    File, UploadFile, status
 from starlette.requests import Request
 from starlette.responses import Response, StreamingResponse
 from pydantic import EmailStr
-from ..res.response import res_success, res_err
-from ...common.service_requests import get_service_requests
-import boto3
-from boto3.s3.transfer import TransferConfig
+from ..req.authorization import AuthMatchRoute, token_required
+from ..res.response import res_success
+from ...common.constants import SERIAL_KEY
+from ...common.cache.cache import Cache
+from ...common.cache.dynamodb_cache import get_cache
+from ...common.service_requests import ServiceRequests
+from ...common.region_hosts import get_media_region_host
+from ...services.media.media_service import MediaService
+from ...exceptions.auth_except import ServerException, ClientException, ForbiddenException
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
@@ -40,19 +43,85 @@ s3client = session.client("s3")
 log.info(s3client)
 
 
-region_media_hosts = {
-    # "default": os.getenv("REGION_HOST_MEDIA", "http://localhost:8083/media/api/v1"),
-    "jp": os.getenv("JP_REGION_HOST_MEDIA", "http://localhost:8083/media/api/v1"),
-    "ge": os.getenv("GE_REGION_HOST_MEDIA", "http://localhost:8083/media/api/v1"),
-    "us": os.getenv("US_REGION_HOST_MEDIA", "http://localhost:8083/media/api/v1"),
-}
-
-
 router = APIRouter(
     prefix="/media",
     tags=["Media"],
+    dependencies=[Depends(token_required)],
+    route_class=AuthMatchRoute,
     responses={404: {"description": "Not found"}},
 )
+
+
+def get_media_host(current_region: str = Header(...)):
+    return get_media_region_host(region=current_region)
+
+
+def get_serial_num(cache: Cache, role_id: str):
+    user, cache_err = cache.get(role_id)
+    if cache_err:
+        raise ServerException(msg="unknown error")
+
+    if not user or not SERIAL_KEY in user:
+        raise ServerException(msg="user has no authrozanization")
+
+    return user[SERIAL_KEY]
+
+
+_media_service = MediaService(ServiceRequests())
+
+
+@router.get("/{role}/{role_id}/upload-params")
+def upload_params(role: str,
+                  role_id: str,
+                  filename: str = Query(...),
+                  mime_type: str = Query(...),
+                  media_host: str = Depends(get_media_host),
+                  cache: Cache = Depends(get_cache),
+                  ):
+    if role != 'teachers' and role != 'companies':
+        raise ClientException(msg="The 'role' should be 'teacher' or 'company'")
+
+    serial_num = get_serial_num(cache=cache, role_id=role_id)
+    result, err = _media_service.get_upload_params(
+        host=media_host,
+        params={
+            "serial_num": serial_num,
+            "role": role,
+            "role_id": role_id,
+            "filename": filename,
+            "mime_type": mime_type,
+        })
+    if err:
+        raise ServerException(msg="get upload params error")
+
+    return res_success(data=result)
+
+
+@router.delete("/{role}/{role_id}")
+def remove(role: str,
+           role_id: str,
+           object_key: str = Query(...),
+           media_host: str = Depends(get_media_host),
+           cache: Cache = Depends(get_cache),
+           ):
+    if role != 'teachers' and role != 'companies':
+        raise ClientException(msg="The 'role' should be 'teacher' or 'company'")
+
+    serial_num = get_serial_num(cache=cache, role_id=role_id)
+    result, msg, err, status_code = _media_service.delete_file(
+        host=media_host,
+        params={
+            "serial_num": serial_num,
+            "object_key": object_key,
+        })
+
+    if err:
+        raise ServerException(msg="delete file error")
+
+    if status_code == status.HTTP_403_FORBIDDEN:
+        raise ForbiddenException(msg=msg)
+
+    return res_success(data=result)
 
 
 """teacher's media schema
@@ -120,6 +189,8 @@ router = APIRouter(
     }
 
 """
+
+
 @router.post("/teachers/{teacher_id}/resumes/{resume_id}/sections/{section_id}/files", status_code=201)
 async def upload_files_by_teacher(
     teacher_id: int,
@@ -129,9 +200,9 @@ async def upload_files_by_teacher(
     file: UploadFile,
     email: EmailStr = Body(...),
 ):
-    
-    # TODO: call "match_service" first, check storage usage (storage space) 
-    
+
+    # TODO: call "match_service" first, check storage usage (storage space)
+
     # form = await request.form()
     # filename = form["file"].filename
     # contents = await form["file"].read()
@@ -140,7 +211,7 @@ async def upload_files_by_teacher(
     # response = StreamingResponse(buff, media_type='text/plain')
     # log.info(type(request.stream()))
     log.info(email)
-    
+
     buff = await file.read()
     s3client.upload_fileobj(
         Fileobj=io.BytesIO(buff),
@@ -148,14 +219,13 @@ async def upload_files_by_teacher(
         Key=f'{email}/{teacher_id}/{resume_id}/{section_id}/{file.filename}',
         Config=mediaConfig
     )
-    
+
     log.info(len(buff))
-    
+
     return {
         "name": file.filename,
         "content_type": file.content_type,
     }
-
 
 
 """company's media schema
@@ -223,6 +293,8 @@ async def upload_files_by_teacher(
     }
     
 """
+
+
 @router.post("/companies/{company_id}/files", status_code=201)
 async def upload_files_by_company(
     company_id: int,
@@ -230,10 +302,10 @@ async def upload_files_by_company(
     file: UploadFile,
     email: EmailStr = Body(...),
 ):
-    # TODO: call "match_service" first, check storage usage (storage space) 
-    
+    # TODO: call "match_service" first, check storage usage (storage space)
+
     log.info(email)
-    
+
     buff = await file.read()
     s3client.upload_fileobj(
         Fileobj=io.BytesIO(buff),
@@ -241,9 +313,9 @@ async def upload_files_by_company(
         Key=f'{email}/{company_id}/{file.filename}',
         Config=mediaConfig
     )
-    
+
     log.info(len(buff))
-    
+
     return {
         "name": file.filename,
         "content_type": file.content_type,

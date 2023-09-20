@@ -115,9 +115,29 @@ class ServiceRequests:
             
         except Exception as e:
             err = e.__str__()
-            log.error(f"delete request error, url:{url}, params:{params}, headers:{headers}, resp:{response}, err:{err}")
+            log.error(f"delete request error, url:{url}, headers:{headers}, resp:{response}, err:{err}")
             
         return result, err
+    
+    def delete_with_statuscode(self, url: str, params: Dict = None, headers: Dict = None):
+        err: str = None
+        msg: str = None
+        result = None
+        response = None
+        status_code: int = 500
+        try:
+            response = requests.delete(url, params=params, headers=headers)
+            result = response.json()
+            status_code = response.status_code
+            log.info(f"url:{url}, resp-data:{result}")
+            msg = result["msg"]
+            result = result["data"]
+            
+        except Exception as e:
+            err = e.__str__()
+            log.error(f"delete request error, url:{url}, headers:{headers}, resp:{response}, err:{err}")
+            
+        return result, msg, err, status_code
 
 
     def __err(self, resp_json):

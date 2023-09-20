@@ -31,6 +31,7 @@ class Account(BaseModel):
     role: str
     role_id: Optional[int] = None
     auth: BaseAuth
+    created_at: Optional[int] = None
 
 
 # request

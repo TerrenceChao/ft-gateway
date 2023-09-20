@@ -22,10 +22,17 @@ match_region_hosts = {
 }
 
 search_region_hosts = {
-    # "default": os.getenv("REGION_HOST_SEARCH", "http://localhost:8083/match/api/v1/search"),
-    "jp": os.getenv("JP_REGION_HOST_SEARCH", "http://localhost:8083/match/api/v1/search"),
-    "ge": os.getenv("GE_REGION_HOST_SEARCH", "http://localhost:8083/match/api/v1/search"),
-    "us": os.getenv("US_REGION_HOST_SEARCH", "http://localhost:8083/match/api/v1/search"),
+    # "default": os.getenv("REGION_HOST_SEARCH", "http://localhost:8084/search/api/v1"),
+    "jp": os.getenv("JP_REGION_HOST_SEARCH", "http://localhost:8084/search/api/v1"),
+    "ge": os.getenv("GE_REGION_HOST_SEARCH", "http://localhost:8084/search/api/v1"),
+    "us": os.getenv("US_REGION_HOST_SEARCH", "http://localhost:8084/search/api/v1"),
+}
+
+media_region_hosts = {
+    "default": os.getenv("REGION_HOST_MEDIA", "http://localhost:8085/media/api/v1"),
+    # "jp": os.getenv("JP_REGION_HOST_MEDIA", "http://localhost:8085/media/api/v1"),
+    # "ge": os.getenv("GE_REGION_HOST_MEDIA", "http://localhost:8085/media/api/v1"),
+    # "us": os.getenv("US_REGION_HOST_MEDIA", "http://localhost:8085/media/api/v1"),
 }
 
 
@@ -55,6 +62,17 @@ def get_search_region_host(region: str):
     try:
         region = region.lower()
         return search_region_hosts[region]
+    except Exception as e:
+        log.error(e.__str__())
+        raise RegionException(region=region)
+
+def get_media_region_host(region: str):
+    try:
+        region = region.lower()
+        if region in media_region_hosts:
+            return media_region_hosts[region]
+        else:
+            return media_region_hosts['default']
     except Exception as e:
         log.error(e.__str__())
         raise RegionException(region=region)
