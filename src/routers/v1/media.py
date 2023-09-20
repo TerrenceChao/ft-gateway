@@ -17,6 +17,7 @@ from ...cache.dynamodb_cache import get_cache
 from ...services.service_requests import ServiceRequests
 from ...configs.region_hosts import get_media_region_host
 from ...services.media.media_service import MediaService
+from ...utils.util import get_serial_num
 from ...configs.exceptions import ServerException, ClientException, ForbiddenException
 from ...configs.conf import FT_BUCKET, MULTIPART_THRESHOLD, MAX_CONCURRENCY, MULTIPART_CHUNKSIZE, \
     AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY
@@ -50,17 +51,6 @@ router = APIRouter(
 
 def get_media_host(current_region: str = Header(...)):
     return get_media_region_host(region=current_region)
-
-
-def get_serial_num(cache: Cache, role_id: str):
-    user, cache_err = cache.get(role_id)
-    if cache_err:
-        raise ServerException(msg="unknown error")
-
-    if not user or not SERIAL_KEY in user:
-        raise ServerException(msg="user has no authrozanization")
-
-    return user[SERIAL_KEY]
 
 
 _media_service = MediaService(ServiceRequests())

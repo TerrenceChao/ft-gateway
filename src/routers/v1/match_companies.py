@@ -8,17 +8,16 @@ from fastapi import APIRouter, \
     Cookie, Header, Path, Query, Body, Form, \
     File, UploadFile, status, \
     HTTPException
+from ...db.nosql import match_companies_schemas as schemas
+from ..req.authorization import AuthMatchRoute, token_required, verify_token_by_company_profile
+from ..res.response import res_success, response_vo
+from ...services.match.company_service import CompanyService
+from ...services.service_requests import get_service_requests, ServiceRequests
+from ...configs.constants import Apply
+from ...configs.region_hosts import get_match_region_host
 from ...configs.exceptions import ClientException, \
     NotFoundException, \
     ServerException
-from ...configs.constants import Apply
-from ...db.nosql import match_companies_schemas as schemas
-from ..req.authorization import AuthMatchRoute, token_required, verify_token_by_company_profile
-from ..res.response import res_success
-from ..res.match_res import response_vo
-from ...services.service_requests import get_service_requests, ServiceRequests
-from ...configs.region_hosts import get_match_region_host
-from ...services.match.company_service import CompanyService
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
