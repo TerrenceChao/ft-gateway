@@ -5,24 +5,19 @@ import re
 from typing import Any
 from redis import Redis
 from .cache import Cache
+from ...configs.conf import REDIS_HOST, REDIS_PORT, REDIS_USER, REDIS_PASS
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
 
 
-cache_host = os.getenv("CACHE_HOST", "localhost")
-cache_port = int(os.getenv("CACHE_PORT", "6379"))
-cache_user = os.getenv("CACHE_USERNAME", "myuser")
-cache_pass = os.getenv("CACHE_PASSWORD", "qwer1234")
-
-
 redis = Redis(
-    host=cache_host,
-    port=cache_port,
+    host=REDIS_HOST,
+    port=REDIS_PORT,
     decode_responses=True,
     # ssl=True,
-    # username=cache_user,
-    # password=cache_pass,
+    # username=REDIS_USER,
+    # password=REDIS_PASS,
 )
 
 if redis.ping():

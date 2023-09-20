@@ -5,14 +5,10 @@ from datetime import datetime, timedelta
 from typing import Any
 import boto3
 from .cache import Cache
+from ...configs.conf import DYNAMODB_URL, TABLE_CACHE
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
-
-
-LOCAL_DB = "http://localhost:8000"
-DYNAMODB_URL = os.getenv("DYNAMODB_URL", LOCAL_DB)
-TABLE_CACHE = os.getenv("TABLE_CACHE", "cache")
 
 
 dynamodb = boto3.resource("dynamodb")

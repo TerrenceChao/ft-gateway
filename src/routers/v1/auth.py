@@ -20,18 +20,11 @@ from ..req.authorization import gen_token
 from ...common.constants import PATHS, PREFETCH
 from ...common.cache.dynamodb_cache import get_cache
 from ...common.service_requests import get_service_requests
-from ...common.region_hosts import get_auth_region_host, get_match_region_host
+from ...configs.region_hosts import get_auth_region_host, get_match_region_host
+from ...configs.conf import SHORT_TERM_TTL, LONG_TERM_TTL
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
-
-
-# default = 5 mins (300 secs)
-SHORT_TERM_TTL = int(os.getenv("SHORT_TERM_TTL", "300"))
-# default = 14 days (14 * 86400 secs)
-LONG_TERM_TTL = int(os.getenv("LONG_TERM_TTL", "1209600"))
-
-
 
 
 def gen_confirm_code():

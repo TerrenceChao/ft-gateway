@@ -7,7 +7,7 @@ from fastapi import APIRouter, \
 from ...db.nosql import match_companies_schemas as schemas
 from ..res.response import res_success, res_err
 from ...common.service_requests import get_service_requests
-from ...common.region_hosts import get_search_region_host
+from ...configs.region_hosts import get_search_region_host
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)

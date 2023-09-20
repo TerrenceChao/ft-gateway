@@ -15,18 +15,14 @@ from ...common.constants import SERIAL_KEY
 from ...common.cache.cache import Cache
 from ...common.cache.dynamodb_cache import get_cache
 from ...common.service_requests import ServiceRequests
-from ...common.region_hosts import get_media_region_host
+from ...configs.region_hosts import get_media_region_host
 from ...services.media.media_service import MediaService
 from ...exceptions.auth_except import ServerException, ClientException, ForbiddenException
+from ...configs.conf import FT_BUCKET, MULTIPART_THRESHOLD, MAX_CONCURRENCY, MULTIPART_CHUNKSIZE, \
+    AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
-
-
-FT_BUCKET = os.getenv("FT_BUCKET", "foreign-teacher")
-MULTIPART_THRESHOLD = int(os.getenv("MULTIPART_THRESHOLD", 512))
-MAX_CONCURRENCY = int(os.getenv("MAX_CONCURRENCY", 10))
-MULTIPART_CHUNKSIZE = int(os.getenv("MULTIPART_CHUNKSIZE", 128))
 
 
 mediaConfig = TransferConfig(multipart_threshold=MULTIPART_THRESHOLD,
@@ -34,11 +30,11 @@ mediaConfig = TransferConfig(multipart_threshold=MULTIPART_THRESHOLD,
                              multipart_chunksize=MULTIPART_CHUNKSIZE,
                              use_threads=True)
 session = boto3.Session(
-    aws_access_key_id="AKIAX77V6Z26DYCBVFAH",
-    aws_secret_access_key="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"
+    aws_access_key_id=AWS_ACCESS_KEY,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY
 )
-# s3 = session.resource("s3")
-# log.info(s3)
+s3 = session.resource("s3")
+log.info(s3)
 s3client = session.client("s3")
 log.info(s3client)
 

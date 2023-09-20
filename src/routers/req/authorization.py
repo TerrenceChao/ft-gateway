@@ -7,15 +7,11 @@ from fastapi import APIRouter, FastAPI, Header, Body, Request, Response
 from fastapi.routing import APIRoute
 from ...db.nosql import match_companies_schemas as com_schema, \
     match_teachers_schemas as teacher_schema
+from ...configs.conf import JWT_SECRET, TOKEN_EXPIRE_TIME
 from ...exceptions.auth_except import ServerException, UnauthorizedException, NotFoundException
 import logging as log
 
 log.basicConfig(level=log.INFO)
-
-
-# JWT_SECRET = os.getenv("TOKEN_EXPIRE_TIME", "zaq1xsw2")
-TOKEN_EXPIRE_TIME = int(os.getenv("TOKEN_EXPIRE_TIME", 60 * 60 * 24 * 7))
-
 
 
 # token required in Header

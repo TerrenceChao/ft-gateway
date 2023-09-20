@@ -20,7 +20,7 @@ from src.routers.v1 import auth, \
 from src.routers.v2 import auth as authv2
 from src.routers.res.response import res_err
 from src.exceptions import auth_except, match_except
-from src.common.region_hosts import RegionException
+from src.configs.region_hosts import RegionException
 
 
 

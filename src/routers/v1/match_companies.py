@@ -17,7 +17,7 @@ from ..req.authorization import AuthMatchRoute, token_required, verify_token_by_
 from ..res.response import res_success
 from ..res.match_res import response_vo
 from ...common.service_requests import get_service_requests, ServiceRequests
-from ...common.region_hosts import get_match_region_host
+from ...configs.region_hosts import get_match_region_host
 from ...services.match.company_service import CompanyService
 import logging as log
 
