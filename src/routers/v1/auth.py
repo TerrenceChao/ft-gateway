@@ -14,7 +14,7 @@ from ...configs.exceptions import ClientException, \
     DuplicateUserException, \
     ServerException
 from ...db.nosql import auth_schemas
-from ..req.auth_req import SignupVO, SignupConfirmVO, LoginVO 
+from ...models.auth import SignupVO, SignupConfirmVO, LoginVO 
 from ..res.response import res_success
 from ..req.authorization import gen_token
 from ...configs.constants import PATHS, PREFETCH
