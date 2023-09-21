@@ -11,7 +11,8 @@ from fastapi import APIRouter, \
 from ...infra.db.nosql import match_teachers_schemas as schemas
 from ..req.authorization import AuthMatchRoute, token_required, verify_token_by_teacher_profile
 from ..res.response import res_success, response_vo
-from ...domains.match.teacther.teacher_service import TeacherService
+from ...domains.match.teacther.services.teacher_service import TeacherService
+from ...domains.match.teacther.services.teacher_profile_service import TeacherProfileService
 from ...infra.service_api_dapter import ServiceApiAdapter, get_service_requests
 from ...configs.constants import Apply
 from ...configs.region_hosts import get_match_region_host
@@ -36,7 +37,8 @@ def get_match_host(current_region: str = Header(...)):
     return get_match_region_host(region=current_region)
 
 
-_teacher_service = TeacherService(ServiceApiAdapter(requests))
+# _teacher_service = TeacherService(ServiceApiAdapter(requests))
+_teacher_profile_service = TeacherProfileService(ServiceApiAdapter(requests))
 
 
 """[此 API 在一開始註冊時會用到]
@@ -52,20 +54,13 @@ def create_profile(profile: schemas.TeacherProfile,
                    # cache=Depends(get_cache),
                    verify=Depends(verify_token_by_teacher_profile),
                    ):
-    data, err = requests.post(url=f"{match_host}/teachers/",
-                             json=profile.dict())
-    if err:
-        raise ServerException(msg=err)
-
+    data = _teacher_profile_service.create_profile(host=match_host, profile=profile)
     return res_success(data=data)
 
 
 @router.get("/{teacher_id}", response_model=response_vo("t_get_profile", schemas.SoftTeacherProfile))
 def get_profile(teacher_id: int, match_host=Depends(get_match_host)):
-    data, err = _teacher_service.get_profile(host=match_host, teacher_id=teacher_id)
-    if err:
-        raise ServerException(msg=err)
-
+    data = _teacher_profile_service.get_profile(host=match_host, teacher_id=teacher_id)
     return res_success(data=data)
 
 
@@ -74,10 +69,7 @@ def update_profile(teacher_id: int,
                    profile: schemas.SoftTeacherProfile = Body(...),
                    match_host=Depends(get_match_host),
 ):
-    data, err = _teacher_service.update_profile(host=match_host, teacher_id=teacher_id, profile=profile)
-    if err:
-        raise ServerException(msg=err)
-
+    data = _teacher_profile_service.update_profile(host=match_host, teacher_id=teacher_id, profile=profile)
     return res_success(data=data)
 
 

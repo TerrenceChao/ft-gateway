@@ -11,7 +11,7 @@ from fastapi import APIRouter, \
 from ...infra.db.nosql import match_companies_schemas as schemas
 from ..req.authorization import AuthMatchRoute, token_required, verify_token_by_company_profile
 from ..res.response import res_success, response_vo
-from ...domains.match.company.company_service import CompanyService
+from ...domains.match.company.services.company_profile_service import CompanyProfileService
 from ...infra.service_api_dapter import ServiceApiAdapter, get_service_requests
 from ...configs.constants import Apply
 from ...configs.region_hosts import get_match_region_host
@@ -36,7 +36,8 @@ def get_match_host(current_region: str = Header(...)):
     return get_match_region_host(region=current_region)
 
 
-_company_service = CompanyService(ServiceApiAdapter(requests))
+# _company_service = CompanyService(ServiceApiAdapter(requests))
+_company_profile_service = CompanyProfileService(ServiceApiAdapter(requests))
 
 
 """[此 API 在一開始註冊時會用到]
@@ -52,20 +53,13 @@ def create_profile(profile: schemas.CompanyProfile,
                    # cache=Depends(get_cache),
                    verify=Depends(verify_token_by_company_profile),
                    ):
-    data, err = requests.post(url=f"{match_host}/companies/",
-                             json=profile.dict())
-    if err:
-        raise ServerException(msg=err)
-
+    data = _company_profile_service.create_profile(host=match_host, profile=profile)
     return res_success(data=data)
 
 
 @router.get("/{company_id}", response_model=response_vo("c_get_profile", schemas.CompanyProfile))
 def get_profile(company_id: int, match_host=Depends(get_match_host)):
-    data, err = _company_service.get_profile(host=match_host, company_id=company_id)
-    if err:
-        raise ServerException(msg=err)
-
+    data = _company_profile_service.get_profile(host=match_host, company_id=company_id)
     return res_success(data=data)
 
 
@@ -74,10 +68,7 @@ def update_profile(company_id: int,
                    profile: schemas.SoftCompanyProfile = Body(...),
                    match_host=Depends(get_match_host),
 ):
-    data, err = _company_service.update_profile(host=match_host, company_id=company_id, profile=profile)
-    if err:
-        raise ServerException(msg=err)
-
+    data = _company_profile_service.update_profile(host=match_host, company_id=company_id, profile=profile)
     return res_success(data=data)
 
 
