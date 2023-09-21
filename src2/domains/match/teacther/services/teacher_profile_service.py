@@ -1,9 +1,8 @@
 from typing import Any, List, Dict
 from ....service_api import IServiceApi
 from .....infra.db.nosql import match_teachers_schemas as schemas
-from .....configs.exceptions import ClientException, \
-    NotFoundException, \
-    ServerException
+from .....configs.exceptions import \
+    ClientException, ServerException
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
@@ -12,7 +11,7 @@ log.basicConfig(filemode='w', level=log.INFO)
 class TeacherProfileService:
     def __init__(self, req: IServiceApi):
         self.req = req
-        
+
     def create_profile(self, host: str, profile: schemas.TeacherProfile):
         url = f"{host}/companies/"
         data, err = self.req.simple_post(url=url, json=profile.dict())
@@ -36,5 +35,3 @@ class TeacherProfileService:
             raise ServerException(msg=err)
 
         return data
-        
-    

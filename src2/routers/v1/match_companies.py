@@ -12,6 +12,7 @@ from ...infra.db.nosql import match_companies_schemas as schemas
 from ..req.authorization import AuthMatchRoute, token_required, verify_token_by_company_profile
 from ..res.response import res_success, response_vo
 from ...domains.match.company.services.company_profile_service import CompanyProfileService
+from ...domains.match.company.services.company_job_service import CompanyJobService
 from ...infra.service_api_dapter import ServiceApiAdapter, get_service_requests
 from ...configs.constants import Apply
 from ...configs.region_hosts import get_match_region_host
@@ -36,30 +37,33 @@ def get_match_host(current_region: str = Header(...)):
     return get_match_region_host(region=current_region)
 
 
-# _company_service = CompanyService(ServiceApiAdapter(requests))
 _company_profile_service = CompanyProfileService(ServiceApiAdapter(requests))
+_company_job_service = CompanyJobService(ServiceApiAdapter(requests))
 
 
 """[此 API 在一開始註冊時會用到]
 Returns:
     [Company]: [description]
 """
+
+
 @router.post("/",
-             response_model=response_vo("c_create_profile", schemas.CompanyProfile), 
+             response_model=response_vo(
+                 "c_create_profile", schemas.CompanyProfile),
              status_code=201)
 def create_profile(profile: schemas.CompanyProfile,
                    match_host=Depends(get_match_host),
-                   requests=Depends(get_service_requests),
-                   # cache=Depends(get_cache),
                    verify=Depends(verify_token_by_company_profile),
                    ):
-    data = _company_profile_service.create_profile(host=match_host, profile=profile)
+    data = _company_profile_service.create_profile(
+        host=match_host, profile=profile)
     return res_success(data=data)
 
 
 @router.get("/{company_id}", response_model=response_vo("c_get_profile", schemas.CompanyProfile))
 def get_profile(company_id: int, match_host=Depends(get_match_host)):
-    data = _company_profile_service.get_profile(host=match_host, company_id=company_id)
+    data = _company_profile_service.get_profile(
+        host=match_host, company_id=company_id)
     return res_success(data=data)
 
 
@@ -67,32 +71,25 @@ def get_profile(company_id: int, match_host=Depends(get_match_host)):
 def update_profile(company_id: int,
                    profile: schemas.SoftCompanyProfile = Body(...),
                    match_host=Depends(get_match_host),
-):
-    data = _company_profile_service.update_profile(host=match_host, company_id=company_id, profile=profile)
+                   ):
+    data = _company_profile_service.update_profile(
+        host=match_host, company_id=company_id, profile=profile)
     return res_success(data=data)
 
 
 # TODO: 未來如果允許使用多個 jobs, 須考慮 idempotent
 @router.post("/{company_id}/jobs",
-             response_model=response_vo("c_create_job", schemas.UpsertCompanyProfileJob), 
+             response_model=response_vo(
+                 "c_create_job", schemas.UpsertCompanyProfileJob),
              status_code=201)
-def create_job(
-    company_id: int,
-    profile: schemas.CompanyProfile = Body(None, embed=True),  # Nullable
-    job: schemas.Job = Body(..., embed=True),
-    match_host=Depends(get_match_host),
-    requests=Depends(get_service_requests),
-    # cache=Depends(get_cache)
-):
-    data, err = requests.post(
-        url=f"{match_host}/companies/{company_id}/jobs",
-        json={
-            "profile": None if profile == None else profile.dict(),
-            "job": job.dict(),
-        })
-    if err:
-        raise ServerException(msg=err)
-
+def create_job(company_id: int,
+               profile: schemas.CompanyProfile = Body(
+                   None, embed=True),  # Nullable
+               job: schemas.Job = Body(..., embed=True),
+               match_host=Depends(get_match_host),
+               ):
+    data = _company_job_service.create_job(
+        host=match_host, company_id=company_id, job=job, profile=profile)
     return res_success(data=data)
 
 
@@ -101,33 +98,18 @@ def create_job(
 @router.get("/{company_id}/jobs/brief")
 def get_brief_jobs(company_id: int, job_id: int = Query(None), size: int = Query(None),
                    match_host=Depends(get_match_host),
-                   requests=Depends(get_service_requests),
-                   # cache=Depends(get_cache)
                    ):
-    data, err = requests.get(
-        url=f"{match_host}/companies/{company_id}/jobs/brief",
-        params={
-            "job_id": int(job_id) if job_id else 0,
-            "size": int(size) if size else 10,
-        })
-    # log.info(data)
-    if err:
-        raise ServerException(msg=err)
-
+    data = _company_job_service.get_brief_jobs(
+        host=match_host, company_id=company_id, job_id=job_id, size=size)
     return res_success(data=data)
 
 
 @router.get("/{company_id}/jobs/{job_id}")
 def get_job(company_id: int, job_id: int,
             match_host=Depends(get_match_host),
-            requests=Depends(get_service_requests),
-            # cache=Depends(get_cache)
             ):
-    data, err = requests.get(
-        url=f"{match_host}/companies/{company_id}/jobs/{job_id}")
-    if err:
-        raise ServerException(msg=err)
-
+    data = _company_job_service.get_job(
+        host=match_host, company_id=company_id, job_id=job_id)
     return res_success(data=data)
 
 
@@ -140,27 +122,15 @@ def get_job(company_id: int, job_id: int,
 # TODO: 未來如果允許使用多個 resumes, 須考慮 idempotent
 @router.put("/{company_id}/jobs/{job_id}",
             response_model=response_vo("c_update_job", schemas.UpsertCompanyProfileJob))
-def update_job(
-    company_id: int,
-    job_id: int,
-    profile: schemas.SoftCompanyProfile = Body(None, embed=True),  # Nullable
-    job: schemas.SoftJob = Body(None, embed=True),  # Nullable,
-    match_host=Depends(get_match_host),
-    requests=Depends(get_service_requests),
-    # cache=Depends(get_cache)
-):
-    if profile == None and job == None:
-        raise ClientException(msg="at least one of the profile or job is required")
-
-    data, err = requests.put(
-        url=f"{match_host}/companies/{company_id}/jobs/{job_id}",
-        json={
-            "profile": None if profile == None else profile.dict(),
-            "job": job.dict(),
-        })
-    if err:
-        raise ServerException(msg=err)
-
+def update_job(company_id: int,
+               job_id: int,
+               profile: schemas.SoftCompanyProfile = Body(
+                   None, embed=True),  # Nullable
+               job: schemas.SoftJob = Body(None, embed=True),  # Nullable,
+               match_host=Depends(get_match_host),
+               ):
+    data = _company_job_service.update_job(
+        host=match_host, company_id=company_id, job_id=job_id, job=job, profile=profile)
     return res_success(data=data)
 
 
@@ -172,26 +142,21 @@ A. 可以將 jobs 設定為一主多備 (只採用一個，其他為備用)
   
 B. 可同時使用多個 jobs. 針對不同 teacher/resume 配對不同 job
 """
+
+
 @router.put("/{company_id}/jobs/{job_id}/enable/{enable}")
 def enable_job(company_id: int, job_id: int, enable: bool,
                match_host=Depends(get_match_host),
-               requests=Depends(get_service_requests),
-               # cache=Depends(get_cache)
                ):
-    data, err = requests.put(
-        url=f"{match_host}/companies/{company_id}/jobs/{job_id}/enable/{enable}")
-    if err:
-        raise ServerException(msg=err)
-
+    data = _company_job_service.enable_job(
+        host=match_host, company_id=company_id, job_id=job_id, enable=enable)
     return res_success(data=data)
 
 
 @router.delete("/{company_id}/jobs/{job_id}")
 def delete_job(company_id: int, job_id: int, match_host=Depends(get_match_host)):
-    data, err = _company_service.delete_job(host=match_host, company_id=company_id, job_id=job_id)
-    if err:
-        raise ServerException(msg=err)
-
+    data = _company_job_service.delete_job(
+        host=match_host, company_id=company_id, job_id=job_id)
     return res_success(data=data)
 
 
@@ -204,8 +169,6 @@ def delete_job(company_id: int, job_id: int, match_host=Depends(get_match_host))
 #                           ):
 #     # TODO: for remote batch update; resume's'Info 是多個 FollowResume
 #     pass
-
-
 
 
 def resume_request_body(register_region: str = Header(None), current_region: str = Header(...), my_status: Apply = Body(None), status: Apply = Body(None), resume: Dict = Body(...), jobInfo: Dict = Body(...)):

@@ -1,9 +1,8 @@
 from typing import Any, List, Dict
 from ....service_api import IServiceApi
 from .....infra.db.nosql import match_companies_schemas as schemas
-from .....configs.exceptions import ClientException, \
-    NotFoundException, \
-    ServerException
+from .....configs.exceptions import \
+    ClientException, ServerException
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
