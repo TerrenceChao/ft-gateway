@@ -5,7 +5,7 @@ from typing import Callable, List, Union
 import jwt as jwt_util
 from fastapi import APIRouter, FastAPI, Header, Body, Request, Response
 from fastapi.routing import APIRoute
-from ...db.nosql import match_companies_schemas as com_schema, \
+from ...infra.db.nosql import match_companies_schemas as com_schema, \
     match_teachers_schemas as teacher_schema
 from ...configs.conf import JWT_SECRET, TOKEN_EXPIRE_TIME
 from ...configs.exceptions import ServerException, UnauthorizedException, NotFoundException

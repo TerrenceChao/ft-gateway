@@ -1,3 +1,4 @@
+import requests
 from fastapi import APIRouter, \
     Request, Depends, \
     Cookie, Header, Path, Query, Body, Form, \
@@ -17,7 +18,7 @@ log.basicConfig(filemode='w', level=log.INFO)
 
 # using dynamodb as cache
 _auth_service = AuthService(
-    ServiceApiAdapter(), DynamoDbCacheAdapter(dynamodb))
+    ServiceApiAdapter(requests), DynamoDbCacheAdapter(dynamodb))
 
 """
     1. get public key

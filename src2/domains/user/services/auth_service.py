@@ -200,6 +200,8 @@ class AuthService:
     def __req_login(self, auth_host: str, body: LoginVO):
         auth_res, msg, err = self.req.post(
             f"{auth_host}/login", json=body.dict())
+        if err:
+            raise ServerException(msg=err)
 
         # found in DB
         if msg == "error_password":
@@ -212,9 +214,6 @@ class AuthService:
         # found in S3, and region == "current_region"(在 meta, 解密後才會知道)(S3記錄:註冊在該auth_service卻找不到)
         if msg == "register_fail":
             raise ServerException(msg="register fail")  # {log_level:嚴重問題}
-
-        if err:
-            raise ServerException(msg=err)
 
         return (auth_res, msg)
 
@@ -252,6 +251,9 @@ class AuthService:
         user, cache_err = self.cache.get(role_id_key)
         if cache_err:
             raise ServerException(msg="cache fail")
+        
+        if not user:
+            return user
 
         if user["token"] != token:
             raise UnauthorizedException(msg="access denied")
