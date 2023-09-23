@@ -117,6 +117,15 @@ def verify_token_by_teacher_profile(request: Request,
         raise UnauthorizedException(msg="invalid teacher user")
 
 
+def verify_token_by_logout(token: str = Header(...),
+                           role_id: int = Body(..., embed=True),
+                           ):
+    secret = __get_secret(role_id)
+    data = __jwt_decode(jwt=token, key=secret, algorithms=["HS256"], msg=f"invalid logout")
+    if not __valid_role_id(data, role_id):
+        raise UnauthorizedException(msg=f"invalid logout")
+
+
 def verify_token(request: Request):
     url_path = request.url.path
     role_id = get_role_id(url_path)

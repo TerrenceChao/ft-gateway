@@ -13,7 +13,7 @@ from ..req.authorization import AuthMatchRoute, token_required, verify_token_by_
 from ..res.response import res_success, response_vo
 from ...domains.match.teacther.services.teacher_profile_service import TeacherProfileService
 from ...domains.match.teacther.services.teacher_resume_service import TeacherResumeService
-from ...infra.service_api_dapter import ServiceApiAdapter, get_service_requests
+from ...infra.apis.service_api_dapter import ServiceApiAdapter, get_service_requests
 from ...configs.constants import Apply
 from ...configs.region_hosts import get_match_region_host
 from ...configs.exceptions import ClientException, \

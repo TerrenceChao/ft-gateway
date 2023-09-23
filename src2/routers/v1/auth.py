@@ -6,10 +6,11 @@ from fastapi import APIRouter, \
     HTTPException
 from pydantic import EmailStr
 from ...domains.user.value_objects.auth_vo import SignupVO, SignupConfirmVO, LoginVO
+from ..req.authorization import verify_token_by_logout
 from ..res.response import res_success
 from ...domains.user.services.auth_service import AuthService
 from ...infra.cache.dynamodb_cache_adapter import DynamoDbCacheAdapter
-from ...infra.service_api_dapter import ServiceApiAdapter
+from ...infra.apis.service_api_dapter import ServiceApiAdapter
 from ...configs.dynamodb import dynamodb
 from ...configs.region_hosts import get_auth_region_host, get_match_region_host
 import logging as log
@@ -154,6 +155,7 @@ def login(current_region: str = Header(...),
 @router.post("/logout", status_code=201)
 def logout(token: str = Header(...),
            role_id: int = Body(..., embed=True),
+           verify=Depends(verify_token_by_logout)
            ):
     data, msg = _auth_service.logout(role_id, token)
     return res_success(data=data, msg=msg)

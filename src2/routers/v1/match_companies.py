@@ -13,7 +13,7 @@ from ..req.authorization import AuthMatchRoute, token_required, verify_token_by_
 from ..res.response import res_success, response_vo
 from ...domains.match.company.services.company_profile_service import CompanyProfileService
 from ...domains.match.company.services.company_job_service import CompanyJobService
-from ...infra.service_api_dapter import ServiceApiAdapter, get_service_requests
+from ...infra.apis.service_api_dapter import ServiceApiAdapter, get_service_requests
 from ...configs.constants import Apply
 from ...configs.region_hosts import get_match_region_host
 from ...configs.exceptions import ClientException, \

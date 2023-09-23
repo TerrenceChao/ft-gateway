@@ -35,7 +35,7 @@ class AuthService:
 
         if not pubkey:
             pubkey = self.__req_get_public_key(host, timestamp)
-            self.cache.set(f"pubkey_{slot}", pubkey)
+            self.cache.set(f"pubkey_{slot}", pubkey, ex=LONG_TERM_TTL)
 
         return (pubkey, None)  # data, msg
 
@@ -238,9 +238,6 @@ class AuthService:
     def logout(self, role_id: int, token: str):
         role_id_key = str(role_id)
         user = self.__cache_check_for_auth(role_id_key, token)
-        if not user or not "token" in user:
-            return (None, "logged out")
-
         user_logout_status = self.__logout_status(user)
 
         # "LONG_TERM_TTL" for redirct notification
@@ -252,8 +249,8 @@ class AuthService:
         if cache_err:
             raise ServerException(msg="cache fail")
         
-        if not user:
-            return user
+        if not user or not "token" in user:
+            raise ClientException(msg="logged out")
 
         if user["token"] != token:
             raise UnauthorizedException(msg="access denied")
