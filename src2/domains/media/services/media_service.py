@@ -13,7 +13,7 @@ class MediaService:
 
     def get_upload_params(self, host: str, params: Dict):
         url = f"{host}/users/upload-params"
-        result, err = self.req.get(url=url, params=params)
+        result, err = self.req.simple_get(url=url, params=params)
 
         if err:
             raise ServerException(msg="get upload params error")
@@ -22,13 +22,15 @@ class MediaService:
 
     def delete_file(self, host: str, params: Dict):
         url = f"{host}/users"
-        result, msg, err, status_code = self.req.delete_with_statuscode(
+        result, msg, status_code, err = self.req.delete_with_statuscode(
             url=url, params=params)
 
         if err:
+            log.error(f"MediaService.delete_file delete fail: result:{result}, msg:{msg}, status_code:{status_code}, err:{err}")
             raise ServerException(msg="delete file error")
 
         if status_code == status.HTTP_403_FORBIDDEN:
+            log.error(f"MediaService.delete_file HTTP_403_FORBIDDEN: result:{result}, msg:{msg}, status_code:{status_code}, err:{err}")
             raise ForbiddenException(msg=msg)
 
         return result

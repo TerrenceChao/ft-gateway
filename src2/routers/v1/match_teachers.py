@@ -43,7 +43,7 @@ _teacher_resume_service = TeacherResumeService(ServiceApiAdapter(requests))
 
 """[此 API 在一開始註冊時會用到]
 Returns:
-    [Company]: [description]
+    [Teacher]: [description]
 """
 
 
