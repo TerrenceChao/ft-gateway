@@ -1,7 +1,7 @@
 from typing import Any, Dict, Union
 from fastapi import status
-from ..service_api import IServiceApi
-from ...configs.exceptions import ServerException, ForbiddenException
+from ...service_api import IServiceApi
+from ....configs.exceptions import ServerException, ForbiddenException
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)

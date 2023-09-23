@@ -8,7 +8,7 @@ from ..req.authorization import AuthMatchRoute, token_required
 from ..res.response import res_success
 from ...domains.cache import Cache
 from ...infra.cache.dynamodb_cache_adapter import DynamoDbCacheAdapter, get_cache
-from ...domains.media.media_service import MediaService
+from ...domains.media.services.media_service import MediaService
 from ...infra.service_api_dapter import ServiceApiAdapter, get_service_requests
 from ...configs.constants import PATHS
 from ...configs.region_hosts import get_media_region_host
