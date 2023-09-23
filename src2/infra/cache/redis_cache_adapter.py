@@ -2,7 +2,7 @@ import os
 import time
 import json
 import re
-from typing import Any
+from typing import Any, Optional
 from redis import Redis
 from ...domains.cache import ICache
 from ...configs.redis import redis
@@ -15,7 +15,7 @@ class RedisCacheAdapter(ICache):
     def __init__(self, redis: Redis):
         self.redis = redis
         
-    def get(self, key: str):
+    def get(self, key: str) -> (Optional[Any], Optional[str]):
         err_msg: str = None
         result = None
 
@@ -33,7 +33,7 @@ class RedisCacheAdapter(ICache):
 
         return result, err_msg
 
-    def set(self, key: str, val: Any, ex: int = None):
+    def set(self, key: str, val: Any, ex: int = None) -> (Optional[bool], Optional[str]):
         err_msg: str = None
         result = False
 

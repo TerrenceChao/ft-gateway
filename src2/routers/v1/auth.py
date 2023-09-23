@@ -9,7 +9,7 @@ from fastapi import APIRouter, \
     HTTPException
 from pydantic import EmailStr
 from ...infra.db.nosql import auth_schemas
-from ...domains.auth.auth_vo import SignupVO, SignupConfirmVO, LoginVO 
+from ...domains.user.value_objects.auth_vo import SignupVO, SignupConfirmVO, LoginVO 
 from ..res.response import res_success
 from ..req.authorization import gen_token
 from ...infra.cache.dynamodb_cache_adapter import DynamoDbCacheAdapter, get_cache

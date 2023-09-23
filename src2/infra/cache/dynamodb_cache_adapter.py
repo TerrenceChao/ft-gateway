@@ -2,7 +2,7 @@ import os
 import time
 import json
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, Optional
 from ...domains.cache import ICache
 from ...configs.dynamodb import dynamodb
 from ...configs.conf import DYNAMODB_URL, TABLE_CACHE
@@ -15,7 +15,7 @@ class DynamoDbCacheAdapter(ICache):
     def __init__(self, dynamodb: Any):
         self.db = dynamodb
 
-    def get(self, key: str):
+    def get(self, key: str) -> (Optional[Any], Optional[str]):
         err_msg: str = None
         result = None
 
@@ -32,7 +32,7 @@ class DynamoDbCacheAdapter(ICache):
 
         return result, err_msg
 
-    def set(self, key: str, val: Any, ex: int = None):
+    def set(self, key: str, val: Any, ex: int = None) -> (Optional[bool], Optional[str]):
         err_msg: str = None
         result = False
         
