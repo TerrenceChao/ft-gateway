@@ -65,7 +65,7 @@ class AuthService:
             res = {
                 "for_testing_only": confirm_code
             }
-            return (res, auth_res)  # data, msg
+            return (res, "email_sent")  # data, msg
 
         else:
             self.cache.set(email, {"region": region}, SHORT_TERM_TTL)
@@ -115,12 +115,12 @@ class AuthService:
         # "registering": empty data, but TTL=30sec
         self.cache.set(email, {}, ex=30)
         auth_res = self.__req_signup(host,
-                                {
-                                    "email": email,
-                                    # "meta": "{\"region\":\"jp\",\"role\":\"teacher\",\"pass\":\"secret\"}"
-                                    "meta": user["meta"],
-                                    "pubkey": body.pubkey,
-                                })
+                                     {
+                                         "email": email,
+                                         # "meta": "{\"region\":\"jp\",\"role\":\"teacher\",\"pass\":\"secret\"}"
+                                         "meta": user["meta"],
+                                         "pubkey": body.pubkey,
+                                     })
 
         role_id_key = str(auth_res["role_id"])
         auth_res = self.__apply_token(auth_res)
@@ -154,7 +154,7 @@ class AuthService:
     def __apply_token(self, res: Dict):
         # gen jwt token
         token = gen_token(res, ["region", "role_id", "role"])
-        res.update({ "token": token })
+        res.update({"token": token})
         return res
 
     """
@@ -216,7 +216,7 @@ class AuthService:
         if err:
             raise ServerException(msg=err)
 
-        return auth_res, msg
+        return (auth_res, msg)
 
     def __cache_auth_res(self, role_id_key: str, auth_res: Dict):
         updated, cache_err = self.cache.set(role_id_key, auth_res, ex=LONG_TERM_TTL)
@@ -243,12 +243,11 @@ class AuthService:
             return (None, "logged out")
 
         user_logout_status = self.__logout_status(user)
-        
+
         # "LONG_TERM_TTL" for redirct notification
         self.__cache_logout_status(role_id_key, user_logout_status)
         return (None, "successfully logged out")
-    
-    
+
     def __cache_check_for_auth(self, role_id_key: str, token: str):
         user, cache_err = self.cache.get(role_id_key)
         if cache_err:
@@ -256,24 +255,22 @@ class AuthService:
 
         if user["token"] != token:
             raise UnauthorizedException(msg="access denied")
-        
+
         return user
-    
-    
+
     def __logout_status(self, user: Dict):
         role_id = user["role_id"]
         region = user["region"]
         current_region = user["current_region"]
-        
+
         return {
-           "role_id": role_id,
-           "region": region,
-           "current_region": current_region,
-           "online": False,
+            "role_id": role_id,
+            "region": region,
+            "current_region": current_region,
+            "online": False,
         }
-        
+
     def __cache_logout_status(self, role_id_key: str, user_logout_status: Dict):
         updated, cache_err = self.cache.set(role_id_key, user_logout_status, ex=LONG_TERM_TTL)
         if not updated or cache_err:
             raise ServerException(msg="cache fail")
-        
