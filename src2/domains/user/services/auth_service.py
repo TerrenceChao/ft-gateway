@@ -31,6 +31,7 @@ class AuthService:
         slot = timestamp % 100
         pubkey, cache_err = self.cache.get(f"pubkey_{slot}")
         if cache_err:
+            log.error(f"AuthService.get_public_key fail: [cache get], host:%s, timestamp:%s, pubkey:%s, cache_err:%s", host, timestamp, pubkey, cache_err)
             raise ServerException(msg="cache fail")
 
         if not pubkey:
@@ -43,6 +44,7 @@ class AuthService:
         pubkey, err = self.req.simple_get(
             f"{host}/security/pubkey", params={"ts": timestamp})
         if err:
+            log.error(f"AuthService.__req_get_public_key fail: [request get], host:%s, timestamp:%s, pubkey:%s, err:%s", host, timestamp, pubkey, err)
             raise ServerException(msg="cannot get public_key")
 
         return pubkey
@@ -74,11 +76,11 @@ class AuthService:
     def __cache_check_for_duplicates(self, email: str):
         data, cache_err = self.cache.get(email)
         if cache_err:
-            log.error(f"cache data:{data}, err:{cache_err}")
+            log.error(f"AuthService.__cache_check_for_duplicates:[cache get], email:%s cache data:%s, err:%s", email, data, cache_err)
             raise ServerException(msg="cache fail")
 
         if data:
-            log.error(f"cache data:{data}")
+            log.error(f"AuthService.__cache_check_for_duplicates:[business error], cache data:{data}")
             raise DuplicateUserException(msg="registered or registering")
 
     def __req_send_confirmcode_by_email(self, host: str, email: str, confirm_code: str):
@@ -89,7 +91,7 @@ class AuthService:
         })
 
         if err:
-            log.error(f"req /sendcode/email error, err:{err}")
+            log.error(f"AuthService.__req_send_confirmcode_by_email:[request post], host:%s, email:%s, confirm_code:%s, auth_res:%s, msg:%s, err:%s", host, email, confirm_code, auth_res, msg, err)
             raise ServerException(msg=err)
 
         return (auth_res, msg)
@@ -126,13 +128,14 @@ class AuthService:
         auth_res = self.__apply_token(auth_res)
         updated, cache_err = self.cache.set(role_id_key, auth_res, ex=LONG_TERM_TTL)
         if not updated or cache_err:
+            log.error(f"AuthService.confirm_signup:[cache set], role_id_key:%s, auth_res:%s, ex:%s, cache data:%s, err:%s", role_id_key, auth_res, LONG_TERM_TTL, updated, cache_err)
             raise ServerException(msg="cache fail")
         else:
             return (auth_res, None)  # data, msg
 
-    def __verify_confirmcode(self, confirm_code: str, user: Any, cache_err: str):
-        log.info("type:%s, user:%s" % (type(user), user))
+    def __verify_confirmcode(self, confirm_code: str, user: Any, cache_err: str = None):
         if cache_err:
+            log.error(f"AuthService.__verify_confirmcode fail: [cache get] confirm_code:%s, user:%s, cache_err:%s", confirm_code, user, cache_err)
             raise ServerException(msg="cache fail")
 
         if not user or not "confirm_code" in user:
@@ -147,6 +150,7 @@ class AuthService:
     def __req_signup(self, host: str, payload: Dict):
         res, err = self.req.simple_post(f"{host}/signup", json=payload)
         if err:
+            log.error(f"AuthService.__req_signup fail: [request post] host:%s, payload:%s, res:%s, err:%s", host, payload, res, err)
             raise ServerException(msg="signup fail")
 
         return res
@@ -201,6 +205,7 @@ class AuthService:
         auth_res, msg, err = self.req.post(
             f"{auth_host}/login", json=body.dict())
         if err:
+            log.error(f"AuthService.__req_login fail: [request post], auth_host:%s, body:%s, auth_res:%s, msg:%s, err:%s", auth_host, body, auth_res, msg, err)
             raise ServerException(msg=err)
 
         # found in DB
@@ -213,6 +218,7 @@ class AuthService:
 
         # found in S3, and region == "current_region"(在 meta, 解密後才會知道)(S3記錄:註冊在該auth_service卻找不到)
         if msg == "register_fail":
+            log.error(f"AuthService.__req_login fail: [request post >> 'register_fail'], auth_host:%s, body:%s, auth_res:%s, msg:%s, err:%s", auth_host, body, auth_res, msg, err)
             raise ServerException(msg="register fail")  # {log_level:嚴重問題}
 
         return (auth_res, msg)
@@ -220,6 +226,7 @@ class AuthService:
     def __cache_auth_res(self, role_id_key: str, auth_res: Dict):
         updated, cache_err = self.cache.set(role_id_key, auth_res, ex=LONG_TERM_TTL)
         if not updated or cache_err:
+            log.error(f"AuthService.__cache_auth_res fail: [cache set], role_id_key:%s, auth_res:%s, ex:%s, cache data:%s, err:%s", role_id_key, auth_res, LONG_TERM_TTL, updated, cache_err)
             raise ServerException(msg="cache fail")
 
     def __req_match_data(self, match_host: str, role_path: str, role_id_key: str, size: int):
@@ -247,13 +254,14 @@ class AuthService:
     def __cache_check_for_auth(self, role_id_key: str, token: str):
         user, cache_err = self.cache.get(role_id_key)
         if cache_err:
+            log.error(f"AuthService.__cache_check_for_auth fail: [cache get], role_id_key:%s, token:%s, user:%s, cache_err:%s", role_id_key, token, user, cache_err)
             raise ServerException(msg="cache fail")
         
         if not user or not "token" in user:
             raise ClientException(msg="logged out")
 
         if user["token"] != token:
-            raise UnauthorizedException(msg="access denied")
+            raise UnauthorizedException(msg="invalid user")
 
         return user
 
@@ -272,4 +280,5 @@ class AuthService:
     def __cache_logout_status(self, role_id_key: str, user_logout_status: Dict):
         updated, cache_err = self.cache.set(role_id_key, user_logout_status, ex=LONG_TERM_TTL)
         if not updated or cache_err:
+            log.error(f"AuthService.__cache_logout_status fail: [cache set], role_id_key:%s, user_logout_status:%s, ex:%s, cache data:%s, err:%s", role_id_key, user_logout_status, LONG_TERM_TTL, updated, cache_err)
             raise ServerException(msg="cache fail")

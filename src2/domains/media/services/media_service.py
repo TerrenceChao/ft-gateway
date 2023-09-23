@@ -16,6 +16,7 @@ class MediaService:
         result, err = self.req.simple_get(url=url, params=params)
 
         if err:
+            log.error(f"MediaService.get_upload_params fail: [request get], host:%s, params:%s, result:%s, err:%s", host, params, result, err)
             raise ServerException(msg="get upload params error")
 
         return result
@@ -26,11 +27,11 @@ class MediaService:
             url=url, params=params)
 
         if err:
-            log.error(f"MediaService.delete_file delete fail: result:{result}, msg:{msg}, status_code:{status_code}, err:{err}")
+            log.error(f"MediaService.delete_file fail: [request delete], host:%s, params:%s, result:%s, msg:%s, status_code:%s, err:%s", host, params, result, msg, status_code, err)
             raise ServerException(msg="delete file error")
 
         if status_code == status.HTTP_403_FORBIDDEN:
-            log.error(f"MediaService.delete_file HTTP_403_FORBIDDEN: result:{result}, msg:{msg}, status_code:{status_code}, err:{err}")
+            log.error(f"MediaService.delete_file fail: [request delete >> HTTP_403_FORBIDDEN], host:%s, params:%s, result:%s, msg:%s, status_code:%s, err:%s", host, params, result, msg, status_code, err)
             raise ForbiddenException(msg=msg)
 
         return result

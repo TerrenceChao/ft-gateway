@@ -202,6 +202,8 @@ def apply_resume(company_id: int, job_id: int, resume_id: int, body=Depends(resu
             "current_region": body["current_region"],
         })
     if err:
+        log.error(f"apply_resume fail: [request put], match_host:%s, company_id:%s, job_id:%s, resume_id:%s, body:{{%s}}, contact_resume:%s, err:%s",
+                  match_host, company_id, job_id, resume_id, body, contact_resume, err)
         raise ServerException(msg=err)
 
     return res_success(data=contact_resume)
@@ -227,6 +229,8 @@ def reply_resume(company_id: int, job_id: int, resume_id: int, body=Depends(resu
             "current_region": body["current_region"],
         })
     if err:
+        log.error(f"reply_resume fail: [request put], match_host:%s, company_id:%s, job_id:%s, resume_id:%s, body:{{%s}}, contact_resume:%s, err:%s",
+                  match_host, company_id, job_id, resume_id, body, contact_resume, err)
         raise ServerException(msg=err)
 
     return res_success(data=contact_resume)
@@ -267,6 +271,8 @@ def get_followed_and_contact_resumes(company_id: int, resume_id: int, size: int,
             "size": int(size)
         })
     if err:
+        log.error(f"get_followed_and_contact_resumes fail: [request get], match_host:%s, company_id:%s, resume_id:%s, size:%s, data:%s, err:%s",
+                  match_host, company_id, resume_id, size, data, err)
         raise ServerException(msg=err)
 
     return res_success(data=data)
@@ -285,6 +291,8 @@ def upsert_follow_resume(company_id: int, resume_id: int, follow: bool, resume_i
         json=resume_info)
 
     if err:
+        log.error(f"upsert_follow_resume fail: [request put], match_host:%s, company_id:%s, resume_id:%s, follow:%s, resume_info:%s, data:%s, err:%s",
+                  match_host, company_id, resume_id, follow, resume_info, data, err)
         raise ServerException(msg=err)
 
     return res_success(data=data)
@@ -300,6 +308,8 @@ def get_matchdata(
     data, err = requests.get(
         url=f"{match_host}/companies/{company_id}/matchdata")
     if err:
+        log.error(f"get_matchdata fail: [request get], match_host:%s, company_id:%s, data:%s, err:%s",
+                  match_host, company_id, data, err)
         raise ServerException(msg=err)
 
     return res_success(data=data)

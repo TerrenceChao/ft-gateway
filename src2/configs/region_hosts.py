@@ -47,7 +47,7 @@ def get_auth_region_host(region: str):
         region = region.lower()
         return auth_region_hosts[region]
     except Exception as e:
-        log.error(e.__str__())
+        log.error(f"get_auth_region_host fail, region:%s err:%s", region, e.__str__())
         raise RegionException(region=region)
 
 def get_match_region_host(region: str):
@@ -55,7 +55,7 @@ def get_match_region_host(region: str):
         region = region.lower()
         return match_region_hosts[region]
     except Exception as e:
-        log.error(e.__str__())
+        log.error(f"get_match_region_host fail, region:%s err:%s", region, e.__str__())
         raise RegionException(region=region)
 
 def get_search_region_host(region: str):
@@ -63,7 +63,7 @@ def get_search_region_host(region: str):
         region = region.lower()
         return search_region_hosts[region]
     except Exception as e:
-        log.error(e.__str__())
+        log.error(f"get_search_region_host fail, region:%s err:%s", region, e.__str__())
         raise RegionException(region=region)
 
 def get_media_region_host(region: str):
@@ -74,6 +74,6 @@ def get_media_region_host(region: str):
         else:
             return media_region_hosts['default']
     except Exception as e:
-        log.error(e.__str__())
+        log.error(f"get_media_region_host fail, region:%s err:%s", region, e.__str__())
         raise RegionException(region=region)
 

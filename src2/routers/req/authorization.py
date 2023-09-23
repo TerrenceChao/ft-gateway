@@ -24,7 +24,7 @@ def __get_secret(role_id):
 def gen_token(data: dict, fields: List):
     public_info = {}
     if not "role_id" in data:
-        log.error(f" 'role_id' is required in data, data:{data}, fields:{fields}")
+        log.error(f"gen_token fail: ['role_id' is required in data], data:{data}, fields:{fields}")
         raise ServerException(msg="internal server error")
     
     secret = __get_secret(data["role_id"])
@@ -121,9 +121,9 @@ def verify_token_by_logout(token: str = Header(...),
                            role_id: int = Body(..., embed=True),
                            ):
     secret = __get_secret(role_id)
-    data = __jwt_decode(jwt=token, key=secret, algorithms=["HS256"], msg=f"invalid logout")
+    data = __jwt_decode(jwt=token, key=secret, algorithms=["HS256"], msg=f"access denied")
     if not __valid_role_id(data, role_id):
-        raise UnauthorizedException(msg=f"invalid logout")
+        raise UnauthorizedException(msg=f"access denied")
 
 
 def verify_token(request: Request):

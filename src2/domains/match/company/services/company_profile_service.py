@@ -16,6 +16,7 @@ class CompanyProfileService:
         url = f"{host}/companies/"
         data, err = self.req.simple_post(url=url, json=profile.dict())
         if err:
+            log.error(f"CompanyProfileService.create_profile fail: [request post], host:%s, profile:{{%s}}, data:%s, err:%s", host, profile, data, err)
             raise ServerException(msg=err)
 
         return data
@@ -24,6 +25,7 @@ class CompanyProfileService:
         url = f"{host}/companies/{company_id}"
         data, err = self.req.simple_get(url)
         if err:
+            log.error(f"CompanyProfileService.get_profile fail: [request get], host:%s, company_id:%s, data:%s, err:%s", host, company_id, data, err)
             raise ServerException(msg=err)
 
         return data
@@ -32,6 +34,7 @@ class CompanyProfileService:
         url = f"{host}/companies/{company_id}"
         data, err = self.req.simple_put(url=url, json=profile.dict())
         if err:
+            log.error(f"CompanyProfileService.update_profile fail: [request put], host:%s, company_id:%s, profile:{{%s}}, data:%s, err:%s", host, company_id, profile, data, err)
             raise ServerException(msg=err)
 
         return data

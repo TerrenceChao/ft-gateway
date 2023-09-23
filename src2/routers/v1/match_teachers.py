@@ -202,6 +202,8 @@ def apply_job(teacher_id: int, resume_id: int, job_id: int, body=Depends(job_req
             "current_region": body["current_region"],
         })
     if err:
+        log.error(f"apply_job fail: [request put], match_host:%s, teacher_id:%s, resume_id:%s, job_id:%s, body:{{%s}}, contact_job:%s, err:%s",
+                  match_host, teacher_id, resume_id, job_id, body, contact_job, err)
         raise ServerException(msg=err)
 
     return res_success(data=contact_job)
@@ -227,6 +229,8 @@ def reply_job(teacher_id: int, resume_id: int, job_id: int, body=Depends(job_req
             "current_region": body["current_region"],
         })
     if err:
+        log.error(f"reply_job fail: [request put], match_host:%s, teacher_id:%s, resume_id:%s, job_id:%s, body:{{%s}}, contact_job:%s, err:%s",
+                  match_host, teacher_id, resume_id, job_id, body, contact_job, err)
         raise ServerException(msg=err)
 
     return res_success(data=contact_job)
@@ -267,6 +271,8 @@ def get_followed_and_contact_jobs(teacher_id: int, job_id: int, size: int,
             "size": int(size)
         })
     if err:
+        log.error(f"get_followed_and_contact_jobs fail: [request get], match_host:%s, teacher_id:%s, job_id:%s, size:%s, data:%s, err:%s",
+                  match_host, teacher_id, job_id, size, data, err)
         raise ServerException(msg=err)
 
     return res_success(data=data)
@@ -285,6 +291,8 @@ def upsert_follow_job(teacher_id: int, job_id: int, follow: bool, job_info: Dict
         json=job_info)
 
     if err:
+        log.error(f"upsert_follow_job fail: [request put], match_host:%s, teacher_id:%s, job_id:%s, follow:%s, job_info:%s, data:%s, err:%s",
+                  match_host, teacher_id, job_id, follow, job_info, data, err)
         raise ServerException(msg=err)
 
     return res_success(data=data)
@@ -300,6 +308,8 @@ def get_matchdata(
     data, err = requests.get(
         url=f"{match_host}/teachers/{teacher_id}/matchdata")
     if err:
+        log.error(f"get_matchdata fail: [request get], match_host:%s, teacher_id:%s, data:%s, err:%s",
+                  match_host, teacher_id, data, err)
         raise ServerException(msg=err)
 
     return res_success(data=data)

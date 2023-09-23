@@ -16,6 +16,7 @@ class TeacherProfileService:
         url = f"{host}/teachers/"
         data, err = self.req.simple_post(url=url, json=profile.dict())
         if err:
+            log.error(f"TeacherProfileService.create_profile fail: [request post], host:%s, profile:{{%s}}, data:%s, err:%s", host, profile, data, err)
             raise ServerException(msg=err)
 
         return data
@@ -24,6 +25,7 @@ class TeacherProfileService:
         url = f"{host}/teachers/{teacher_id}"
         data, err = self.req.simple_get(url)
         if err:
+            log.error(f"TeacherProfileService.get_profile fail: [request get], host:%s, teacher_id:%s, data:%s, err:%s", host, teacher_id, data, err)
             raise ServerException(msg=err)
 
         return data
@@ -32,6 +34,7 @@ class TeacherProfileService:
         url = f"{host}/teachers/{teacher_id}"
         data, err = self.req.simple_put(url=url, json=profile.dict())
         if err:
+            log.error(f"TeacherProfileService.update_profile fail: [request put], host:%s, teacher_id:%s, profile:{{%s}}, data:%s, err:%s", host, teacher_id, profile, data, err)
             raise ServerException(msg=err)
 
         return data
