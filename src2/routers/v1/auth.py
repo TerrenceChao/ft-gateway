@@ -10,7 +10,7 @@ from ..req.authorization import verify_token_by_logout
 from ..res.response import res_success
 from ...domains.user.services.auth_service import AuthService
 from ...infra.cache.dynamodb_cache_adapter import DynamoDbCacheAdapter
-from ...infra.apis.service_api_dapter import ServiceApiAdapter
+from ...apps.service_api_dapter import ServiceApiAdapter
 from ...configs.dynamodb import dynamodb
 from ...configs.region_hosts import get_auth_region_host, get_match_region_host
 import logging as log

@@ -10,7 +10,7 @@ from ..res.response import res_success
 from ...domains.cache import ICache
 from ...infra.cache.dynamodb_cache_adapter import DynamoDbCacheAdapter, get_cache
 from ...domains.media.services.media_service import MediaService
-from ...infra.apis.service_api_dapter import ServiceApiAdapter, get_service_requests
+from ...apps.service_api_dapter import ServiceApiAdapter
 from ...configs.constants import PATHS
 from ...configs.region_hosts import get_media_region_host
 from ...configs.exceptions import ServerException, ClientException, ForbiddenException

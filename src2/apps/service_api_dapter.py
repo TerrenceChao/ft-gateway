@@ -1,6 +1,6 @@
 import requests as RequestsHTTPLibrary
 from typing import Dict, Union, Any
-from ...domains.service_api import IServiceApi
+from ..domains.service_api import IServiceApi
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
