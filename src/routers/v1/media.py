@@ -1,3 +1,4 @@
+import requests
 from fastapi import APIRouter, \
     Depends, \
     Cookie, Header, Path, Query, Body, Form, \
@@ -6,14 +7,14 @@ from starlette.requests import Request
 from starlette.responses import Response, StreamingResponse
 from ..req.authorization import AuthMatchRoute, token_required
 from ..res.response import res_success
-from ...repositories.cache import Cache
-from ...cache.dynamodb_cache import get_cache
-from ...services.media.media_service import MediaService
-from ...services.service_requests import ServiceRequests
+from ...domains.cache import ICache
+from ...infra.cache.dynamodb_cache_adapter import DynamoDbCacheAdapter, get_cache
+from ...domains.media.services.media_service import MediaService
+from ...apps.service_api_dapter import ServiceApiAdapter
 from ...configs.constants import PATHS
 from ...configs.region_hosts import get_media_region_host
 from ...configs.exceptions import ServerException, ClientException, ForbiddenException
-from ...utils.util import get_serial_num
+from ...infra.utils.util import get_serial_num
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
@@ -32,7 +33,7 @@ def get_media_host(current_region: str = Header(...)):
     return get_media_region_host(region=current_region)
 
 
-_media_service = MediaService(ServiceRequests())
+_media_service = MediaService(ServiceApiAdapter(requests))
 
 
 @router.get("/{role}/{role_id}/upload-params")
@@ -41,7 +42,7 @@ def upload_params(role: str,
                   filename: str = Query(...),
                   mime_type: str = Query(...),
                   media_host: str = Depends(get_media_host),
-                  cache: Cache = Depends(get_cache),
+                  cache: ICache = Depends(get_cache),
                   ):
     if not role in PATHS.keys():
         raise ClientException(
@@ -66,7 +67,7 @@ def remove(role: str,
            role_id: str,
            object_key: str = Query(...),
            media_host: str = Depends(get_media_host),
-           cache: Cache = Depends(get_cache),
+           cache: ICache = Depends(get_cache),
            ):
     if not role in PATHS.keys():
         raise ClientException(

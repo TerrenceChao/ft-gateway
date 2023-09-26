@@ -13,9 +13,9 @@ from ...configs.exceptions import ClientException, \
     NotFoundException, \
     DuplicateUserException, \
     ServerException
-from ...db.nosql import auth_schemas
+from ...infra.db.nosql import auth_schemas
 from ..res.response import res_success
-from ...services.service_requests import get_service_requests
+from ...apps.service_api_dapter import ServiceApiAdapter, get_service_requests
 from ...configs.region_hosts import get_auth_region_host, get_match_region_host
 from ...configs.conf import SHORT_TERM_TTL, LONG_TERM_TTL
 import logging as log

@@ -1,6 +1,4 @@
-from typing import Any
 from redis import Redis
-from ..repositories.cache import Cache
 from .conf import REDIS_HOST, REDIS_PORT, REDIS_USER, REDIS_PASS
 import logging as log
 

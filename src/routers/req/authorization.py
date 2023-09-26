@@ -5,7 +5,7 @@ from typing import Callable, List, Union
 import jwt as jwt_util
 from fastapi import APIRouter, FastAPI, Header, Body, Request, Response
 from fastapi.routing import APIRoute
-from ...db.nosql import match_companies_schemas as com_schema, \
+from ...infra.db.nosql import match_companies_schemas as com_schema, \
     match_teachers_schemas as teacher_schema
 from ...configs.conf import JWT_SECRET, TOKEN_EXPIRE_TIME
 from ...configs.exceptions import ServerException, UnauthorizedException, NotFoundException
@@ -24,7 +24,7 @@ def __get_secret(role_id):
 def gen_token(data: dict, fields: List):
     public_info = {}
     if not "role_id" in data:
-        log.error(f" 'role_id' is required in data, data:{data}, fields:{fields}")
+        log.error(f"gen_token fail: ['role_id' is required in data], data:{data}, fields:{fields}")
         raise ServerException(msg="internal server error")
     
     secret = __get_secret(data["role_id"])
@@ -115,6 +115,15 @@ def verify_token_by_teacher_profile(request: Request,
     if not __valid_role(data, request.url.path) or \
         not __valid_role_id(data, teacher_id):
         raise UnauthorizedException(msg="invalid teacher user")
+
+
+def verify_token_by_logout(token: str = Header(...),
+                           role_id: int = Body(..., embed=True),
+                           ):
+    secret = __get_secret(role_id)
+    data = __jwt_decode(jwt=token, key=secret, algorithms=["HS256"], msg=f"access denied")
+    if not __valid_role_id(data, role_id):
+        raise UnauthorizedException(msg=f"access denied")
 
 
 def verify_token(request: Request):
