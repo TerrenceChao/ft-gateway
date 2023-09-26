@@ -13,7 +13,8 @@ class CompanyJobService:
     def __init__(self, req: IServiceApi):
         self.req = req
 
-    def create_job(self, host: str, company_id: int, job: schemas.Job, profile: schemas.CompanyProfile = None):
+    def create_job(self, host: str, register_region: str, company_id: int, job: schemas.Job, profile: schemas.CompanyProfile = None):
+        job.published_in = register_region
         data, err = self.req.simple_post(
             url=f"{host}/companies/{company_id}/jobs",
             json={

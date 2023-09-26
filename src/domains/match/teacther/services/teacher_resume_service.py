@@ -12,7 +12,8 @@ class TeacherResumeService:
     def __init__(self, req: IServiceApi):
         self.req = req
 
-    def create_resume(self, host: str, teacher_id: int, resume: schemas.Resume, profile: schemas.TeacherProfile = None):
+    def create_resume(self, host: str, register_region: str, teacher_id: int, resume: schemas.Resume, profile: schemas.TeacherProfile = None):
+        resume.published_in = register_region
         data, err = self.req.simple_post(
             url=f"{host}/teachers/{teacher_id}/resumes",
             json={

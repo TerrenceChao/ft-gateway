@@ -41,6 +41,7 @@ class Resume(BaseModel):
     intro: Optional[str] = None
     enable: bool
     sections: Optional[List[ResumeSection]] = None
+    published_in: Optional[str] = None
 
 
 class SoftResume(BaseModel):

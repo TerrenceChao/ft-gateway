@@ -86,10 +86,11 @@ def create_job(company_id: int,
                profile: schemas.CompanyProfile = Body(
                    None, embed=True),  # Nullable
                job: schemas.Job = Body(..., embed=True),
+               register_region: str = Header(...),
                match_host=Depends(get_match_host),
                ):
     data = _company_job_service.create_job(
-        host=match_host, company_id=company_id, job=job, profile=profile)
+        host=match_host, register_region=register_region, company_id=company_id, job=job, profile=profile)
     return res_success(data=data)
 
 

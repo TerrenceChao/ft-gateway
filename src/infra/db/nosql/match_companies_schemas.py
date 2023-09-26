@@ -35,6 +35,8 @@ class Job(BaseModel):
     job_desc: Dict
     others: Optional[Dict] = None  # extra data, photos
     enable: bool = True
+    published_in: Optional[str] = None
+    
 
 
 class SoftJob(BaseModel):

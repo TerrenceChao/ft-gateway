@@ -86,10 +86,11 @@ def create_resume(teacher_id: int,
                   profile: schemas.TeacherProfile = Body(
                       None, embed=True),  # Nullable
                   resume: schemas.Resume = Body(..., embed=True),
+                  register_region: str = Header(...),
                   match_host=Depends(get_match_host),
                   ):
     data = _teacher_resume_service.create_resume(
-        host=match_host, teacher_id=teacher_id, resume=resume, profile=profile)
+        host=match_host, register_region=register_region, teacher_id=teacher_id, resume=resume, profile=profile)
     return res_success(data=data)
 
 
