@@ -46,6 +46,7 @@ _teacher_resume_service = TeacherResumeService(ServiceApiAdapter(requests))
 _follow_job_service = FollowJobService(ServiceApiAdapter(requests))
 _contact_job_service = ContactJobService(ServiceApiAdapter(requests))
 
+
 """[此 API 在一開始註冊時會用到]
 Returns:
     [Teacher]: [description]

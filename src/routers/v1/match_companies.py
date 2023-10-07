@@ -195,7 +195,9 @@ def upsert_follow_resume(company_id: int,
 
 @router.get("/{company_id}/resume-follows",
             response_model=com_res.FollowResumeListResponseVO)
-def get_followed_resume_list(company_id: int, size: int, next_ts: int = None,
+def get_followed_resume_list(company_id: int, 
+                             size: int, 
+                             next_ts: int = None,
                              match_host=Depends(get_match_host),
                              ):
     data = _follow_resume_service.get_followed_resume_list(
