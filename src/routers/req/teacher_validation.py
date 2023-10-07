@@ -8,7 +8,7 @@ from ...configs.conf import MAX_TAGS
 from ...configs.exceptions import ClientException
 from ...domains.match.public_value_objects import BaseJobVO
 from ...domains.match.teacher.value_objects.t_value_objects import \
-    UpdateTeacherProfileVO, ResumeVO, UpdateResumeVO
+    UpdateTeacherProfileVO, ResumeVO, UpdateResumeVO, ApplyJobVO
 
 
 def __parse_resume_sections(teacher_id, resume_id, sections):
@@ -71,3 +71,11 @@ def upsert_follow_job_check_job(
 ) -> (Dict):
     # job_info.jid = job_id
     return job_info.dict()
+
+def apply_job_check(register_region: str = Header(...),
+                    current_region: str = Header(...),
+                    body: ApplyJobVO = Body(...),
+                    ):
+    body.current_region = current_region
+    body.resume_info.published_in = register_region
+    return body

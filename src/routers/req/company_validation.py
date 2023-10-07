@@ -8,7 +8,7 @@ from ...configs.conf import MAX_TAGS
 from ...configs.exceptions import ClientException
 from ...domains.match.public_value_objects import BaseResumeVO
 from ...domains.match.company.value_objects.c_value_objects import \
-    UpdateCompanyProfileVO, JobVO, UpdateJobVO
+    UpdateCompanyProfileVO, JobVO, UpdateJobVO, ApplyResumeVO
 
 
 # def create_job_check_profile(
@@ -62,3 +62,12 @@ def upsert_follow_resume_check_resume(
 ) -> (Dict):
     # resume_info.rid = resume_id
     return resume_info.dict()
+
+
+def apply_resume_check(register_region: str = Header(...),
+                       current_region: str = Header(...),
+                       body: ApplyResumeVO = Body(...)
+                       ):
+    body.current_region = current_region
+    body.job_info.published_in = register_region
+    return body

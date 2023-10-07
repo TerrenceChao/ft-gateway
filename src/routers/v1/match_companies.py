@@ -13,10 +13,9 @@ from ..req.company_validation import *
 from ..res.response import res_success, response_vo
 from ..res import company_response as com_res
 from ...domains.match.company.value_objects import c_value_objects as com_vo
-from ...domains.match.company.services.company_profile_service import CompanyProfileService
+from ...domains.match.company.services.company_service import CompanyProfileService, CompanyAggregateService
 from ...domains.match.company.services.company_job_service import CompanyJobService
-from ...domains.match.company.services.follow_resume_service import FollowResumeService
-from ...domains.match.company.services.contact_resume_service import ContactResumeService
+from ...domains.match.company.services.follow_and_contact_resume_service import FollowResumeService, ContactResumeService
 from ...apps.service_api_dapter import ServiceApiAdapter, get_service_requests
 from ...configs.constants import Apply
 from ...configs.region_hosts import get_match_region_host
@@ -45,6 +44,8 @@ _company_profile_service = CompanyProfileService(ServiceApiAdapter(requests))
 _company_job_service = CompanyJobService(ServiceApiAdapter(requests))
 _follow_resume_service = FollowResumeService(ServiceApiAdapter(requests))
 _contact_resume_service = ContactResumeService(ServiceApiAdapter(requests))
+_company_aggregate_service = CompanyAggregateService(
+    ServiceApiAdapter(requests))
 
 
 """[此 API 在一開始註冊時會用到]
@@ -184,7 +185,7 @@ def delete_job(company_id: int,
             response_model=com_res.FollowResumeResponseVO)
 def upsert_follow_resume(company_id: int,
                          resume_id: int,
-                         resume_info: Dict = Body(None),
+                         resume_info: com_vo.BaseResumeVO = Body(None),
                          match_host=Depends(get_match_host),
                          ):
     data = _follow_resume_service.upsert_follow_resume(
@@ -195,8 +196,8 @@ def upsert_follow_resume(company_id: int,
 
 @router.get("/{company_id}/resume-follows",
             response_model=com_res.FollowResumeListResponseVO)
-def get_followed_resume_list(company_id: int, 
-                             size: int, 
+def get_followed_resume_list(company_id: int,
+                             size: int,
                              next_ts: int = None,
                              match_host=Depends(get_match_host),
                              ):
@@ -229,15 +230,6 @@ def delete_followed_resume(company_id: int,
 """[contact-resume]"""
 
 
-def apply_resume_check(register_region: str = Header(...),
-                       current_region: str = Header(...),
-                       body: com_vo.ApplyResumeVO = Body(...)
-                       ):
-    body.current_region = current_region
-    body.job_info.published_in = register_region
-    return body
-
-
 # TODO: resume_info: Dict >> resume_info 是 "ContactResume".resume_info (Dict/JSON, 是 Contact!!)
 @router.put("/{company_id}/apply-resume",
             response_model=com_res.ContactResumeResponseVO)
@@ -254,10 +246,10 @@ def apply_resume(company_id: int = Path(...),
 @router.get("/{company_id}/resume-contacts",
             response_model=com_res.ContactResumeListResponseVO)
 def get_contacted_resume_list(company_id: int = Path(...),
-                                        size: int = Query(None),
-                                        next_ts: int = Query(None),
-                                        match_host=Depends(get_match_host),
-                                        ):
+                              size: int = Query(None),
+                              next_ts: int = Query(None),
+                              match_host=Depends(get_match_host),
+                              ):
     # proactively
     my_statuses: List = [Apply.CONFRIM]
     statuses: List = [Apply.PENDING]
@@ -275,10 +267,10 @@ def get_contacted_resume_list(company_id: int = Path(...),
 @router.get("/{company_id}/resume-applications",
             response_model=com_res.ContactResumeListResponseVO)
 def get_resume_application_list(company_id: int = Path(...),
-                                          size: int = Query(None),
-                                          next_ts: int = Query(None),
-                                          match_host=Depends(get_match_host),
-                                          ):
+                                size: int = Query(None),
+                                next_ts: int = Query(None),
+                                match_host=Depends(get_match_host),
+                                ):
     # passively
     my_statuses: List = [Apply.PENDING]
     statuses: List = []
@@ -298,7 +290,7 @@ def delete_any_contacted_resume(company_id: int,
                                 resume_id: int,
                                 match_host=Depends(get_match_host),
                                 ):
-    data = _contact_resume_service.get_any_contacted_resume_list(
+    data = _contact_resume_service.delete_any_contacted_resume(
         host=match_host, company_id=company_id, resume_id=resume_id)
 
     return res_success(data=data)
@@ -307,40 +299,25 @@ def delete_any_contacted_resume(company_id: int,
 """[others]"""
 
 
-@router.get("/{company_id}/follow-and-contact/resumes")
+@router.get("/{company_id}/follow-and-contact/resumes",
+            response_model=com_res.CompanyFollowAndContactResponseVO)
 def get_follows_and_contacts_at_first(company_id: int,
-                                       size: int = None,
-                                       match_host=Depends(get_match_host),
-                                       requests=Depends(get_service_requests),
-                                       ):
-    data, err = requests.get(
-        url=f"{match_host}/companies/{company_id}/resumes/follow-and-apply",
-        params={
-            "size": size,
-        })
-    if err:
-        log.error(f"get_followed_and_contact_resumes fail: [request get], match_host:%s, company_id:%s, size:%s, data:%s, err:%s",
-                  match_host, company_id, size, data, err)
-        raise ServerException(msg=err)
+                                      size: int = None,
+                                      match_host=Depends(get_match_host),
+                                      ):
+    data = _company_aggregate_service.get_resume_follows_and_contacts(
+        host=match_host, company_id=company_id, size=size)
 
     return res_success(data=data)
 
 
-@router.get("/{company_id}/matchdata")
-def get_matchdata(
-    company_id: int,
-    size: int = None,
-    match_host=Depends(get_match_host),
-    requests=Depends(get_service_requests),
-):
-    data, err = requests.get(
-        url=f"{match_host}/companies/{company_id}/matchdata",
-        params={
-            "size": size,
-        })
-    if err:
-        log.error(f"get_matchdata fail: [request get], match_host:%s, company_id:%s, size:%s, data:%s, err:%s",
-                  match_host, company_id, size, data, err)
-        raise ServerException(msg=err)
+@router.get("/{company_id}/matchdata",
+            response_model=com_res.CompanyMatchDataResponseVO)
+def get_matchdata(company_id: int,
+                  size: int = None,
+                  match_host=Depends(get_match_host),
+                  ):
+    data = _company_aggregate_service.get_matchdata(
+        host=match_host, company_id=company_id, size=size)
 
     return res_success(data=data)

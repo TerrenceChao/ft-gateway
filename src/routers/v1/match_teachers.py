@@ -13,10 +13,9 @@ from ..req.teacher_validation import *
 from ..res.response import res_success, response_vo
 from ..res import teacher_response as teach_res
 from ...domains.match.teacher.value_objects import t_value_objects as teach_vo
-from ...domains.match.teacher.services.teacher_profile_service import TeacherProfileService
+from ...domains.match.teacher.services.teacher_service import TeacherProfileService, TeacherAggregateService
 from ...domains.match.teacher.services.teacher_resume_service import TeacherResumeService
-from ...domains.match.teacher.services.follow_job_service import FollowJobService
-from ...domains.match.teacher.services.contact_job_service import ContactJobService
+from ...domains.match.teacher.services.follow_and_contact_job_service import FollowJobService, ContactJobService
 from ...apps.service_api_dapter import ServiceApiAdapter, get_service_requests
 from ...configs.constants import Apply
 from ...configs.region_hosts import get_match_region_host
@@ -45,6 +44,8 @@ _teacher_profile_service = TeacherProfileService(ServiceApiAdapter(requests))
 _teacher_resume_service = TeacherResumeService(ServiceApiAdapter(requests))
 _follow_job_service = FollowJobService(ServiceApiAdapter(requests))
 _contact_job_service = ContactJobService(ServiceApiAdapter(requests))
+_teacher_aggregate_service = TeacherAggregateService(
+    ServiceApiAdapter(requests))
 
 
 """[此 API 在一開始註冊時會用到]
@@ -183,7 +184,7 @@ def delete_resume(teacher_id: int,
             response_model=teach_res.FollowJobResponseVO)
 def upsert_follow_job(teacher_id: int,
                       job_id: int,
-                      job_info: Dict = Body(...),
+                      job_info: teach_vo.BaseJobVO = Body(...),
                       match_host=Depends(get_match_host),
                       ):
     data = _follow_job_service.upsert_follow_job(
@@ -228,15 +229,6 @@ def delete_followed_job(teacher_id: int,
 """[contact-job]"""
 
 
-def apply_job_check(register_region: str = Header(...),
-                    current_region: str = Header(...),
-                    body: teach_vo.ApplyJobVO = Body(...),
-                    ):
-    body.current_region = current_region
-    body.resume_info.published_in = register_region
-    return body
-
-
 # TODO: job_info: Dict >> job_info 是 "ContactJob".job_info (Dict/JSON, 是 Contact!!)
 @router.put("/{teacher_id}/apply-job",
             response_model=teach_res.ContactJobResponseVO)
@@ -253,10 +245,10 @@ def apply_job(teacher_id: int = Path(...),
 @router.get("/{teacher_id}/job-applications",
             response_model=teach_res.ContactJobListResponseVO)
 def get_applied_job_list(teacher_id: int = Path(...),
-                                         size: int = Query(None),
-                                         next_ts: int = Query(None),
-                                         match_host=Depends(get_match_host),
-                                         ):
+                         size: int = Query(None),
+                         next_ts: int = Query(None),
+                         match_host=Depends(get_match_host),
+                         ):
     # proactively
     my_statuses: List = [Apply.CONFRIM]
     statuses: List = [Apply.PENDING]
@@ -274,10 +266,10 @@ def get_applied_job_list(teacher_id: int = Path(...),
 @router.get("/{teacher_id}/job-positions",
             response_model=teach_res.ContactJobListResponseVO)
 def get_job_position_list(teacher_id: int = Path(...),
-                                    size: int = Query(None),
-                                    next_ts: int = Query(None),
-                                    match_host=Depends(get_match_host),
-                                    ):
+                          size: int = Query(None),
+                          next_ts: int = Query(None),
+                          match_host=Depends(get_match_host),
+                          ):
     # passively
     my_statuses: List = [Apply.PENDING]
     statuses: List = []
@@ -306,40 +298,25 @@ def delete_any_contacted_job(teacher_id: int,
 """[others]"""
 
 
-@router.get("/{teacher_id}/follow-and-application/jobs")
+@router.get("/{teacher_id}/follow-and-application/jobs",
+            response_model=teach_res.TeacherFollowAndContactResponseVO)
 def get_follows_and_applications_at_first(teacher_id: int,
-                                  size: int = None,
-                                  match_host=Depends(get_match_host),
-                                  requests=Depends(get_service_requests),
-                                  ):
-    data, err = requests.get(
-        url=f"{match_host}/teachers/{teacher_id}/jobs/follow-and-apply",
-        params={
-            "size": size,
-        })
-    if err:
-        log.error(f"get_followed_and_contact_jobs fail: [request get], match_host:%s, teacher_id:%s, size:%s, data:%s, err:%s",
-                  match_host, teacher_id, size, data, err)
-        raise ServerException(msg=err)
+                                          size: int = None,
+                                          match_host=Depends(get_match_host),
+                                          ):
+    data = _teacher_aggregate_service.get_job_follows_and_contacts(
+        host=match_host, teacher_id=teacher_id, size=size)
 
     return res_success(data=data)
 
 
-@router.get("/{teacher_id}/matchdata")
-def get_matchdata(
-    teacher_id: int,
-    size: int = None,
-    match_host=Depends(get_match_host),
-    requests=Depends(get_service_requests),
-):
-    data, err = requests.get(
-        url=f"{match_host}/teachers/{teacher_id}/matchdata",
-        params={
-            "size": size,
-        })
-    if err:
-        log.error(f"get_matchdata fail: [request get], match_host:%s, teacher_id:%s, size:%s, data:%s, err:%s",
-                  match_host, teacher_id, size, data, err)
-        raise ServerException(msg=err)
+@router.get("/{teacher_id}/matchdata",
+            response_model=teach_res.TeacherMatchDataResponseVO)
+def get_matchdata(teacher_id: int,
+                  size: int = None,
+                  match_host=Depends(get_match_host),
+                  ):
+    data = _teacher_aggregate_service.get_matchdata(
+        host=match_host, teacher_id=teacher_id, size=size)
 
     return res_success(data=data)
