@@ -1,6 +1,6 @@
 from typing import Any, List, Dict
 from ....service_api import IServiceApi
-from .....infra.db.nosql import match_companies_schemas as schemas
+from .....domains.match.company.value_objects import c_value_objects as com_vo
 from .....configs.exceptions import \
     ClientException, ServerException
 import logging as log
@@ -12,8 +12,8 @@ class CompanyProfileService:
     def __init__(self, req: IServiceApi):
         self.req = req
 
-    def create_profile(self, host: str, profile: schemas.CompanyProfile):
-        url = f"{host}/companies/"
+    def create_profile(self, host: str, company_id: int, profile: com_vo.CompanyProfileVO):
+        url = f"{host}/companies/{company_id}"
         data, err = self.req.simple_post(url=url, json=profile.dict())
         if err:
             log.error(f"CompanyProfileService.create_profile fail: [request post], host:%s, profile:{{%s}}, data:%s, err:%s", host, profile, data, err)
@@ -30,7 +30,7 @@ class CompanyProfileService:
 
         return data
 
-    def update_profile(self, host: str, company_id: int, profile: schemas.SoftCompanyProfile):
+    def update_profile(self, host: str, company_id: int, profile: com_vo.UpdateCompanyProfileVO):
         url = f"{host}/companies/{company_id}"
         data, err = self.req.simple_put(url=url, json=profile.dict())
         if err:

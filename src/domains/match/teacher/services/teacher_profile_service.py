@@ -1,6 +1,6 @@
 from typing import Any, List, Dict
 from ....service_api import IServiceApi
-from .....infra.db.nosql import match_teachers_schemas as schemas
+from .....domains.match.teacher.value_objects import t_value_objects as teach_vo
 from .....configs.exceptions import \
     ClientException, ServerException
 import logging as log
@@ -12,8 +12,8 @@ class TeacherProfileService:
     def __init__(self, req: IServiceApi):
         self.req = req
 
-    def create_profile(self, host: str, profile: schemas.TeacherProfile):
-        url = f"{host}/teachers/"
+    def create_profile(self, host: str, teacher_id: int, profile: teach_vo.TeacherProfileVO):
+        url = f"{host}/teachers/{teacher_id}"
         data, err = self.req.simple_post(url=url, json=profile.dict())
         if err:
             log.error(f"TeacherProfileService.create_profile fail: [request post], host:%s, profile:{{%s}}, data:%s, err:%s", host, profile, data, err)
@@ -30,7 +30,7 @@ class TeacherProfileService:
 
         return data
 
-    def update_profile(self, host: str, teacher_id: int, profile: schemas.SoftTeacherProfile):
+    def update_profile(self, host: str, teacher_id: int, profile: teach_vo.UpdateTeacherProfileVO):
         url = f"{host}/teachers/{teacher_id}"
         data, err = self.req.simple_put(url=url, json=profile.dict())
         if err:

@@ -1,6 +1,6 @@
 from typing import Any, List, Dict
 from ....service_api import IServiceApi
-from .....infra.db.nosql import match_teachers_schemas as schemas
+from .....domains.match.teacher.value_objects import t_value_objects as teach_vo
 from .....configs.exceptions import \
     ClientException, ServerException
 import logging as log
@@ -12,7 +12,7 @@ class TeacherResumeService:
     def __init__(self, req: IServiceApi):
         self.req = req
 
-    def create_resume(self, host: str, register_region: str, teacher_id: int, resume: schemas.Resume, profile: schemas.TeacherProfile = None):
+    def create_resume(self, host: str, register_region: str, teacher_id: int, resume: teach_vo.ResumeVO, profile: teach_vo.UpdateTeacherProfileVO = None):
         resume.published_in = register_region
         data, err = self.req.simple_post(
             url=f"{host}/teachers/{teacher_id}/resumes",
@@ -28,7 +28,7 @@ class TeacherResumeService:
 
     def get_brief_resumes(self, host: str, teacher_id: int):
         data, err = self.req.simple_get(
-            url=f"{host}/teachers/{teacher_id}/resumes/brief")
+            url=f"{host}/teachers/{teacher_id}/brief-resumes")
         # log.info(data)
         if err:
             log.error(f"TeacherResumeService.get_brief_resumes fail: [request get], host:%s, teacher_id:%s, data:%s, err:%s", host, teacher_id, data, err)
@@ -45,7 +45,7 @@ class TeacherResumeService:
 
         return data
 
-    def update_resume(self, host: str, teacher_id: int, resume_id: int, resume: schemas.SoftResume = None, profile: schemas.SoftTeacherProfile = None):
+    def update_resume(self, host: str, teacher_id: int, resume_id: int, resume: teach_vo.UpdateResumeVO = None, profile: teach_vo.UpdateTeacherProfileVO = None):
         if profile == None and resume == None:
             raise ClientException(
                 msg="at least one of the profile or resume is required")

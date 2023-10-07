@@ -22,6 +22,8 @@ SHORT_TERM_TTL = int(os.getenv("SHORT_TERM_TTL", "300"))
 # default = 14 days (14 * 86400 secs)
 LONG_TERM_TTL = int(os.getenv("LONG_TERM_TTL", "1209600"))
 
+MAX_TAGS = int(os.getenv("MAX_TAGS", "7"))
+
 FT_BUCKET = os.getenv("FT_BUCKET", "foreign-teacher")
 MULTIPART_THRESHOLD = int(os.getenv("MULTIPART_THRESHOLD", 512))
 MAX_CONCURRENCY = int(os.getenv("MAX_CONCURRENCY", 10))

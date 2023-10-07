@@ -1,32 +1,32 @@
 import json
 from typing import Dict, List, Optional
 from pydantic import BaseModel, EmailStr
+from .match_public_schemas import BaseEntity
 from ....configs.constants import Apply
 
 
-class ContactJob(BaseModel):
+class ContactJob(BaseEntity):
     jid: int
     tid: int
     rid: int  # NOT ForeignKey
-    enable: bool
-    read: bool
     status: Optional[Apply] = Apply.PENDING
     my_status: Optional[Apply] = Apply.PENDING
-    job_info: Dict
+    job_info: Optional[Dict] = None
+
+    def fine_dict(self):
+        dictionary = self.dict()
+        dictionary["status"] = self.status.value
+        dictionary["my_status"] = self.my_status.value
+        return dictionary
 
 
-class FollowJob(BaseModel):
+class FollowJob(BaseEntity):
     jid: int
     tid: int
-    follow: bool
-    job_info: Dict
+    job_info: Optional[Dict] = None
 
 
-# class BaseSchema(BaseModel):
-#   id: Optional[int] = None
-
-
-class ResumeSection(BaseModel):
+class ResumeSection(BaseEntity):
     sid: Optional[int] = None
     tid: int
     rid: int  # NOT ForeignKey
@@ -35,49 +35,28 @@ class ResumeSection(BaseModel):
     context: Dict
 
 
-class Resume(BaseModel):
+class Resume(BaseEntity):
     rid: Optional[int] = None
     tid: int
     intro: Optional[str] = None
-    enable: bool
-    sections: Optional[List[ResumeSection]] = None
+    sections: Optional[List[ResumeSection]] = []
+    tags: Optional[List[str]] = []
+    enable: Optional[bool] = True
+    # it's optional in gateway
     published_in: Optional[str] = None
 
 
-class SoftResume(BaseModel):
-    rid: Optional[int] = None
+class TeacherProfile(BaseEntity):
     tid: int
-    intro: Optional[str] = None
-    enable: Optional[bool]
-    sections: Optional[List[ResumeSection]] = None
-
-
-class TeacherProfile(BaseModel):
-    tid: int
-    fullname: str
-    email: EmailStr
+    fullname: Optional[str] = None
+    email: Optional[EmailStr] = None
     avator: Optional[str] = None
     brief_intro: Optional[str] = None
-    is_verified: bool
+    is_verified: Optional[bool] = False
 
 
-class SoftTeacherProfile(BaseModel):
-    tid: int
-    fullname: Optional[str]
-    email: Optional[EmailStr]
-    avator: Optional[str] = None
-    brief_intro: Optional[str] = None
-    is_verified: Optional[bool]
-
-
-# for response model
-class UpsertTeacherProfileResume(BaseModel):
-    profile: SoftTeacherProfile = None
-    resume: SoftResume
-
-
+'''Teacher(TeacherProfile): Used for remote copies'''
 class Teacher(TeacherProfile):
-    resumes: Optional[List[Resume]] = None
-    # TODO: deprecated >> resume_sections: Optional[List[ResumeSection]] = None
-    follow_jobs: Optional[List[FollowJob]] = None
-    contact_jobs: Optional[List[ContactJob]] = None
+    resumes: Optional[List[Resume]] = []
+    follow_jobs: Optional[List[FollowJob]] = []
+    contact_jobs: Optional[List[ContactJob]] = []

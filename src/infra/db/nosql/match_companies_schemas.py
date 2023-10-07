@@ -1,82 +1,59 @@
 import json
 from typing import Dict, List, Optional
 from pydantic import BaseModel
+from .match_public_schemas import BaseEntity
 from ....configs.constants import Apply
 
-
-class ContactResume(BaseModel):
+class ContactResume(BaseEntity):
     rid: int
     cid: int
     jid: int  # NOT ForeignKey
-    enable: bool
-    read: bool
     status: Optional[Apply] = Apply.PENDING
     my_status: Optional[Apply] = Apply.PENDING
-    resume_info: Dict
+    resume_info: Optional[Dict] = None
+
+    def fine_dict(self):
+        dictionary = self.dict()
+        dictionary["status"] = self.status.value
+        dictionary["my_status"] = self.my_status.value
+        return dictionary
 
 
-class FollowResume(BaseModel):
+class FollowResume(BaseEntity):
     rid: int
     cid: int
-    follow: bool = True
-    resume_info: Dict
+    resume_info: Optional[Dict] = None
 
 
-# class BaseSchema(BaseModel):
-#   id: Optional[int] = None
-
-
-class Job(BaseModel):
+class Job(BaseEntity):
     jid: Optional[int] = None
     cid: int
-    title: str
-    region: str
-    salary: str
-    job_desc: Dict
-    others: Optional[Dict] = None  # extra data, photos
-    enable: bool = True
-    published_in: Optional[str] = None
-    
-
-
-class SoftJob(BaseModel):
-    jid: Optional[int] = None
-    cid: int
-    title: Optional[str]
-    region: Optional[str]
-    salary: Optional[str]
-    job_desc: Optional[Dict]
-    others: Optional[Dict] = None  # extra data, photos
+    title: Optional[str] = None
+    region: Optional[str] = None
+    salary: Optional[str] = None
+    job_desc: Optional[Dict] = None
+    # extra data, photos
+    others: Optional[Dict] = None
+    tags: Optional[List[str]] = []
     enable: Optional[bool] = True
+    # it's optional in gateway
+    published_in: Optional[str] = None
 
 
-class CompanyProfile(BaseModel):
+class CompanyProfile(BaseEntity):
     cid: int
-    name: str
+    name: Optional[str] = None
+    intro: Optional[str] = None
     logo: Optional[str] = None
-    intro: str
-    overview: Dict  # size, founded, revenue, ... etc (json)
-    sections: List[Dict]  # who, what, where, ... etc (json array)
-    photos: Optional[List[Dict]] = None
+    # size, founded, revenue, ... etc (json)
+    overview: Optional[Dict] = None
+    # who, what, where, ... etc (json array)
+    sections: Optional[List[Dict]] = []
+    photos: Optional[List[Dict]] = []
 
 
-class SoftCompanyProfile(BaseModel):
-    cid: int
-    name: Optional[str]
-    logo: Optional[str] = None
-    intro: Optional[str]
-    overview: Optional[Dict]  # size, founded, revenue, ... etc (json)
-    sections: Optional[List[Dict]]  # who, what, where, ... etc (json array)
-    photos: Optional[List[Dict]] = None
-
-
-# for response model
-class UpsertCompanyProfileJob(BaseModel):
-    profile: SoftCompanyProfile = None
-    job: SoftJob
-
-
+'''Company(CompanyProfile): Used for remote copies'''
 class Company(CompanyProfile):
-    jobs: Optional[List[Job]] = None
-    follow_resumes: Optional[List[FollowResume]] = None
-    contact_resumes: Optional[List[ContactResume]] = None
+    jobs: Optional[List[Job]] = []
+    follow_resumes: Optional[List[FollowResume]] = []
+    contact_resumes: Optional[List[ContactResume]] = []

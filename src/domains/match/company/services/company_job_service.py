@@ -1,6 +1,6 @@
 from typing import Any, List, Dict
 from ....service_api import IServiceApi
-from .....infra.db.nosql import match_companies_schemas as schemas
+from .....domains.match.company.value_objects import c_value_objects as com_vo
 from .....configs.constants import BRIEF_JOB_SIZE
 from .....configs.exceptions import \
     ClientException, ServerException
@@ -13,7 +13,7 @@ class CompanyJobService:
     def __init__(self, req: IServiceApi):
         self.req = req
 
-    def create_job(self, host: str, register_region: str, company_id: int, job: schemas.Job, profile: schemas.CompanyProfile = None):
+    def create_job(self, host: str, register_region: str, company_id: int, job: com_vo.JobVO, profile: com_vo.UpdateCompanyProfileVO = None):
         job.published_in = register_region
         data, err = self.req.simple_post(
             url=f"{host}/companies/{company_id}/jobs",
@@ -28,11 +28,11 @@ class CompanyJobService:
 
         return data
 
-    def get_brief_jobs(self, host: str, company_id: int, job_id: int, size: int):
+    def get_brief_jobs(self, host: str, company_id: int, size: int, job_id: int = None):
         data, err = self.req.simple_get_list(
-            url=f"{host}/companies/{company_id}/jobs/brief",
+            url=f"{host}/companies/{company_id}/brief-jobs",
             params={
-                "job_id": int(job_id) if job_id else 0,
+                "job_id": int(job_id) if job_id else None,
                 "size": int(size) if size else BRIEF_JOB_SIZE,
             })
         # log.info(data)
@@ -53,7 +53,7 @@ class CompanyJobService:
 
         return data
 
-    def update_job(self, host: str, company_id: int, job_id: int, job: schemas.SoftJob = None, profile: schemas.SoftCompanyProfile = None):
+    def update_job(self, host: str, company_id: int, job_id: int, job: com_vo.UpdateJobVO = None, profile: com_vo.UpdateCompanyProfileVO = None):
         if profile == None and job == None:
             raise ClientException(
                 msg="at least one of the profile or job is required")
