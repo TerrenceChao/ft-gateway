@@ -31,6 +31,7 @@ def get_resumes(limit: int,
                 search_host=Depends(get_search_host),
                 requests=Depends(get_service_requests),
 ):
+    # TODO: improve process
     data, err = requests.get(f"{search_host}/resumes")
     if err:
         return res_err(msg=err)
@@ -43,6 +44,7 @@ def get_resume_by_id(rid: int,
                     search_host=Depends(get_search_host),
                     requests=Depends(get_service_requests),
 ):
+    # TODO: improve process
     data, err = requests.get(f"{search_host}/resumes/{rid}")
     if err:
         return res_err(msg=err)
@@ -57,6 +59,7 @@ def get_jobs(limit: int,
             search_host=Depends(get_search_host),
             requests=Depends(get_service_requests),
 ):
+    # TODO: improve process
     data, err = requests.get(f"{search_host}/jobs")
     if err:
         return res_err(msg=err)
@@ -69,6 +72,7 @@ def get_job_by_id(jid: int,
                 search_host=Depends(get_search_host),
                 requests=Depends(get_service_requests),
 ):
+    # TODO: improve process
     data, err = requests.get(f"{search_host}/jobs/{jid}")
     if err:
         return res_err(msg=err)

@@ -30,6 +30,11 @@ class NotFoundException(HTTPException, ErrorLogger):
     def __init__(self, msg: str):
         self.msg = msg
         self.status_code = status.HTTP_404_NOT_FOUND
+        
+class NotAcceptableException(HTTPException, ErrorLogger):
+    def __init__(self, msg: str):
+        self.msg = msg
+        self.status_code = status.HTTP_406_NOT_ACCEPTABLE
 
 class DuplicateUserException(HTTPException, ErrorLogger):
     def __init__(self, msg: str):
@@ -54,6 +59,9 @@ def __forbidden_exception_handler(request: Request, exc: ForbiddenException):
 def __not_found_exception_handler(request: Request, exc: NotFoundException):
     return JSONResponse(status_code=exc.status_code, content=res_err(msg=exc.msg))
 
+def __not_acceptable_exception_handler(request: Request, exc: NotAcceptableException):
+    return JSONResponse(status_code=exc.status_code, content=res_err(msg=exc.msg))
+
 def __duplicate_user_exception_handler(request: Request, exc: DuplicateUserException):
     return JSONResponse(status_code=exc.status_code, content=res_err(msg=exc.msg))
 
@@ -68,5 +76,6 @@ def include_app(app: FastAPI):
     app.add_exception_handler(UnauthorizedException, __unauthorized_exception_handler)
     app.add_exception_handler(ForbiddenException, __forbidden_exception_handler)
     app.add_exception_handler(NotFoundException, __not_found_exception_handler)
+    app.add_exception_handler(NotAcceptableException, __not_acceptable_exception_handler)
     app.add_exception_handler(DuplicateUserException, __duplicate_user_exception_handler)
     app.add_exception_handler(ServerException, __server_exception_handler)
