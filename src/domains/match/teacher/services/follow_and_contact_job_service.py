@@ -54,8 +54,8 @@ class ContactJobService:
         data = self.req.simple_get(
             url=f"{host}/teachers/{teacher_id}/contact/jobs",
             params={
-                "apply_statuses": my_statuses,
-                # "statuses": statuses,
+                "my_statuses": my_statuses,
+                "statuses": statuses,
                 "size": size,
                 "next_ts": next_ts
             })

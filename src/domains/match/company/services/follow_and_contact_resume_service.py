@@ -54,7 +54,7 @@ class ContactResumeService:
         data = self.req.simple_get(
             url=f"{host}/companies/{company_id}/contact/resumes",
             params={
-                "apply_statuses": my_statuses,
+                "my_statuses": my_statuses,
                 "statuses": statuses,
                 "size": size,
                 "next_ts": next_ts

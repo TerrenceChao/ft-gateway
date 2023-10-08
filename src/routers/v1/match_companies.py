@@ -244,14 +244,14 @@ def apply_resume(company_id: int = Path(...),
 
 @router.get("/{company_id}/resume-contacts",
             response_model=com_res.ContactResumeListResponseVO)
-def get_contacted_resume_list(company_id: int = Path(...),
+def get_applied_resume_list(company_id: int = Path(...),
                               size: int = Query(None),
                               next_ts: int = Query(None),
                               match_host=Depends(get_match_host),
                               ):
     # proactively
     my_statuses: List[str] = [Apply.CONFIRM.value]
-    statuses: List[str] = [Apply.PENDING.value]
+    statuses: List[str] = []
     data = _contact_resume_service.get_any_contacted_resume_list(
         host=match_host,
         company_id=company_id,
@@ -271,8 +271,8 @@ def get_resume_application_list(company_id: int = Path(...),
                                 match_host=Depends(get_match_host),
                                 ):
     # passively
-    my_statuses: List[str] = [Apply.PENDING.value]
-    statuses: List[str] = []
+    my_statuses: List[str] = [Apply.CONFIRM.value, Apply.PENDING.value]
+    statuses: List[str] = [Apply.CONFIRM.value]
     data = _contact_resume_service.get_any_contacted_resume_list(
         host=match_host,
         company_id=company_id,
