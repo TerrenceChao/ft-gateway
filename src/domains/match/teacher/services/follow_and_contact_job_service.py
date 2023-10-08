@@ -28,7 +28,7 @@ class FollowJobService:
         return data
 
     def get_followed_job_list(self, host: str, teacher_id: int, size: int, next_ts: int = None):
-        data, err = self.req.simple_get_list(
+        data, err = self.req.simple_get(
             url=f"{host}/teachers/{teacher_id}/follow/jobs",
             params={
                 "size": size,
@@ -74,7 +74,7 @@ class ContactJobService:
         return data
 
     def get_any_contacted_job_list(self, host: str, teacher_id: int, my_statuses: List[Apply], statuses: List[Apply], size: int, next_ts: int = None):
-        data, err = self.req.simple_get_list(
+        data, err = self.req.simple_get(
             url=f"{host}/teachers/{teacher_id}/contact/jobs",
             params={
                 "my_statuses": my_statuses,

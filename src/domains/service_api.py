@@ -14,18 +14,6 @@ class IServiceApi(ABC):
     @abstractmethod
     def get_with_statuscode(self, url: str, params: Dict = None, headers: Dict = None) -> (Union[Any, None], Union[str, None], Union[int, None], Union[str, None]):
         pass
-    
-    @abstractmethod
-    def simple_get_list(self, url: str, params: Dict = None, headers: Dict = None) -> (Union[Any, None], Union[str, None]):
-        pass
-    
-    @abstractmethod
-    def get_list(self, url: str, params: Dict = None, headers: Dict = None) -> (Union[Any, None], Union[str, None], Union[str, None]):
-        pass
-    
-    @abstractmethod
-    def get_list_with_statuscode(self, url: str, params: Dict = None, headers: Dict = None) -> (Union[Any, None], Union[str, None], Union[int, None], Union[str, None]):
-        pass
 
     @abstractmethod
     def simple_post(self, url: str, json: Dict, headers: Dict = None) -> (Union[Any, None], Union[str, None]):

@@ -49,7 +49,7 @@ class CompanyAggregateService:
 
     def get_resume_follows_and_contacts(self, host: str, company_id: int, size: int):
         url = f"{host}/companies/{company_id}/resumes/follow-and-apply"
-        data, err = self.req.simple_get_list(url=url, params={"size": size})
+        data, err = self.req.simple_get(url=url, params={"size": size})
         if err:
             log.error(f"{self.__class__.__name__}.get_resume_follows_and_contacts fail: [request get],\
                 host:%s, company_id:%s, size:%s, data:%s, err:%s",
@@ -60,7 +60,7 @@ class CompanyAggregateService:
 
     def get_matchdata(self, host: str, company_id: int, size: int):
         url = f"{host}/companies/{company_id}/matchdata"
-        data, err = self.req.simple_get_list(url=url, params={"size": size})
+        data, err = self.req.simple_get(url=url, params={"size": size})
         if err:
             log.error(f"{self.__class__.__name__}.get_matchdata fail: [request get],\
                 host:%s, company_id:%s, size:%s, data:%s, err:%s",

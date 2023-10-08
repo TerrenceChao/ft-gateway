@@ -49,7 +49,7 @@ class TeacherAggregateService:
 
     def get_job_follows_and_contacts(self, host: str, teacher_id: int, size: int):
         url = f"{host}/teachers/{teacher_id}/jobs/follow-and-apply"
-        data, err = self.req.simple_get_list(url=url, params={"size": size})
+        data, err = self.req.simple_get(url=url, params={"size": size})
         if err:
             log.error(f"{self.__class__.__name__}.get_job_follows_and_contacts fail: [request get],\
                 host:%s, teacher_id:%s, size:%s, data:%s, err:%s",
@@ -60,7 +60,7 @@ class TeacherAggregateService:
 
     def get_matchdata(self, host: str, teacher_id: int, size: int):
         url = f"{host}/teachers/{teacher_id}/matchdata"
-        data, err = self.req.simple_get_list(url=url, params={"size": size})
+        data, err = self.req.simple_get(url=url, params={"size": size})
         if err:
             log.error(f"{self.__class__.__name__}.get_matchdata fail: [request get],\
                 host:%s, teacher_id:%s, size:%s, data:%s, err:%s",

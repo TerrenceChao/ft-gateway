@@ -28,7 +28,7 @@ class FollowResumeService:
         return data
 
     def get_followed_resume_list(self, host: str, company_id: int, size: int, next_ts: int = None):
-        data, err = self.req.simple_get_list(
+        data, err = self.req.simple_get(
             url=f"{host}/companies/{company_id}/follow/resumes",
             params={
                 "size": size,
@@ -74,7 +74,7 @@ class ContactResumeService:
         return data
 
     def get_any_contacted_resume_list(self, host: str, company_id: int, my_statuses: List[Apply], statuses: List[Apply], size: int, next_ts: int = None):
-        data, err = self.req.simple_get_list(
+        data, err = self.req.simple_get(
             url=f"{host}/companies/{company_id}/contact/resumes",
             params={
                 "my_statuses": my_statuses,

@@ -29,7 +29,7 @@ class CompanyJobService:
         return data
 
     def get_brief_jobs(self, host: str, company_id: int, size: int, job_id: int = None):
-        data, err = self.req.simple_get_list(
+        data, err = self.req.simple_get(
             url=f"{host}/companies/{company_id}/brief-jobs",
             params={
                 "job_id": int(job_id) if job_id else None,
