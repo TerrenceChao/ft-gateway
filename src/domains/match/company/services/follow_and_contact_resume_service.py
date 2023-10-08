@@ -20,7 +20,7 @@ class FollowResumeService:
         )
         if err:
             log.error(
-                f"{self.__class__.__name__}.upsert_follow_resume fail: [request post],\
+                f"{self.__class__.__name__}.upsert_follow_resume fail: [request put],\
                     host:%s, company_id:%s, resume_id:%s, resume_info:%s, data:%s, err:%s",
                 host, company_id, resume_id, resume_info, data, err)
             raise ServerException(msg=err)
@@ -47,7 +47,7 @@ class FollowResumeService:
         data, err = self.req.simple_delete(
             url=f"{host}/companies/{company_id}/follow/resumes/{resume_id}")
         if err:
-            log.error(f"{self.__class__.__name__}.delete_followed_resume fail: [request post],\
+            log.error(f"{self.__class__.__name__}.delete_followed_resume fail: [request delete],\
                 host:%s, company_id:%s, data:%s, err:%s",
                       host, company_id, data, err)
             raise ServerException(msg=err)
@@ -96,7 +96,7 @@ class ContactResumeService:
             url=f"{host}/companies/{company_id}/contact/resumes/{resume_id}")
         if err:
             log.error(
-                f"{self.__class__.__name__}.delete_any_contacted_resume fail: [request get],\
+                f"{self.__class__.__name__}.delete_any_contacted_resume fail: [request delete],\
                     host:%s, company_id:%s, resume_id:%s, data:%s, err:%s",
                 host, company_id, resume_id, data, err)
             raise ServerException(msg=err)

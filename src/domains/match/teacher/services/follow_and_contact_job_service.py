@@ -20,7 +20,7 @@ class FollowJobService:
         )
         if err:
             log.error(
-                f"{self.__class__.__name__}.upsert_follow_job fail: [request post],\
+                f"{self.__class__.__name__}.upsert_follow_job fail: [request put],\
                     host:%s, teacher_id:%s, job_id:%s, job_info:%s, data:%s, err:%s",
                 host, teacher_id, job_id, job_info, data, err)
             raise ServerException(msg=err)
@@ -47,7 +47,7 @@ class FollowJobService:
         data, err = self.req.simple_delete(
             url=f"{host}/teachers/{teacher_id}/follow/jobs/{job_id}")
         if err:
-            log.error(f"{self.__class__.__name__}.delete_followed_job fail: [request post],\
+            log.error(f"{self.__class__.__name__}.delete_followed_job fail: [request delete],\
                 host:%s, teacher_id:%s, data:%s, err:%s",
                       host, teacher_id, data, err)
             raise ServerException(msg=err)
@@ -66,7 +66,7 @@ class ContactJobService:
         )
         if err:
             log.error(
-                f"{self.__class__.__name__}.apply_job fail: [request post],\
+                f"{self.__class__.__name__}.apply_job fail: [request put],\
                     host:%s, teacher_id:%s, body:%s, data:%s, err:%s",
                 host, teacher_id, body, data, err)
             raise ServerException(msg=err)
@@ -96,7 +96,7 @@ class ContactJobService:
             url=f"{host}/teachers/{teacher_id}/contact/jobs/{job_id}")
         if err:
             log.error(
-                f"{self.__class__.__name__}.delete_any_contacted_job fail: [request get],\
+                f"{self.__class__.__name__}.delete_any_contacted_job fail: [request delete],\
                     host:%s, teacher_id:%s, job_id:%s, data:%s, err:%s",
                 host, teacher_id, job_id, data, err)
             raise ServerException(msg=err)
