@@ -16,7 +16,7 @@ from ...domains.match.teacher.value_objects import t_value_objects as teach_vo
 from ...domains.match.teacher.services.teacher_service import TeacherProfileService, TeacherAggregateService
 from ...domains.match.teacher.services.teacher_resume_service import TeacherResumeService
 from ...domains.match.teacher.services.follow_and_contact_job_service import FollowJobService, ContactJobService
-from ...apps.service_api_dapter import ServiceApiAdapter, get_service_requests
+from ...apps.service_api_dapter import ServiceApiAdapter
 from ...configs.constants import Apply
 from ...configs.region_hosts import get_match_region_host
 from ...configs.exceptions import ClientException, \
@@ -210,7 +210,6 @@ def get_followed_job_list(teacher_id: int,
 #             response_model=teach_res.FollowJobResponseVO)
 # def get_followed_job(teacher_id: int, job_id: int,
 #                      match_host=Depends(get_match_host),
-#                      requests=Depends(get_service_requests),
 #                      ):
 #     pass
 

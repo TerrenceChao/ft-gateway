@@ -16,7 +16,7 @@ from ...domains.match.company.value_objects import c_value_objects as com_vo
 from ...domains.match.company.services.company_service import CompanyProfileService, CompanyAggregateService
 from ...domains.match.company.services.company_job_service import CompanyJobService
 from ...domains.match.company.services.follow_and_contact_resume_service import FollowResumeService, ContactResumeService
-from ...apps.service_api_dapter import ServiceApiAdapter, get_service_requests
+from ...apps.service_api_dapter import ServiceApiAdapter
 from ...configs.constants import Apply
 from ...configs.region_hosts import get_match_region_host
 from ...configs.exceptions import ClientException, \
@@ -211,7 +211,6 @@ def get_followed_resume_list(company_id: int,
 #             response_model=com_res.FollowResumeResponseVO)
 # def get_followed_resume(company_id: int, resume_id: int,
 #                         match_host=Depends(get_match_host),
-#                         requests=Depends(get_service_requests),
 #                         ):
 #     pass
 
