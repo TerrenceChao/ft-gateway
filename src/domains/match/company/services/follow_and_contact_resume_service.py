@@ -50,11 +50,11 @@ class ContactResumeService:
 
         return data
 
-    def get_any_contacted_resume_list(self, host: str, company_id: int, my_statuses: List[Apply], statuses: List[Apply], size: int, next_ts: int = None):
+    def get_any_contacted_resume_list(self, host: str, company_id: int, my_statuses: List[str], statuses: List[str], size: int, next_ts: int = None):
         data = self.req.simple_get(
             url=f"{host}/companies/{company_id}/contact/resumes",
             params={
-                "my_statuses": my_statuses,
+                "apply_statuses": my_statuses,
                 "statuses": statuses,
                 "size": size,
                 "next_ts": next_ts

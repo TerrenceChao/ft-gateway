@@ -250,8 +250,8 @@ def get_contacted_resume_list(company_id: int = Path(...),
                               match_host=Depends(get_match_host),
                               ):
     # proactively
-    my_statuses: List = [Apply.CONFRIM]
-    statuses: List = [Apply.PENDING]
+    my_statuses: List[str] = [Apply.CONFIRM.value]
+    statuses: List[str] = [Apply.PENDING.value]
     data = _contact_resume_service.get_any_contacted_resume_list(
         host=match_host,
         company_id=company_id,
@@ -271,8 +271,8 @@ def get_resume_application_list(company_id: int = Path(...),
                                 match_host=Depends(get_match_host),
                                 ):
     # passively
-    my_statuses: List = [Apply.PENDING]
-    statuses: List = []
+    my_statuses: List[str] = [Apply.PENDING.value]
+    statuses: List[str] = []
     data = _contact_resume_service.get_any_contacted_resume_list(
         host=match_host,
         company_id=company_id,

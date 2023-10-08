@@ -249,8 +249,8 @@ def get_applied_job_list(teacher_id: int = Path(...),
                          match_host=Depends(get_match_host),
                          ):
     # proactively
-    my_statuses: List = [Apply.CONFRIM]
-    statuses: List = [Apply.PENDING]
+    my_statuses: List[str] = [Apply.CONFIRM.value]
+    statuses: List[str] = [Apply.PENDING.value]
     data = _contact_job_service.get_any_contacted_job_list(
         host=match_host,
         teacher_id=teacher_id,
@@ -270,8 +270,8 @@ def get_job_position_list(teacher_id: int = Path(...),
                           match_host=Depends(get_match_host),
                           ):
     # passively
-    my_statuses: List = [Apply.PENDING]
-    statuses: List = []
+    my_statuses: List[str] = [Apply.PENDING.value]
+    statuses: List[str] = []
     data = _contact_job_service.get_any_contacted_job_list(
         host=match_host,
         teacher_id=teacher_id,

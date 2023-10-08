@@ -299,9 +299,11 @@ class ServiceApiAdapter(IServiceApi):
     def __status_code_validation(self, response: Response, method: str, url: str, body: Dict = None, params: Dict = None, headers: Dict = None):
         status_code = response.status_code
         if status_code < 400:
-            return 
+            return
         
-        msg = response.json()["msg"]
+        # log.info(response.json()) 
+        
+        msg = response.json()["msg"] if "msg" in response.json() else response.reason
         log.error(f"service request fail, [%s]: %s, body:%s, params:%s, headers:%s, status_code:%s, msg:%s", 
                   method, url, body, params, headers, status_code, msg)
         

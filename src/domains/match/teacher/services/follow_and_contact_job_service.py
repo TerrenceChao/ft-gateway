@@ -50,12 +50,12 @@ class ContactJobService:
 
         return data
 
-    def get_any_contacted_job_list(self, host: str, teacher_id: int, my_statuses: List[Apply], statuses: List[Apply], size: int, next_ts: int = None):
+    def get_any_contacted_job_list(self, host: str, teacher_id: int, my_statuses: List[str], statuses: List[str], size: int, next_ts: int = None):
         data = self.req.simple_get(
             url=f"{host}/teachers/{teacher_id}/contact/jobs",
             params={
-                "my_statuses": my_statuses,
-                "statuses": statuses,
+                "apply_statuses": my_statuses,
+                # "statuses": statuses,
                 "size": size,
                 "next_ts": next_ts
             })
