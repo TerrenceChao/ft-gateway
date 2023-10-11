@@ -2,10 +2,11 @@ import os
 import time
 import json
 import re
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 from redis import Redis
 from ...domains.cache import ICache
 from ...configs.redis import redis
+from ...configs.exceptions import ServerException
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
@@ -14,47 +15,45 @@ log.basicConfig(filemode='w', level=log.INFO)
 class RedisCacheAdapter(ICache):
     def __init__(self, redis: Redis):
         self.redis = redis
-        
-    def get(self, key: str) -> (Optional[Any], Optional[str]):
-        err_msg: str = None
-        result = None
+        self.__cls_name = self.__class__.__name__
 
+    def get(self, key: str):
+        val = None
+        result = None
         try:
             val = self.redis.get(key)
             if val == None:
-                return result, err_msg
-            
+                return result
+
             # log.info(val, "\n", val[0] == "{" and val[-1] =="}")
-            result = json.loads(val) if val[0] == "{" and val[-1] =="}" else val
+            result = json.loads(
+                val) if val[0] == "{" and val[-1] == "}" else val
+            return result
 
         except Exception as e:
-            err_msg = e.__str__()
-            log.error(err_msg)
+            log.error(f"cache {self.__cls_name}.get fail \
+                    key:%s, val:%s, result:%s, err:%s",
+                      key, val, result, e.__str__())
+            raise ServerException(msg="r_server_error")
 
-        return result, err_msg
-
-    def set(self, key: str, val: Any, ex: int = None) -> (Optional[bool], Optional[str]):
-        err_msg: str = None
-        result = False
+    def set(self, key: str, val: Any, ex: int = None):
 
         try:
-            if type(val) == dict:
+            if isinstance(val, Dict):
                 log.debug(f'type:%s, val:%s' % (type(val), str(val)))
                 val = json.dumps(val)
                 log.debug(f'type:%s, val:%s' % (type(val), str(val)))
 
             if not ex:
-                self.redis.set(key, val)
+                return self.redis.set(key, val)
             else:
-                self.redis.set(key, val, ex)
-                
-            result = True
+                return self.redis.set(key, val, ex)
 
         except Exception as e:
-            err_msg = e.__str__()
-            log.error(err_msg)
-
-        return result, err_msg
+            log.error(f"cache {self.__cls_name}.set fail \
+                    key:%s, val:%s, ex:%s, err:%s",
+                      key, val, ex, e.__str__())
+            raise ServerException(msg="r_server_error")
 
 
 def get_cache():
