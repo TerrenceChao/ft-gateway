@@ -17,6 +17,8 @@ from ...domains.match.company.services.company_service import CompanyProfileServ
 from ...domains.match.company.services.company_job_service import CompanyJobService
 from ...domains.match.company.services.follow_and_contact_resume_service import FollowResumeService, ContactResumeService
 from ...apps.service_api_dapter import ServiceApiAdapter
+from ...configs.conf import \
+    MY_STATUS_OF_COMPANY_APPLY, STATUS_OF_COMPANY_APPLY, MY_STATUS_OF_COMPANY_REACTION, STATUS_OF_COMPANY_REACTION
 from ...configs.constants import Apply
 from ...configs.region_hosts import get_match_region_host
 from ...configs.exceptions import ClientException, \
@@ -249,9 +251,9 @@ def get_applied_resume_list(company_id: int = Path(...),
                               next_ts: int = Query(None),
                               match_host=Depends(get_match_host),
                               ):
-    # proactively
-    my_statuses: List[str] = [Apply.CONFIRM.value]
-    statuses: List[str] = []
+    # APPLY
+    my_statuses: List[str] = MY_STATUS_OF_COMPANY_APPLY
+    statuses: List[str] = STATUS_OF_COMPANY_APPLY
     data = _contact_resume_service.get_any_contacted_resume_list(
         host=match_host,
         company_id=company_id,
@@ -270,9 +272,9 @@ def get_resume_application_list(company_id: int = Path(...),
                                 next_ts: int = Query(None),
                                 match_host=Depends(get_match_host),
                                 ):
-    # passively
-    my_statuses: List[str] = [Apply.CONFIRM.value, Apply.PENDING.value]
-    statuses: List[str] = [Apply.CONFIRM.value]
+    # REACTION
+    my_statuses: List[str] = MY_STATUS_OF_COMPANY_REACTION
+    statuses: List[str] = STATUS_OF_COMPANY_REACTION
     data = _contact_resume_service.get_any_contacted_resume_list(
         host=match_host,
         company_id=company_id,

@@ -1,6 +1,8 @@
 import os
 from functools import lru_cache
 from pydantic import BaseSettings
+from typing import Set
+from .constants import Apply
 
 # cache
 # dynamodb
@@ -32,6 +34,36 @@ MULTIPART_CHUNKSIZE = int(os.getenv("MULTIPART_CHUNKSIZE", 128))
 # aws config
 AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY", None)
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", None)
+
+# company apply status (my_status, status)
+MY_STATUS_OF_COMPANY_APPLY = os.getenv("MY_STATUS_OF_COMPANY_APPLY", "confirm")
+STATUS_OF_COMPANY_APPLY = os.getenv("STATUS_OF_COMPANY_APPLY", None)
+MY_STATUS_OF_COMPANY_REACTION = os.getenv("MY_STATUS_OF_COMPANY_REACTION", "confirm,pending")
+STATUS_OF_COMPANY_REACTION = os.getenv("STATUS_OF_COMPANY_REACTION", "confirm")
+
+
+# teacher apply status (my_status, status)
+MY_STATUS_OF_TEACHER_APPLY = os.getenv("MY_STATUS_OF_TEACHER_APPLY", "confirm")
+STATUS_OF_TEACHER_APPLY = os.getenv("STATUS_OF_TEACHER_APPLY", None)
+MY_STATUS_OF_TEACHER_REACTION = os.getenv("MY_STATUS_OF_TEACHER_REACTION", "confirm,pending")
+STATUS_OF_TEACHER_REACTION = os.getenv("STATUS_OF_TEACHER_REACTION", "confirm")
+
+def parse_list(statuses: str):
+    if statuses is None or statuses.strip() == "":
+        return []
+    
+    apply_enums: Set[Apply] = set([Apply(s.lower().strip()) for s in statuses.split(",") if s.strip() != ""])
+    return list({ a.value for a in apply_enums })
+    
+MY_STATUS_OF_COMPANY_APPLY = parse_list(MY_STATUS_OF_COMPANY_APPLY)
+STATUS_OF_COMPANY_APPLY = parse_list(STATUS_OF_COMPANY_APPLY)
+MY_STATUS_OF_COMPANY_REACTION = parse_list(MY_STATUS_OF_COMPANY_REACTION)
+STATUS_OF_COMPANY_REACTION = parse_list(STATUS_OF_COMPANY_REACTION)
+
+MY_STATUS_OF_TEACHER_APPLY = parse_list(MY_STATUS_OF_TEACHER_APPLY)
+STATUS_OF_TEACHER_APPLY = parse_list(STATUS_OF_TEACHER_APPLY)
+MY_STATUS_OF_TEACHER_REACTION = parse_list(MY_STATUS_OF_TEACHER_REACTION)
+STATUS_OF_TEACHER_REACTION = parse_list(STATUS_OF_TEACHER_REACTION)
 
 
 # check README.md for more details

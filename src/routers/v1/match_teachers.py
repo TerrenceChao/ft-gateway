@@ -17,6 +17,8 @@ from ...domains.match.teacher.services.teacher_service import TeacherProfileServ
 from ...domains.match.teacher.services.teacher_resume_service import TeacherResumeService
 from ...domains.match.teacher.services.follow_and_contact_job_service import FollowJobService, ContactJobService
 from ...apps.service_api_dapter import ServiceApiAdapter
+from ...configs.conf import \
+    MY_STATUS_OF_TEACHER_APPLY, STATUS_OF_TEACHER_APPLY, MY_STATUS_OF_TEACHER_REACTION, STATUS_OF_TEACHER_REACTION
 from ...configs.constants import Apply
 from ...configs.region_hosts import get_match_region_host
 from ...configs.exceptions import ClientException, \
@@ -248,9 +250,9 @@ def get_applied_job_list(teacher_id: int = Path(...),
                          next_ts: int = Query(None),
                          match_host=Depends(get_match_host),
                          ):
-    # proactively
-    my_statuses: List[str] = [Apply.CONFIRM.value]
-    statuses: List[str] = []
+    # APPLY
+    my_statuses: List[str] = MY_STATUS_OF_TEACHER_APPLY
+    statuses: List[str] = STATUS_OF_TEACHER_APPLY
     data = _contact_job_service.get_any_contacted_job_list(
         host=match_host,
         teacher_id=teacher_id,
@@ -269,9 +271,9 @@ def get_job_position_list(teacher_id: int = Path(...),
                           next_ts: int = Query(None),
                           match_host=Depends(get_match_host),
                           ):
-    # passively
-    my_statuses: List[str] = [Apply.CONFIRM.value, Apply.PENDING.value]
-    statuses: List[str] = [Apply.CONFIRM.value]
+    # REACTION
+    my_statuses: List[str] = MY_STATUS_OF_TEACHER_REACTION
+    statuses: List[str] = STATUS_OF_TEACHER_REACTION
     data = _contact_job_service.get_any_contacted_job_list(
         host=match_host,
         teacher_id=teacher_id,
