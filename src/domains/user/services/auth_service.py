@@ -4,15 +4,12 @@ from ..value_objects.auth_vo import SignupConfirmVO, LoginVO
 from ...cache import ICache
 from ...service_api import IServiceApi
 from ....infra.utils.util import gen_confirm_code
-from ....configs.conf import SHORT_TERM_TTL, LONG_TERM_TTL
+from ....configs.conf import SHORT_TERM_TTL, LONG_TERM_TTL,\
+    MY_STATUS_OF_COMPANY_APPLY, STATUS_OF_COMPANY_APPLY,\
+    MY_STATUS_OF_TEACHER_APPLY, STATUS_OF_TEACHER_APPLY
 from ....configs.constants import PATHS, PREFETCH
 from ....configs.region_hosts import get_auth_region_host, get_match_region_host
-from ....configs.exceptions import \
-    ClientException, \
-    UnauthorizedException, \
-    NotFoundException, \
-    DuplicateUserException, \
-    ServerException
+from ....configs.exceptions import *
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
@@ -164,18 +161,25 @@ class AuthService:
 
     def login(self, auth_host: str, match_host: str, current_region: str, body: LoginVO):
         # request login & auth data
-        body.current_region = current_region
-        auth_res, msg = self.__req_login(auth_host, body)
-
-        # found in S3, and region != "current_region"(在 meta, 解密後才會知道)(找錯地方)
-        # S3 有記錄但該地區的 auth-service 沒記錄，auth 從 S3 找 region 後回傳
-        if msg == "wrong_region":
+        region = None
+        auth_res = None
+        try:
+            body.current_region = current_region
+            auth_res = self.__req_login(auth_host, body)
+            
+        except ForbiddenException as e:
+            # found in S3, and region != "current_region"(在 meta, 解密後才會知道)(找錯地方)
+            # S3 有記錄但該地區的 auth-service 沒記錄，auth 從 S3 找 region 後回傳
             log.warn("WRONG REGION: \n \
                     has record in S3, but no record in DB of current region, ready to request user record from register region")
+            log.error(f"AuthService.login fail: [request res: WRONG REGION], \
+                auth_host:%s, match_host:%s, current_region:%s, body:%s, region:%s, auth_res:%s, err:%s", 
+                auth_host, match_host, current_region, body, region, auth_res, e.__str__())
+                
             region = auth_res["region"]  # 換其他 region 再請求一次
             auth_host = get_auth_region_host(region)
             match_host = get_match_region_host(region)
-            auth_res, msg = self.__req_login(auth_host, body)
+            auth_res = self.__req_login(auth_host, body)
 
         # cache auth data
         role_id_key = str(auth_res["role_id"])
@@ -199,31 +203,9 @@ class AuthService:
         }, None)  # data, msg
 
     def __req_login(self, auth_host: str, body: LoginVO):
-        # TODO: improve process
-        auth_res, msg, err = self.req.post(
+        return self.req.simple_post(
             f"{auth_host}/login", json=body.dict())
-        if err:
-            log.error(f"AuthService.__req_login fail: [request post],\
-                    auth_host:%s, body:%s, auth_res:%s, msg:%s, err:%s", 
-                    auth_host, body, auth_res, msg, err)
-            raise ServerException(msg=err)
-
-        # found in DB
-        if msg == "error_password":
-            raise ClientException(msg="error_password")
-
-        # not found in DB and S3
-        if msg == "not_registered":
-            raise NotFoundException(msg="user not found")  # 沒註冊過
-
-        # found in S3, and region == "current_region"(在 meta, 解密後才會知道)(S3記錄:註冊在該auth_service卻找不到)
-        if msg == "register_fail":
-            log.error(f"AuthService.__req_login fail: [request post >> 'register_fail'],\
-                    auth_host:%s, body:%s, auth_res:%s, msg:%s, err:%s", 
-                    auth_host, body, auth_res, msg, err)
-            raise ServerException(msg="register fail")  # {log_level:嚴重問題}
-
-        return (auth_res, msg)
+        
 
     def __cache_auth_res(self, role_id_key: str, auth_res: Dict):
         updated, cache_err = self.cache.set(
@@ -235,8 +217,23 @@ class AuthService:
             raise ServerException(msg="cache fail")
 
     def __req_match_data(self, match_host: str, role_path: str, role_id_key: str, size: int):
+        my_statuses, statuses = [], []
+        
+        if role_path == "companies" or role_path == "company":
+            my_statuses = MY_STATUS_OF_COMPANY_APPLY
+            statuses = STATUS_OF_COMPANY_APPLY
+        elif role_path == "teachers" or role_path == "teacher":
+            my_statuses = MY_STATUS_OF_TEACHER_APPLY
+            statuses = STATUS_OF_TEACHER_APPLY
+            
         match_res = self.req.simple_get(
-            f"{match_host}/{role_path}/{role_id_key}/matchdata?size={size}")
+            url=f"{match_host}/{role_path}/{role_id_key}/matchdata",
+            params={
+                "size": size,
+                "my_statuses": my_statuses,
+                "statuses": statuses,
+            }
+        )
 
         return match_res
 
