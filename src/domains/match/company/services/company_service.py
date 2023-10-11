@@ -1,6 +1,8 @@
 from typing import Any, List, Dict
 from ....service_api import IServiceApi
 from .....domains.match.company.value_objects import c_value_objects as com_vo
+from .....configs.conf import \
+    MY_STATUS_OF_COMPANY_APPLY, STATUS_OF_COMPANY_APPLY
 from .....configs.exceptions import \
     ClientException, ServerException
 import logging as log
@@ -37,12 +39,26 @@ class CompanyAggregateService:
 
     def get_resume_follows_and_contacts(self, host: str, company_id: int, size: int):
         url = f"{host}/companies/{company_id}/resumes/follow-and-apply"
-        data = self.req.simple_get(url=url, params={"size": size})
+        data = self.req.simple_get(
+            url=url, 
+            params={
+                "size": size,
+                "my_statuses": MY_STATUS_OF_COMPANY_APPLY,
+                "statuses": STATUS_OF_COMPANY_APPLY,
+            }
+        )
 
         return data
 
     def get_matchdata(self, host: str, company_id: int, size: int):
         url = f"{host}/companies/{company_id}/matchdata"
-        data = self.req.simple_get(url=url, params={"size": size})
+        data = self.req.simple_get(
+            url=url, 
+            params={
+                "size": size,
+                "my_statuses": MY_STATUS_OF_COMPANY_APPLY,
+                "statuses": STATUS_OF_COMPANY_APPLY,
+            }
+        )
 
         return data

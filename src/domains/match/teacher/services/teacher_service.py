@@ -1,6 +1,8 @@
 from typing import Any, List, Dict
 from ....service_api import IServiceApi
 from .....domains.match.teacher.value_objects import t_value_objects as teach_vo
+from .....configs.conf import \
+    MY_STATUS_OF_TEACHER_APPLY, STATUS_OF_TEACHER_APPLY
 from .....configs.exceptions import \
     ClientException, ServerException
 import logging as log
@@ -37,12 +39,26 @@ class TeacherAggregateService:
 
     def get_job_follows_and_contacts(self, host: str, teacher_id: int, size: int):
         url = f"{host}/teachers/{teacher_id}/jobs/follow-and-apply"
-        data = self.req.simple_get(url=url, params={"size": size})
+        data = self.req.simple_get(
+            url=url, 
+            params={
+                "size": size,
+                "my_statuses": MY_STATUS_OF_TEACHER_APPLY,
+                "statuses": STATUS_OF_TEACHER_APPLY,
+            }
+        )
 
         return data
 
     def get_matchdata(self, host: str, teacher_id: int, size: int):
         url = f"{host}/teachers/{teacher_id}/matchdata"
-        data = self.req.simple_get(url=url, params={"size": size})
+        data = self.req.simple_get(
+            url=url, 
+            params={
+                "size": size,
+                "my_statuses": MY_STATUS_OF_TEACHER_APPLY,
+                "statuses": STATUS_OF_TEACHER_APPLY,
+            }
+        )
 
         return data
