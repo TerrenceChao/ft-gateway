@@ -23,7 +23,7 @@ import logging as log
 log.basicConfig(filemode='w', level=log.INFO)
 
 
-"""
+'''
     1. change account's email
         
     2. change password (while logged in)
@@ -33,11 +33,11 @@ log.basicConfig(filemode='w', level=log.INFO)
         1. send link(url + querystring) to email
         2. request with new pass 
         
-"""
+'''
 router = APIRouter(
-    prefix="/auth",
-    tags=["Auth V2"],
-    responses={404: {"description": "Not found"}},
+    prefix='/auth',
+    tags=['Auth V2'],
+    responses={404: {'description': 'Not found'}},
 )
 
 
@@ -49,21 +49,21 @@ def get_match_host(region: str = Header(...)):
     return get_match_region_host(region=region)
 
 
-@router.post("/email/change", status_code=201)
-def change_account_email():
+@router.post('/google/signup', status_code=201)
+def google_signup():
     pass
 
 
-@router.post("/password/change", status_code=201)
-def change_password():
+@router.post('/google/login', status_code=201)
+def google_login():
     pass
 
 
-@router.post("/password/forgot", status_code=201)
-def forgot_password():
+@router.post('/facebook/signup', status_code=201)
+def facebook_signup():
     pass
 
 
-@router.put("/password/reset")
-def reset_password(token: str):
+@router.post('/facebook/login', status_code=201)
+def facebook_login():
     pass

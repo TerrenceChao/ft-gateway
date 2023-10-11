@@ -159,3 +159,18 @@ def logout(token: str = Header(...),
            ):
     data, msg = _auth_service.logout(role_id, token)
     return res_success(data=data, msg=msg)
+
+
+@router.put('/password/update', status_code=200)
+def update_password(token: str = Header(...),
+           email: EmailStr = Body(..., embed=True),
+           ):
+    # TODO: update password
+    pass
+
+@router.put('/password/reset', status_code=200)
+def reset_password(token: str = Header(...),
+           email: EmailStr = Body(..., embed=True),
+           ):
+    # TODO: reset password
+    pass
