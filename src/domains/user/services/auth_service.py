@@ -37,7 +37,7 @@ class AuthService:
             pubkey = self.req.simple_get(f"{host}/security/pubkey", params={"ts": timestamp})
             self.cache.set(f"pubkey_{slot}", pubkey, ex=LONG_TERM_TTL)
 
-        return (pubkey, None)  # data, msg
+        return pubkey
 
     """
     signup
@@ -47,21 +47,20 @@ class AuthService:
         self.__cache_check_for_duplicates(email)
 
         confirm_code = gen_confirm_code()
-        auth_res, msg = self.__req_send_confirmcode_by_email(
+        auth_res = self.__req_send_confirmcode_by_email(
             host, email, confirm_code)
 
-        if auth_res == "email_sent" and msg == "ok":
+        if auth_res == "email_sent":
             self.__cache_confirmcode(email, confirm_code, meta)
 
-            # TODO remove the res here('confirm_code') during production
-            res = {
+            # FIXME: remove the res here('confirm_code') during production
+            return {
                 "for_testing_only": confirm_code
             }
-            return (res, "email_sent")  # data, msg
 
         else:
             self.cache.set(email, {"region": region}, SHORT_TERM_TTL)
-            raise DuplicateUserException(msg="email registered")
+            raise DuplicateUserException(msg="email_registered")
 
     def __cache_check_for_duplicates(self, email: str):
         data, cache_err = self.cache.get(email)
@@ -77,21 +76,13 @@ class AuthService:
             raise DuplicateUserException(msg="registered or registering")
 
     def __req_send_confirmcode_by_email(self, host: str, email: str, confirm_code: str):
-        # TODO: improve process
-        auth_res, msg, err = self.req.post(f"{host}/sendcode/email", json={
+        auth_res = self.req.simple_post(f"{host}/sendcode/email", json={
             "email": email,
             "confirm_code": confirm_code,
             "sendby": "no_exist",  # email 不存在時寄送
         })
 
-        if err:
-            log.error(
-                f"AuthService.__req_send_confirmcode_by_email:[request post],\
-                    host:%s, email:%s, confirm_code:%s, auth_res:%s, msg:%s, err:%s", 
-                    host, email, confirm_code, auth_res, msg, err)
-            raise ServerException(msg=err)
-
-        return (auth_res, msg)
+        return auth_res
 
     def __cache_confirmcode(self, email: str, confirm_code: str, meta: str):
         email_playload = {
@@ -131,7 +122,7 @@ class AuthService:
                 role_id_key, auth_res, LONG_TERM_TTL, updated, cache_err)
             raise ServerException(msg="cache fail")
         else:
-            return (auth_res, None)  # data, msg
+            return auth_res
 
     def __verify_confirmcode(self, confirm_code: str, user: Any, cache_err: str = None):
         if cache_err:
@@ -176,7 +167,8 @@ class AuthService:
                 auth_host:%s, match_host:%s, current_region:%s, body:%s, region:%s, auth_res:%s, err:%s", 
                 auth_host, match_host, current_region, body, region, auth_res, e.__str__())
                 
-            region = auth_res["region"]  # 換其他 region 再請求一次
+            email_info = e.data
+            region = email_info["region"]  # 換其他 region 再請求一次
             auth_host = get_auth_region_host(region)
             match_host = get_match_region_host(region)
             auth_res = self.__req_login(auth_host, body)
@@ -197,10 +189,10 @@ class AuthService:
         match_res = self.__req_match_data(
             match_host, role_path, role_id_key, size)
 
-        return ({
+        return {
             "auth": auth_res,
             "match": match_res,
-        }, None)  # data, msg
+        }
 
     def __req_login(self, auth_host: str, body: LoginVO):
         return self.req.simple_post(

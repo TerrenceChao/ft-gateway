@@ -48,8 +48,8 @@ def get_match_host(region: str = Header(...)):
 def get_public_key(timestamp: int = 0,
                    auth_host=Depends(get_auth_host),
                    ):
-    pubkey, msg = _auth_service.get_public_key(auth_host, timestamp)
-    return res_success(data=pubkey, msg=msg)
+    pubkey = _auth_service.get_public_key(auth_host, timestamp)
+    return res_success(data=pubkey)
 
 
 # "meta": "{\"region\":\"jp\",\"role\":\"teacher\",\"pass\":\"secret\"}"
@@ -57,16 +57,16 @@ def get_public_key(timestamp: int = 0,
 def signup(region: str = Header(...), body: SignupVO = Body(...),
            auth_host=Depends(get_auth_host),
            ):
-    data, msg = _auth_service.signup(auth_host, body.email, body.meta, region)
-    return res_success(data=data, msg=msg)
+    data = _auth_service.signup(auth_host, body.email, body.meta, region)
+    return res_success(data=data, msg="email_sent")
 
 
 @router.post("/signup/confirm", status_code=201)
 def confirm_signup(body: SignupConfirmVO = Body(...),
                    auth_host=Depends(get_auth_host),
                    ):
-    data, msg = _auth_service.confirm_signup(auth_host, body)
-    return res_success(data=data, msg=msg)
+    data = _auth_service.confirm_signup(auth_host, body)
+    return res_success(data=data)
 
 
 """login
@@ -147,9 +147,9 @@ def login(current_region: str = Header(...),
           auth_host=Depends(get_auth_host),
           match_host=Depends(get_match_host),
           ):
-    data, msg = _auth_service.login(
+    data = _auth_service.login(
         auth_host, match_host, current_region, body)
-    return res_success(data=data, msg=msg)
+    return res_success(data=data)
 
 
 @router.post("/logout", status_code=201)

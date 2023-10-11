@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request, HTTPException, status
 from fastapi.responses import JSONResponse
+from typing import Any
 from ..routers.res.response import res_err
 import logging as log
 
@@ -11,62 +12,77 @@ class ErrorLogger:
         log.error(msg)
         
 
+
 class ClientException(HTTPException, ErrorLogger):
-    def __init__(self, msg: str):
+    def __init__(self, msg: str, code: str = '40000', data: Any = None):
         self.msg = msg
+        self.code = code
+        self.data = data
         self.status_code = status.HTTP_400_BAD_REQUEST
         
 class UnauthorizedException(HTTPException, ErrorLogger):
-    def __init__(self, msg: str):
+    def __init__(self, msg: str, code: str = '40100', data: Any = None):
         self.msg = msg
+        self.code = code
+        self.data = data
         self.status_code = status.HTTP_401_UNAUTHORIZED
 
 class ForbiddenException(HTTPException, ErrorLogger):
-    def __init__(self, msg: str):
+    def __init__(self, msg: str, code: str = '40300', data: Any = None):
         self.msg = msg
+        self.code = code
+        self.data = data
         self.status_code = status.HTTP_403_FORBIDDEN
 
 class NotFoundException(HTTPException, ErrorLogger):
-    def __init__(self, msg: str):
+    def __init__(self, msg: str, code: str = '40400', data: Any = None):
         self.msg = msg
+        self.code = code
+        self.data = data
         self.status_code = status.HTTP_404_NOT_FOUND
         
 class NotAcceptableException(HTTPException, ErrorLogger):
-    def __init__(self, msg: str):
+    def __init__(self, msg: str, code: str = '40600', data: Any = None):
         self.msg = msg
+        self.code = code
+        self.data = data
         self.status_code = status.HTTP_406_NOT_ACCEPTABLE
 
 class DuplicateUserException(HTTPException, ErrorLogger):
-    def __init__(self, msg: str):
+    def __init__(self, msg: str, code: str = '40600', data: Any = None):
         self.msg = msg
+        self.code = code
+        self.data = data
         self.status_code = status.HTTP_406_NOT_ACCEPTABLE
         
 class ServerException(HTTPException, ErrorLogger):
-    def __init__(self, msg: str):
+    def __init__(self, msg: str, code: str = '50000', data: Any = None):
         self.msg = msg
+        self.code = code
+        self.data = data
         self.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
 def __client_exception_handler(request: Request, exc: ClientException):
-    return JSONResponse(status_code=exc.status_code, content=res_err(msg=exc.msg))
+    return JSONResponse(status_code=exc.status_code, content=res_err(msg=exc.msg, code=exc.code, data=exc.data))
 
 def __unauthorized_exception_handler(request: Request, exc: UnauthorizedException):
-    return JSONResponse(status_code=exc.status_code, content=res_err(msg=exc.msg))
+    return JSONResponse(status_code=exc.status_code, content=res_err(msg=exc.msg, code=exc.code, data=exc.data))
 
 def __forbidden_exception_handler(request: Request, exc: ForbiddenException):
-    return JSONResponse(status_code=exc.status_code, content=res_err(msg=exc.msg))
+    return JSONResponse(status_code=exc.status_code, content=res_err(msg=exc.msg, code=exc.code, data=exc.data))
 
 def __not_found_exception_handler(request: Request, exc: NotFoundException):
-    return JSONResponse(status_code=exc.status_code, content=res_err(msg=exc.msg))
+    return JSONResponse(status_code=exc.status_code, content=res_err(msg=exc.msg, code=exc.code, data=exc.data))
 
 def __not_acceptable_exception_handler(request: Request, exc: NotAcceptableException):
-    return JSONResponse(status_code=exc.status_code, content=res_err(msg=exc.msg))
+    return JSONResponse(status_code=exc.status_code, content=res_err(msg=exc.msg, code=exc.code, data=exc.data))
 
 def __duplicate_user_exception_handler(request: Request, exc: DuplicateUserException):
-    return JSONResponse(status_code=exc.status_code, content=res_err(msg=exc.msg))
+    return JSONResponse(status_code=exc.status_code, content=res_err(msg=exc.msg, code=exc.code, data=exc.data))
 
 def __server_exception_handler(request: Request, exc: ServerException):
-    return JSONResponse(status_code=exc.status_code, content=res_err(msg=exc.msg))
+    return JSONResponse(status_code=exc.status_code, content=res_err(msg=exc.msg, code=exc.code, data=exc.data))
 
 
 

@@ -301,28 +301,28 @@ class ServiceApiAdapter(IServiceApi):
         if status_code < 400:
             return
         
-        # log.info(response.json()) 
-        
-        msg = response.json()["msg"] if "msg" in response.json() else response.reason
+        response_json = response.json()
+        msg = response_json["msg"] if "msg" in response_json else response.reason
+        data = response_json["data"] if "data" in response_json else None
         log.error(f"service request fail, [%s]: %s, body:%s, params:%s, headers:%s, status_code:%s, msg:%s", 
                   method, url, body, params, headers, status_code, msg)
         
         if status_code == status.HTTP_400_BAD_REQUEST:
-            raise ClientException(msg=msg)
+            raise ClientException(msg=msg, data=data)
         
         if status_code == status.HTTP_401_UNAUTHORIZED:
-            raise UnauthorizedException(msg=msg)
+            raise UnauthorizedException(msg=msg, data=data)
         
         if status_code == status.HTTP_403_FORBIDDEN:
-            raise ForbiddenException(msg=msg)
+            raise ForbiddenException(msg=msg, data=data)
         
         if status_code == status.HTTP_404_NOT_FOUND:
-            raise NotFoundException(msg=msg)
+            raise NotFoundException(msg=msg, data=data)
         
         if status_code == status.HTTP_406_NOT_ACCEPTABLE:
-            raise NotAcceptableException(msg=msg)
+            raise NotAcceptableException(msg=msg, data=data)
         
-        raise ServerException(msg=msg)
+        raise ServerException(msg=msg, data=data)
             
 
     def __err(self, resp_json):
