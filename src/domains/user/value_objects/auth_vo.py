@@ -64,7 +64,7 @@ class LoginVO(BaseModel):
         schema_extra = {
             "example": {
                 "email": "user@example.com",
-                "meta": "{\"region\":\"jp\",\"role\":\"teacher\",\"pass\":\"secret\"}",
+                "meta": "{\"pass\":\"secret\"}",
                 "prefetch": None,
                 "pubkey": "the-pubkey"
             }

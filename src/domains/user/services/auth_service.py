@@ -156,26 +156,29 @@ class AuthService:
         auth_res = None
         try:
             body.current_region = current_region
-            # auth_res = self.__req_login(auth_host, body)
-            raise ForbiddenException(msg="wrong_region", data={
-                "region": "jp",
-                "version": "asdfasdasdf"
-            })
+            auth_res = self.__req_login(auth_host, body)
             
-        except ForbiddenException as e:
+        except ForbiddenException as err_payload:
             # found in S3, and region != "current_region"(在 meta, 解密後才會知道)(找錯地方)
             # S3 有記錄但該地區的 auth-service 沒記錄，auth 從 S3 找 region 後回傳
             log.warn("WRONG REGION: \n \
                     has record in S3, but no record in DB of current region, ready to request user record from register region")
             log.error(f"AuthService.login fail: [request res: WRONG REGION], \
-                auth_host:%s, match_host:%s, current_region:%s, body:%s, region:%s, auth_res:%s, err:%s", 
-                auth_host, match_host, current_region, body, region, auth_res, e.__str__())
+                auth_host:%s, match_host:%s, current_region:%s, body:%s, region:%s, auth_res:%s, err_payload:%s", 
+                auth_host, match_host, current_region, body, region, auth_res, err_payload.msg)
                 
-            email_info = e.data
-            region = email_info["region"]  # 換其他 region 再請求一次
-            auth_host = get_auth_region_host(region)
-            match_host = get_match_region_host(region)
-            auth_res = self.__req_login(auth_host, body)
+            try:
+                email_info = err_payload.data
+                region = email_info["region"]  # 換其他 region 再請求一次
+                auth_host = get_auth_region_host(region)
+                match_host = get_match_region_host(region)
+                auth_res = self.__req_login(auth_host, body)
+                
+            except Exception as redirect_err:
+                log.error(f"AuthService.login fail: [redirect_fail], \
+                    auth_host:%s, match_host:%s, current_region:%s, body:%s, region:%s, auth_res:%s, err:%s", 
+                    auth_host, match_host, current_region, body, region, auth_res, redirect_err.__str__())
+                raise ServerException(msg="redirect_fail")
         
         except Exception as e:
             log.error(f"AuthService.login fail: [unknow_error], \
