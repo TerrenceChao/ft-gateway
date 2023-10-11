@@ -36,12 +36,16 @@ router = APIRouter(
 )
 
 
-def get_auth_host(region: str = Header(...)):
+def get_auth_host_for_signup(region: str = Header(...)):
     return get_auth_region_host(region=region)
 
 
-def get_match_host(region: str = Header(...)):
-    return get_match_region_host(region=region)
+def get_auth_host(current_region: str = Header(...)):
+    return get_auth_region_host(region=current_region)
+
+
+def get_match_host(current_region: str = Header(...)):
+    return get_match_region_host(region=current_region)
 
 
 @router.get("/welcome")
@@ -55,7 +59,7 @@ def get_public_key(timestamp: int = 0,
 # "meta": "{\"region\":\"jp\",\"role\":\"teacher\",\"pass\":\"secret\"}"
 @router.post("/signup", status_code=201)
 def signup(region: str = Header(...), body: SignupVO = Body(...),
-           auth_host=Depends(get_auth_host),
+           auth_host=Depends(get_auth_host_for_signup),
            ):
     data = _auth_service.signup(auth_host, body.email, body.meta, region)
     return res_success(data=data, msg="email_sent")
@@ -63,7 +67,7 @@ def signup(region: str = Header(...), body: SignupVO = Body(...),
 
 @router.post("/signup/confirm", status_code=201)
 def confirm_signup(body: SignupConfirmVO = Body(...),
-                   auth_host=Depends(get_auth_host),
+                   auth_host=Depends(get_auth_host_for_signup),
                    ):
     data = _auth_service.confirm_signup(auth_host, body)
     return res_success(data=data)
@@ -163,14 +167,17 @@ def logout(token: str = Header(...),
 
 @router.put('/password/update', status_code=200)
 def update_password(token: str = Header(...),
-           email: EmailStr = Body(..., embed=True),
-           ):
-    # TODO: update password
+                    email: EmailStr = Body(..., embed=True),
+                    auth_host=Depends(get_auth_host),
+                    ):
+    # TODO: update password with 'origin password' and 'new password'
     pass
 
+
 @router.put('/password/reset', status_code=200)
-def reset_password(token: str = Header(...),
-           email: EmailStr = Body(..., embed=True),
-           ):
-    # TODO: reset password
+def reset_password(verify_token: str = Query(...),
+                   email: EmailStr = Body(..., embed=True),
+                   auth_host=Depends(get_auth_host),
+                   ):
+    # TODO: reset password: /password/reset?verify_token=xxxxxx
     pass

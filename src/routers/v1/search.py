@@ -12,8 +12,8 @@ import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
 
-def get_search_host(region: str = Header(...)):
-    return get_search_region_host(region=region)
+def get_search_host(current_region: str = Header(...)):
+    return get_search_region_host(region=current_region)
 
 
 

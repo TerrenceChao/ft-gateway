@@ -156,7 +156,11 @@ class AuthService:
         auth_res = None
         try:
             body.current_region = current_region
-            auth_res = self.__req_login(auth_host, body)
+            # auth_res = self.__req_login(auth_host, body)
+            raise ForbiddenException(msg="wrong_region", data={
+                "region": "jp",
+                "version": "asdfasdasdf"
+            })
             
         except ForbiddenException as e:
             # found in S3, and region != "current_region"(在 meta, 解密後才會知道)(找錯地方)
@@ -172,6 +176,12 @@ class AuthService:
             auth_host = get_auth_region_host(region)
             match_host = get_match_region_host(region)
             auth_res = self.__req_login(auth_host, body)
+        
+        except Exception as e:
+            log.error(f"AuthService.login fail: [unknow_error], \
+                auth_host:%s, match_host:%s, current_region:%s, body:%s, region:%s, auth_res:%s, err:%s", 
+                auth_host, match_host, current_region, body, region, auth_res, e.__str__())
+            raise ServerException(msg="unknow_error")
 
         # cache auth data
         role_id_key = str(auth_res["role_id"])

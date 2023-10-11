@@ -41,29 +41,31 @@ router = APIRouter(
 )
 
 
-def get_auth_host(region: str = Header(...)):
+def get_auth_host_for_signup(region: str = Header(...)):
     return get_auth_region_host(region=region)
 
+def get_auth_host(current_region: str = Header(...)):
+    return get_auth_region_host(region=current_region)
 
-def get_match_host(region: str = Header(...)):
-    return get_match_region_host(region=region)
+def get_match_host(current_region: str = Header(...)):
+    return get_match_region_host(region=current_region)
 
 
 @router.post('/google/signup', status_code=201)
-def google_signup():
+def google_signup(auth_host = Depends(get_auth_host_for_signup)):
     pass
 
 
 @router.post('/google/login', status_code=201)
-def google_login():
+def google_login(auth_host = Depends(get_auth_host)):
     pass
 
 
 @router.post('/facebook/signup', status_code=201)
-def facebook_signup():
+def facebook_signup(auth_host = Depends(get_auth_host_for_signup)):
     pass
 
 
 @router.post('/facebook/login', status_code=201)
-def facebook_login():
+def facebook_login(auth_host = Depends(get_auth_host)):
     pass
