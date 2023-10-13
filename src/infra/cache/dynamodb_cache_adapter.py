@@ -6,6 +6,7 @@ from typing import Any, Optional
 from ...domains.cache import ICache
 from ...configs.dynamodb import dynamodb
 from ...configs.conf import DYNAMODB_URL, TABLE_CACHE
+from ...configs.exceptions import ServerException
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
@@ -14,28 +15,31 @@ log.basicConfig(filemode='w', level=log.INFO)
 class DynamoDbCacheAdapter(ICache):
     def __init__(self, dynamodb: Any):
         self.db = dynamodb
+        self.__cls_name = self.__class__.__name__
 
-    def get(self, key: str) -> (Optional[Any], Optional[str]):
-        err_msg: str = None
+    def get(self, key: str):
+        res = None
         result = None
-
         try:
             table = self.db.Table(TABLE_CACHE)
             res = table.get_item(Key={"cache_key": key})
-            if "Item" in res:
+            if "Item" in res and "value" in res["Item"]:
                 val = res["Item"]["value"]
-                result = json.loads(val) if val[0] == "{" and val[-1] =="}" else val
+                result = json.loads(
+                    val) if val[0] == "{" and val[-1] == "}" else val
+
+            return result
 
         except Exception as e:
-            err_msg = e.__str__()
-            log.error(err_msg)
+            log.error(f"cache {self.__cls_name}.get fail \
+                key:%s, res:%s, result:%s, err:%s",
+                      key, res, result, e.__str__())
+            raise ServerException(msg="d2_server_error")
 
-        return result, err_msg
 
-    def set(self, key: str, val: Any, ex: int = None) -> (Optional[bool], Optional[str]):
-        err_msg: str = None
+    def set(self, key: str, val: Any, ex: int = None):
+        res = None
         result = False
-        
         try:
             if type(val) == dict:
                 val = json.dumps(val)
@@ -50,16 +54,17 @@ class DynamoDbCacheAdapter(ICache):
                 ttl = int(ttl.timestamp())
                 item.update({"ttl": ttl})
 
-            table.put_item(Item=item)
+            res = table.put_item(Item=item)
             result = True
+            return result
 
         except Exception as e:
-            err_msg = e.__str__()
-            log.error(err_msg)
+            log.error(f"cache {self.__cls_name}.set fail \
+                    key:%s, val:%s, ex:%s, res:%s, result:%s, err:%s",
+                      key, val, ex, res, result, e.__str__())
+            raise ServerException(msg="d2_server_error")
 
-        return result, err_msg
-    
-    
+
 def get_cache():
     try:
         cache = DynamoDbCacheAdapter(dynamodb)
