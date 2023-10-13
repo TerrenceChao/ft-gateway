@@ -30,7 +30,6 @@ def meta_validator(meta: str, pubkey: str = None):
 
 
 class SignupVO(BaseModel):
-    region: str = None  # in headers
     email: EmailStr
     pubkey: str = None
     meta: str
@@ -46,7 +45,7 @@ class SignupVO(BaseModel):
                 "pubkey": "the-pubkey",
                 "meta": "{\"role\":\"teacher\",\"pass\":\"secret\"}",
             },
-            "description": "ignore 'region' in the body, it will be set in headers; ignore 'pubkey' in the body",
+            "description": "ignore 'pubkey' in the body",
         }
 
 

@@ -58,7 +58,7 @@ def get_public_key(auth_host=Depends(get_auth_host)):
 
 # "meta": "{\"role\":\"teacher\",\"pass\":\"secret\"}"
 @router.post("/signup", status_code=201)
-def signup(body: SignupVO = Depends(signup_check_body),
+def signup(body: SignupVO = Body(...),
            auth_host=Depends(get_auth_host_for_signup),
            ):
     data = _auth_service.signup(auth_host, body)

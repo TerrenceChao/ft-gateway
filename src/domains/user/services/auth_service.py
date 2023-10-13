@@ -57,7 +57,7 @@ class AuthService:
             }
 
         else:
-            self.cache.set(email, {"region": body.region}, SHORT_TERM_TTL)
+            self.cache.set(email, {"avoid_freq_email_req_and_hit_db": 1}, SHORT_TERM_TTL)
             raise DuplicateUserException(msg="email_registered")
 
     def __cache_check_for_duplicates(self, email: str):
