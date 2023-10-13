@@ -9,6 +9,9 @@ def meta_validator(meta: str, pubkey: str = None):
     try:
         # TODO: need pubkey to decrypt meta
         meta_json = json.loads(meta)
+        if not 'role' in meta_json:
+            raise ClientException(msg=f'role is required')
+        
         if not meta_json['role'] in VALID_ROLES:
             raise ClientException(msg=f'role allowed only in {VALID_ROLES}')
 
