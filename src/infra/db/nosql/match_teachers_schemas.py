@@ -1,7 +1,7 @@
 import json
 from typing import Dict, List, Optional
 from pydantic import BaseModel, EmailStr
-from .match_public_schemas import BaseEntity
+from .base_schemas import BaseEntity
 from ....configs.constants import Apply
 
 
