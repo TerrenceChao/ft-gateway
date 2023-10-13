@@ -1,8 +1,9 @@
 from typing import List, Optional
 from pydantic import BaseModel, EmailStr
+from .base_schemas import BaseEntity
 
 
-class BaseAuth(BaseModel):
+class BaseAuth(BaseEntity):
     email: EmailStr
     aid: Optional[int] = None
 
@@ -22,7 +23,7 @@ class GoogleAuth(BaseAuth):
     pass
 
 
-class Account(BaseModel):
+class Account(BaseEntity):
     aid: Optional[int] = None
     region: str
     email: EmailStr
@@ -31,25 +32,3 @@ class Account(BaseModel):
     role: str
     role_id: Optional[int] = None
     auth: BaseAuth
-    created_at: Optional[int] = None
-
-
-# request
-class FTUser(BaseModel):
-    email: EmailStr
-    # user's { "region/current_region", "role", pass } 透過 pubkey 編碼取得，可解密
-    meta: Optional[str] = None
-    pubkey: Optional[str] = None
-    confirm_code: Optional[str] = None
-
-
-# response
-class User(BaseModel):
-    email: EmailStr
-    region: Optional[str] = None  # 在哪裡找資料庫 很重要
-    current_region: Optional[str] = None  # 訊息發送到哪裡 很重要
-    role: str
-    role_id: int
-    token: str
-
-    # TODO: def cache(): ...

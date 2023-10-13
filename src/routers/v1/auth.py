@@ -7,6 +7,7 @@ from fastapi import APIRouter, \
 from pydantic import EmailStr
 from ...domains.user.value_objects.auth_vo import SignupVO, SignupConfirmVO, LoginVO
 from ..req.authorization import verify_token_by_logout
+from ..res.auth_response import *
 from ..res.response import res_success
 from ...domains.user.services.auth_service import AuthService
 from ...infra.cache.dynamodb_cache_adapter import DynamoDbCacheAdapter
@@ -48,12 +49,10 @@ def get_match_host(current_region: str = Header(...)):
     return get_match_region_host(region=current_region)
 
 
-@router.get("/welcome")
-def get_public_key(timestamp: int = 0,
-                   auth_host=Depends(get_auth_host),
-                   ):
-    pubkey = _auth_service.get_public_key(auth_host, timestamp)
-    return res_success(data=pubkey)
+@router.get("/welcome", response_model=WelcomeResponseVO)
+def get_public_key(auth_host=Depends(get_auth_host)):
+    pubkey_vo = _auth_service.get_public_key(auth_host)
+    return res_success(data=pubkey_vo)
 
 
 # "meta": "{\"region\":\"jp\",\"role\":\"teacher\",\"pass\":\"secret\"}"
@@ -65,7 +64,7 @@ def signup(region: str = Header(...), body: SignupVO = Body(...),
     return res_success(data=data, msg="email_sent")
 
 
-@router.post("/signup/confirm", status_code=201)
+@router.post("/signup/confirm", status_code=201, response_model=SignupResponseVO)
 def confirm_signup(body: SignupConfirmVO = Body(...),
                    auth_host=Depends(get_auth_host_for_signup),
                    ):
@@ -145,7 +144,7 @@ TODO: current_region 和其他 metadata 需改為多份
 """
 
 
-@router.post("/login", status_code=201)
+@router.post("/login", status_code=201, response_model=LoginResponseVO)
 def login(current_region: str = Header(...),
           body: LoginVO = Body(...),
           auth_host=Depends(get_auth_host),

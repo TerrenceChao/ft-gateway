@@ -4,6 +4,7 @@ from ..value_objects.auth_vo import SignupConfirmVO, LoginVO
 from ...cache import ICache
 from ...service_api import IServiceApi
 from ....infra.utils.util import gen_confirm_code
+from ....infra.utils.time_util import gen_timestamp
 from ....configs.conf import SHORT_TERM_TTL, LONG_TERM_TTL,\
     MY_STATUS_OF_COMPANY_APPLY, STATUS_OF_COMPANY_APPLY,\
     MY_STATUS_OF_TEACHER_APPLY, STATUS_OF_TEACHER_APPLY
@@ -24,7 +25,8 @@ class AuthService:
     get_public_key
     """
 
-    def get_public_key(self, host: str, timestamp: int):
+    def get_public_key(self, host: str):
+        timestamp = gen_timestamp()
         slot = timestamp % 100
         pubkey, cache_err = self.cache.get(f"pubkey_{slot}")
         if cache_err:
@@ -37,7 +39,7 @@ class AuthService:
             pubkey = self.req.simple_get(f"{host}/security/pubkey", params={"ts": timestamp})
             self.cache.set(f"pubkey_{slot}", pubkey, ex=LONG_TERM_TTL)
 
-        return pubkey
+        return {"pubkey": pubkey}
 
     """
     signup
@@ -122,7 +124,7 @@ class AuthService:
                 role_id_key, auth_res, LONG_TERM_TTL, updated, cache_err)
             raise ServerException(msg="cache fail")
         else:
-            return auth_res
+            return {"auth": auth_res}
 
     def __verify_confirmcode(self, confirm_code: str, user: Any, cache_err: str = None):
         if cache_err:

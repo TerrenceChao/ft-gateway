@@ -23,7 +23,14 @@ class ServiceApiAdapter(IServiceApi):
     """
     def simple_get(self, url: str, params: Dict = None, headers: Dict = None) -> (Union[Any, None], Union[str, None]):
         result = None
-        response = self.requests.get(url, params=params, headers=headers)
+        response = None
+        try:
+            response = self.requests.get(url, params=params, headers=headers)
+        except Exception as e:
+            log.error(f"simple_get request error, url:%s, params:%s, headers:%s, resp:%s, err:%s",
+                    url, params, headers, response, e.__str__())
+            raise ServerException(msg='get_connection_error')
+            
         self.__status_code_validation(
             response=response,
             method='GET',
@@ -92,7 +99,14 @@ class ServiceApiAdapter(IServiceApi):
     """
     def simple_post(self, url: str, json: Dict, headers: Dict = None) -> (Union[Any, None], Union[str, None]):
         result = None
-        response = self.requests.post(url, json=json, headers=headers)
+        response = None
+        try:
+            response = self.requests.post(url, json=json, headers=headers)
+        except Exception as e:
+            log.error(f"simple_post request error, url:%s, json:%s, headers:%s, resp:%s, err:%s",
+                    url, json, headers, response, e.__str__())
+            raise ServerException(msg='post_connection_error')
+            
         self.__status_code_validation(
             response=response,
             method='POST',
@@ -160,8 +174,15 @@ class ServiceApiAdapter(IServiceApi):
     return result
     """
     def simple_put(self, url: str, json: Dict = None, headers: Dict = None) -> (Union[Any, None], Union[str, None]):
-        result = None        
-        response = self.requests.put(url, json=json, headers=headers)
+        result = None
+        response = None
+        try:
+            response = self.requests.put(url, json=json, headers=headers)
+        except Exception as e:
+            log.error(f"simple_put request error, url:%s, json:%s, headers:%s, resp:%s, err:%s",
+                    url, json, headers, response, e.__str__())
+            raise ServerException(msg='put_connection_error')
+            
         self.__status_code_validation(
             response=response,
             method='PUT',
@@ -230,7 +251,14 @@ class ServiceApiAdapter(IServiceApi):
     """
     def simple_delete(self, url: str, params: Dict = None, headers: Dict = None) -> (Union[Any, None], Union[str, None]):
         result = None
-        response = self.requests.delete(url, params=params, headers=headers)
+        response = None
+        try:
+            response = self.requests.delete(url, params=params, headers=headers)
+        except Exception as e:
+            log.error(f"simple_delete request error, url:%s, params:%s, headers:%s, resp:%s, err:%s",
+                    url, params, headers, response, e.__str__())
+            raise ServerException(msg='delete_connection_error')
+            
         self.__status_code_validation(
             response=response,
             method='DEL',
