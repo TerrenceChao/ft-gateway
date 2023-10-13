@@ -68,11 +68,17 @@ class AuthService:
             raise DuplicateUserException(msg="registered or registering")
 
     def __req_send_confirmcode_by_email(self, host: str, email: str, confirm_code: str):
-        auth_res = self.req.simple_post(f"{host}/sendcode/email", json={
+        auth_res, msg, err = self.req.post(f"{host}/sendcode/email", json={
             "email": email,
             "confirm_code": confirm_code,
             "sendby": "no_exist",  # email 不存在時寄送
         })
+        
+        if msg or err:
+            log.error(f"AuthService.__req_send_confirmcode_by_email:[request exception], \
+                host:%s, email:%s, confirm_code:%s, auth_res:%s, msg:%s, err:%s",
+                host, email, confirm_code, auth_res, msg, err)
+            self.cache.set(email, {"avoid_freq_email_req_and_hit_db": 1}, SHORT_TERM_TTL)
 
         return auth_res
 
