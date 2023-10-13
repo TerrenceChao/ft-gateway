@@ -1,6 +1,6 @@
 from typing import Any, List, Dict
 from ....routers.req.authorization import gen_token
-from ..value_objects.auth_vo import SignupConfirmVO, LoginVO
+from ..value_objects.auth_vo import *
 from ...cache import ICache
 from ...service_api import IServiceApi
 from ....infra.utils.util import gen_confirm_code
@@ -45,7 +45,9 @@ class AuthService:
     signup
     """
 
-    def signup(self, host: str, email: str, meta: str, region: str):
+    def signup(self, host: str, body: SignupVO):
+        email = body.email
+        meta = body.meta
         self.__cache_check_for_duplicates(email)
 
         confirm_code = gen_confirm_code()
@@ -61,7 +63,7 @@ class AuthService:
             }
 
         else:
-            self.cache.set(email, {"region": region}, SHORT_TERM_TTL)
+            self.cache.set(email, {"region": body.region}, SHORT_TERM_TTL)
             raise DuplicateUserException(msg="email_registered")
 
     def __cache_check_for_duplicates(self, email: str):
@@ -109,7 +111,7 @@ class AuthService:
         auth_res = self.req.simple_post(f"{host}/signup",
                                         json={
                                             "email": email,
-                                            # "meta": "{\"region\":\"jp\",\"role\":\"teacher\",\"pass\":\"secret\"}"
+                                            # "meta": "{\"role\":\"teacher\",\"pass\":\"secret\"}"
                                             "meta": user["meta"],
                                             "pubkey": body.pubkey,
                                         })
@@ -152,12 +154,11 @@ class AuthService:
     login
     """
 
-    def login(self, auth_host: str, match_host: str, current_region: str, body: LoginVO):
+    def login(self, auth_host: str, match_host: str, body: LoginVO):
         # request login & auth data
         region = None
         auth_res = None
         try:
-            body.current_region = current_region
             auth_res = self.__req_login(auth_host, body)
             
         except ForbiddenException as err_payload:
@@ -166,8 +167,8 @@ class AuthService:
             log.warn("WRONG REGION: \n \
                     has record in S3, but no record in DB of current region, ready to request user record from register region")
             log.error(f"AuthService.login fail: [request res: WRONG REGION], \
-                auth_host:%s, match_host:%s, current_region:%s, body:%s, region:%s, auth_res:%s, err_payload:%s", 
-                auth_host, match_host, current_region, body, region, auth_res, err_payload.msg)
+                auth_host:%s, match_host:%s, body:%s, region:%s, auth_res:%s, err_payload:%s", 
+                auth_host, match_host, body, region, auth_res, err_payload.msg)
                 
             try:
                 email_info = err_payload.data
@@ -178,21 +179,21 @@ class AuthService:
                 
             except Exception as redirect_err:
                 log.error(f"AuthService.login fail: [redirect_fail], \
-                    auth_host:%s, match_host:%s, current_region:%s, body:%s, region:%s, auth_res:%s, err:%s", 
-                    auth_host, match_host, current_region, body, region, auth_res, redirect_err.__str__())
+                    auth_host:%s, match_host:%s, body:%s, region:%s, auth_res:%s, err:%s", 
+                    auth_host, match_host, body, region, auth_res, redirect_err.__str__())
                 raise ServerException(msg="redirect_fail")
         
         except Exception as e:
             log.error(f"AuthService.login fail: [unknow_error], \
-                auth_host:%s, match_host:%s, current_region:%s, body:%s, region:%s, auth_res:%s, err:%s", 
-                auth_host, match_host, current_region, body, region, auth_res, e.__str__())
+                auth_host:%s, match_host:%s, body:%s, region:%s, auth_res:%s, err:%s", 
+                auth_host, match_host, body, region, auth_res, e.__str__())
             raise ServerException(msg="unknow_error")
 
         # cache auth data
         role_id_key = str(auth_res["role_id"])
         auth_res = self.__apply_token(auth_res)
         auth_res.update({
-            "current_region": current_region,
+            "current_region": body.current_region,
             "socketid": "it's socketid",
             "online": True,
         })
