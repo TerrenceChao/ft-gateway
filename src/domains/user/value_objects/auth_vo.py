@@ -1,22 +1,19 @@
 import json
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, EmailStr, validator
-from ....configs.constants import VALID_ROLES, REGION_MAPPING
+from ....configs.constants import VALID_ROLES
 from ....configs.exceptions import *
-from ...match.company.value_objects.c_value_objects import CompanyMatchDataVO
-from ...match.teacher.value_objects.t_value_objects import TeacherMatchDataVO
-
-REGION_CODES = set(REGION_MAPPING.values())
 
 
-def meta_validator(meta: str):
+def meta_validator(meta: str, pubkey: str = None):
     try:
+        # TODO: need pubkey to decrypt meta
         meta_json = json.loads(meta)
         if not meta_json['role'] in VALID_ROLES:
             raise ClientException(msg=f'role allowed only in {VALID_ROLES}')
 
-        if not meta_json['region'] in REGION_CODES:
-            raise ClientException(msg=f'region is not allowed')
+        if not 'pass' in meta_json:
+            raise ClientException(msg=f'pass is required')
 
         return meta
 
@@ -30,19 +27,23 @@ def meta_validator(meta: str):
 
 
 class SignupVO(BaseModel):
+    region: str = None  # in headers
     email: EmailStr
+    pubkey: str = None
     meta: str
 
     @validator('meta')
-    def check_meta(cls, v):
-        return meta_validator(v)
+    def check_meta(cls, v, values, **kwargs):
+        return meta_validator(v, values['pubkey'])
 
     class Config:
         schema_extra = {
             "example": {
                 "email": "user@example.com",
-                "meta": "{\"region\":\"jp\",\"role\":\"teacher\",\"pass\":\"secret\"}",
-            }
+                "pubkey": "the-pubkey",
+                "meta": "{\"role\":\"teacher\",\"pass\":\"secret\"}",
+            },
+            "description": "ignore 'region' in the body, it will be set in headers; ignore 'pubkey' in the body",
         }
 
 
@@ -56,26 +57,28 @@ class SignupConfirmVO(BaseModel):
             "example": {
                 "email": "user@example.com",
                 "confirm_code": "106E7B",
-                "pubkey": "the-pubkey"
-            }
+                "pubkey": "the-pubkey",
+            },
+            "description": "ignore 'pubkey' in the body",
         }
 
 
 class LoginVO(BaseModel):
-    current_region: str = None,  # this.header, auth-service.body
+    current_region: str = None  # in headers
     email: EmailStr
+    pubkey: str = None
     meta: str
     prefetch: int = None
-    pubkey: str = None
 
     class Config:
         schema_extra = {
             "example": {
                 "email": "user@example.com",
+                "pubkey": "the-pubkey",
                 "meta": "{\"pass\":\"secret\"}",
-                "prefetch": None,
-                "pubkey": "the-pubkey"
-            }
+                "prefetch": 3,
+            },
+            "description": "ignore 'current_region' in the body, it will be set in headers; ignore 'pubkey' in the body",
         }
 
 

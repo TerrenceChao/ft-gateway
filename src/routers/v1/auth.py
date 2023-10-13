@@ -7,6 +7,7 @@ from fastapi import APIRouter, \
 from pydantic import EmailStr
 from ...domains.user.value_objects.auth_vo import SignupVO, SignupConfirmVO, LoginVO
 from ..req.authorization import verify_token_by_logout
+from ..req.auth_validation import *
 from ..res.auth_response import *
 from ..res.response import res_success
 from ...domains.user.services.auth_service import AuthService
@@ -55,12 +56,12 @@ def get_public_key(auth_host=Depends(get_auth_host)):
     return res_success(data=pubkey_vo)
 
 
-# "meta": "{\"region\":\"jp\",\"role\":\"teacher\",\"pass\":\"secret\"}"
+# "meta": "{\"role\":\"teacher\",\"pass\":\"secret\"}"
 @router.post("/signup", status_code=201)
-def signup(region: str = Header(...), body: SignupVO = Body(...),
+def signup(body: SignupVO = Depends(signup_check_body),
            auth_host=Depends(get_auth_host_for_signup),
            ):
-    data = _auth_service.signup(auth_host, body.email, body.meta, region)
+    data = _auth_service.signup(auth_host, body)
     return res_success(data=data, msg="email_sent")
 
 
@@ -145,13 +146,11 @@ TODO: current_region 和其他 metadata 需改為多份
 
 
 @router.post("/login", status_code=201, response_model=LoginResponseVO)
-def login(current_region: str = Header(...),
-          body: LoginVO = Body(...),
+def login(body: LoginVO = Depends(login_check_body),
           auth_host=Depends(get_auth_host),
           match_host=Depends(get_match_host),
           ):
-    data = _auth_service.login(
-        auth_host, match_host, current_region, body)
+    data = _auth_service.login(auth_host, match_host, body)
     return res_success(data=data)
 
 
