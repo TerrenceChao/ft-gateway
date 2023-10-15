@@ -111,16 +111,9 @@ class AuthService:
                                         })
 
         role_id_key = str(auth_res["role_id"])
+        self.__cache_auth_res(role_id_key, auth_res)
         auth_res = self.__apply_token(auth_res)
-        updated = self.cache.set(
-            role_id_key, auth_res, ex=LONG_TERM_TTL)
-        if not updated:
-            log.error(f"AuthService.confirm_signup:[cache set],\
-                role_id_key:%s, auth_res:%s, ex:%s, cache data:%s",
-                role_id_key, auth_res, LONG_TERM_TTL, updated)
-            raise ServerException(msg="server_error")
-        else:
-            return {"auth": auth_res}
+        return {"auth": auth_res}
 
     def __verify_confirmcode(self, confirm_code: str, user: Any):
         if not user or not "confirm_code" in user:
@@ -179,19 +172,21 @@ class AuthService:
 
         # cache auth data
         role_id_key = str(auth_res["role_id"])
-        auth_res = self.__apply_token(auth_res)
         auth_res.update({
             "current_region": body.current_region,
             "socketid": "it's socketid",
-            "online": True,
         })
         self.__cache_auth_res(role_id_key, auth_res)
+        auth_res = self.__apply_token(auth_res)
 
         # request match data
         role_path = PATHS[auth_res["role"]]
-        size = body.prefetch or PREFETCH
         match_res = self.__req_match_data(
-            match_host, role_path, role_id_key, size)
+            match_host,
+            role_path,
+            role_id_key,
+            body.prefetch
+        )
 
         return {
             "auth": auth_res,
@@ -204,6 +199,9 @@ class AuthService:
         
 
     def __cache_auth_res(self, role_id_key: str, auth_res: Dict):
+        auth_res.update({
+            "online": True,
+        })
         updated = self.cache.set(
             role_id_key, auth_res, ex=LONG_TERM_TTL)
         if not updated:
@@ -212,7 +210,7 @@ class AuthService:
                 role_id_key, auth_res, LONG_TERM_TTL, updated)
             raise ServerException(msg="server_error")
 
-    def __req_match_data(self, match_host: str, role_path: str, role_id_key: str, size: int):
+    def __req_match_data(self, match_host: str, role_path: str, role_id_key: str, size: int = PREFETCH):
         my_statuses, statuses = [], []
         
         if role_path == "companies" or role_path == "company":
@@ -237,23 +235,21 @@ class AuthService:
     logout
     """
 
-    def logout(self, role_id: int, token: str):
+    def logout(self, role_id: int):
         role_id_key = str(role_id)
-        user = self.__cache_check_for_auth(role_id_key, token)
+        user = self.__cache_check_for_auth(role_id_key)
         user_logout_status = self.__logout_status(user)
 
         # "LONG_TERM_TTL" for redirct notification
         self.__cache_logout_status(role_id_key, user_logout_status)
         return (None, "successfully logged out")
 
-    def __cache_check_for_auth(self, role_id_key: str, token: str):
+    def __cache_check_for_auth(self, role_id_key: str):
         user = self.cache.get(role_id_key)
-
-        if not user or not "token" in user:
+        if not user or \
+            not "online" in user or \
+            user["online"] == False:
             raise ClientException(msg="logged out")
-
-        if user["token"] != token:
-            raise UnauthorizedException(msg="invalid user")
 
         return user
 

@@ -155,11 +155,10 @@ def login(body: LoginVO = Depends(login_check_body),
 
 
 @router.post("/logout", status_code=201)
-def logout(token: str = Header(...),
-           role_id: int = Body(..., embed=True),
+def logout(role_id: int = Body(..., embed=True),
            verify=Depends(verify_token_by_logout)
            ):
-    data, msg = _auth_service.logout(role_id, token)
+    data, msg = _auth_service.logout(role_id)
     return res_success(data=data, msg=msg)
 
 
