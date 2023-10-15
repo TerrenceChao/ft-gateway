@@ -83,6 +83,13 @@ class LoginVO(BaseModel):
             "description": "ignore 'current_region' in the body, it will be set in headers; ignore 'pubkey' in the body",
         }
 
+class ResetPasswordVO(BaseModel):
+    register_email: EmailStr
+    password1: str
+    password2: str
+
+class UpdatePasswordVO(ResetPasswordVO):
+    origin_password: str
 
 class AuthVO(BaseModel):
     email: EmailStr

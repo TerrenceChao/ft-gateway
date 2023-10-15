@@ -277,3 +277,39 @@ class AuthService:
                 role_id_key:%s, user_logout_status:%s, ex:%s, cache data:%s",
                 role_id_key, user_logout_status, LONG_TERM_TTL, updated)
             raise ServerException(msg="server_error")
+
+    '''
+    password
+    '''
+    def send_reset_password_comfirm_email(self, auth_host: str, email: EmailStr, ):
+        verify_token = self.__req_send_reset_password_comfirm_email(auth_host, email)
+        self.cache.set(verify_token, email, SHORT_TERM_TTL)
+        return 'send_email_success'
+
+    def reset_passwrod(self, auth_host: str, verify_token: str, body: ResetPasswordVO):
+        checked_email = self.cache.get(verify_token)
+        if not checked_email:
+            raise ServerException(msg="invalid token") 
+        if checked_email != body.register_email:
+            raise ServerException(msg="invalid user")
+        auth_res = self.__req_reset_password(auth_host, body)
+        self.cache.delete(verify_token)
+        return {'auth_res': auth_res}
+
+    def update_password(self, auth_host: str, token: str, role_id: int, body: UpdatePasswordVO):
+        # check is in login status
+        _ = self.__cache_check_for_auth(str(role_id), token)
+        auth_res = self.__req_update_password(auth_host, body)
+        return {'auth_res': auth_res}
+
+    def __req_send_reset_password_comfirm_email(self, auth_host: str, email: EmailStr):
+        return self.req.simple_get(
+            f"{auth_host}/password/send_reset_password_confirm_email", params={'email': email}) 
+
+    def __req_update_password(self, auth_host: str, body: UpdatePasswordVO):
+        return self.req.simple_post(
+            f"{auth_host}/password/update", json=body.dict())
+
+    def __req_reset_password(self, auth_host: str, body: ResetPasswordVO):
+        return self.req.simple_post(
+            f"{auth_host}/password/update", json=body.dict()) 

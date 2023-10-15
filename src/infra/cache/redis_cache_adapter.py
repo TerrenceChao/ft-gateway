@@ -55,6 +55,14 @@ class RedisCacheAdapter(ICache):
                       key, val, ex, e.__str__())
             raise ServerException(msg="r_server_error")
 
+    def delete(self, key: str):
+        try:
+            redis.delete(key)
+        except Exception as e:
+            log.error(f"cache {self.__cls_name}.delete fail \
+                    key:%s, err:%s",
+                      key, e.__str__())
+            raise ServerException(msg="r_server_error") 
 
 def get_cache():
     try:

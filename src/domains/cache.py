@@ -11,3 +11,7 @@ class ICache(ABC):
     @abstractmethod
     def set(self, key: str, val: Any, ex: int = None):
         pass
+
+    @abstractmethod
+    def delete(self, key: str):
+        pass
