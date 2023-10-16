@@ -282,8 +282,8 @@ class AuthService:
     password
     '''
     def send_reset_password_comfirm_email(self, auth_host: str, email: EmailStr, ):
-        verify_token = self.__req_send_reset_password_comfirm_email(auth_host, email)
-        self.cache.set(verify_token, email, SHORT_TERM_TTL)
+        data = self.__req_send_reset_password_comfirm_email(auth_host, email)
+        self.cache.set(data['token'], email, SHORT_TERM_TTL)
         return 'send_email_success'
 
     def reset_passwrod(self, auth_host: str, verify_token: str, body: ResetPasswordVO):
