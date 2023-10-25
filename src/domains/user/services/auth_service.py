@@ -284,7 +284,8 @@ class AuthService:
     def send_reset_password_comfirm_email(self, auth_host: str, email: EmailStr, ):
         data = self.__req_send_reset_password_comfirm_email(auth_host, email)
         self.cache.set(data['token'], email, SHORT_TERM_TTL)
-        return 'send_email_success'
+        #TEST: log
+        return f'''send_email_success {data['token']}'''
 
     def reset_passwrod(self, auth_host: str, verify_token: str, body: ResetPasswordVO):
         checked_email = self.cache.get(verify_token)
@@ -307,9 +308,9 @@ class AuthService:
             f"{auth_host}/password/send_reset_password_confirm_email", params={'email': email}) 
 
     def __req_update_password(self, auth_host: str, body: UpdatePasswordVO):
-        return self.req.simple_post(
+        return self.req.simple_put(
             f"{auth_host}/password/update", json=body.dict())
 
     def __req_reset_password(self, auth_host: str, body: ResetPasswordVO):
-        return self.req.simple_post(
+        return self.req.simple_put(
             f"{auth_host}/password/update", json=body.dict()) 
