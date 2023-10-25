@@ -297,9 +297,7 @@ class AuthService:
         self.cache.delete(verify_token)
         return {'auth_res': auth_res}
 
-    def update_password(self, auth_host: str, token: str, role_id: int, body: UpdatePasswordVO):
-        # check is in login status
-        _ = self.__cache_check_for_auth(str(role_id), token)
+    def update_password(self, auth_host: str, body: UpdatePasswordVO):
         auth_res = self.__req_update_password(auth_host, body)
         return {'auth_res': auth_res}
 

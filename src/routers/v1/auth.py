@@ -163,14 +163,13 @@ def logout(token: str = Header(...),
     return res_success(data=data, msg=msg)
 
 
-@router.put('/password/update', status_code=200)
-def update_password(token: str = Header(...),
-                    role_id: int = Query(...),
-                    update_password_vo: UpdatePasswordVO = Body(...),
+@router.put('/password/{role_id}/update/', status_code=200)
+def update_password(update_password_vo: UpdatePasswordVO = Body(...),
                     auth_host=Depends(get_auth_host),
+                    #verify=Depends(verify_token)
                     ):
     data = _auth_service.update_password(
-        auth_host, token, role_id, update_password_vo)
+        auth_host, update_password_vo)
     return res_success(data=data)
 
 

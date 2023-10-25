@@ -54,6 +54,10 @@ def get_role(url_path: str):
     
     if "/teachers" in url_path or "/teacher" in url_path:
         return "teacher"
+
+    # 帳號相關功能沒有分 role
+    if "/auth" in url_path:
+        return "normal role"
     
     raise NotFoundException(msg="invalid role")
 
