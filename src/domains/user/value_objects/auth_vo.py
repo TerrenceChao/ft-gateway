@@ -23,7 +23,7 @@ def meta_validator(meta: str, pubkey: str = None):
     except json.JSONDecodeError as e:
         log.error(
             f'func: meta_validator error [json_decode_error] meta:%s, err:%s', meta, e.__str__())
-        raise ClientException(msg=f'invalid json format, meta:{meta}')
+        raise ClientException(msg=f'invalid json format of meta')
 
     except ClientException as e:
         raise ClientException(msg=e.msg)
