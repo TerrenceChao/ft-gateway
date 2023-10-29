@@ -55,6 +55,13 @@ class DuplicateUserException(HTTPException, ErrorLogger):
         self.data = data
         self.status_code = status.HTTP_406_NOT_ACCEPTABLE
         
+class TooManyRequestsException(HTTPException, ErrorLogger):
+    def __init__(self, msg: str, code: str = '42900', data: Any = None):
+        self.msg = msg
+        self.code = code
+        self.data = data
+        self.status_code = status.HTTP_429_TOO_MANY_REQUESTS
+        
 class ServerException(HTTPException, ErrorLogger):
     def __init__(self, msg: str, code: str = '50000', data: Any = None):
         self.msg = msg
@@ -81,6 +88,9 @@ def __not_acceptable_exception_handler(request: Request, exc: NotAcceptableExcep
 def __duplicate_user_exception_handler(request: Request, exc: DuplicateUserException):
     return JSONResponse(status_code=exc.status_code, content=res_err(msg=exc.msg, code=exc.code, data=exc.data))
 
+def __too_many_requests_exception_handler(request: Request, exc: TooManyRequestsException):
+    return JSONResponse(status_code=exc.status_code, content=res_err(msg=exc.msg, code=exc.code, data=exc.data))
+
 def __server_exception_handler(request: Request, exc: ServerException):
     return JSONResponse(status_code=exc.status_code, content=res_err(msg=exc.msg, code=exc.code, data=exc.data))
 
@@ -94,4 +104,5 @@ def include_app(app: FastAPI):
     app.add_exception_handler(NotFoundException, __not_found_exception_handler)
     app.add_exception_handler(NotAcceptableException, __not_acceptable_exception_handler)
     app.add_exception_handler(DuplicateUserException, __duplicate_user_exception_handler)
+    app.add_exception_handler(TooManyRequestsException, __too_many_requests_exception_handler)
     app.add_exception_handler(ServerException, __server_exception_handler)

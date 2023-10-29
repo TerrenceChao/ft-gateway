@@ -3,7 +3,7 @@ import time
 from datetime import datetime
 from typing import Callable, List, Union
 import jwt as jwt_util
-from fastapi import APIRouter, FastAPI, Header, Body, Request, Response
+from fastapi import APIRouter, FastAPI, Header, Path, Body, Request, Response
 from fastapi.routing import APIRoute
 from ...infra.db.nosql import match_companies_schemas as com_schema, \
     match_teachers_schemas as teacher_schema
@@ -120,6 +120,14 @@ def verify_token_by_teacher_profile(request: Request,
 def verify_token_by_logout(token: str = Header(...),
                            role_id: int = Body(..., embed=True),
                            ):
+    secret = __get_secret(role_id)
+    data = __jwt_decode(jwt=token, key=secret, algorithms=["HS256"], msg=f"access denied")
+    if not __valid_role_id(data, role_id):
+        raise UnauthorizedException(msg=f"access denied")
+    
+def verify_token_by_update_password(token: str = Header(...),
+                                    role_id: int = Path(...),
+                                    ):
     secret = __get_secret(role_id)
     data = __jwt_decode(jwt=token, key=secret, algorithms=["HS256"], msg=f"access denied")
     if not __valid_role_id(data, role_id):
