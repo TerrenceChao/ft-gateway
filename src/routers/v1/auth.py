@@ -164,16 +164,17 @@ def logout(token: str = Header(...),
 
 
 @router.put('/password/{role_id}/update/')
-def update_password(update_password_vo: UpdatePasswordVO = Body(...),
+def update_password(role_id: int,
+                    update_password_vo: UpdatePasswordVO = Body(...),
                     auth_host=Depends(get_auth_host),
                     verify=Depends(verify_token_by_update_password),
                     ):
     data = _auth_service.update_password(
-        auth_host, update_password_vo)
+        auth_host, role_id, update_password_vo)
     return res_success(data=data)
 
 
-@router.get('/password/send_reset_password_comfirm_email')
+@router.get('/password/reset/email')
 def send_reset_password_comfirm_email(
     email: EmailStr,
     auth_host=Depends(get_auth_host),
