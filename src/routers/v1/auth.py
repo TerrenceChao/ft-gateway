@@ -6,7 +6,7 @@ from fastapi import APIRouter, \
     HTTPException
 from pydantic import EmailStr
 from ...domains.user.value_objects.auth_vo import SignupVO, SignupConfirmVO, LoginVO, UpdatePasswordVO, ResetPasswordVO
-from ..req.authorization import verify_token_by_logout
+from ..req.authorization import verify_token_by_logout, verify_token_by_update_password
 from ..req.auth_validation import *
 from ..res.auth_response import *
 from ..res.response import res_success
@@ -163,17 +163,17 @@ def logout(token: str = Header(...),
     return res_success(data=data, msg=msg)
 
 
-@router.put('/password/{role_id}/update/', status_code=200)
+@router.put('/password/{role_id}/update/')
 def update_password(update_password_vo: UpdatePasswordVO = Body(...),
                     auth_host=Depends(get_auth_host),
-                    #verify=Depends(verify_token)
+                    verify=Depends(verify_token_by_update_password),
                     ):
     data = _auth_service.update_password(
         auth_host, update_password_vo)
     return res_success(data=data)
 
 
-@router.get('/password/send_reset_password_comfirm_email', status_code=200)
+@router.get('/password/send_reset_password_comfirm_email')
 def send_reset_password_comfirm_email(
     email: EmailStr,
     auth_host=Depends(get_auth_host),
@@ -182,7 +182,7 @@ def send_reset_password_comfirm_email(
     return res_success(msg=msg)
 
 
-@router.put('/password/reset', status_code=200)
+@router.put('/password/reset')
 def reset_password(
     reset_passwrod_vo: ResetPasswordVO = Body(...),
     verify_token: str = Query(...),
