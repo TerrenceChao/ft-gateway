@@ -1,8 +1,6 @@
 import os
-import logging as log
 from fastapi import HTTPException, status
-from fastapi.responses import JSONResponse
-from ..routers.res.response import res_err
+import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
 
@@ -29,10 +27,10 @@ search_region_hosts = {
 }
 
 media_region_hosts = {
-    "default": os.getenv("REGION_HOST_MEDIA", "http://localhost:8085/media/api/v1"),
-    # "jp": os.getenv("JP_REGION_HOST_MEDIA", "http://localhost:8085/media/api/v1"),
-    # "ge": os.getenv("GE_REGION_HOST_MEDIA", "http://localhost:8085/media/api/v1"),
-    # "us": os.getenv("US_REGION_HOST_MEDIA", "http://localhost:8085/media/api/v1"),
+    # "default": os.getenv("REGION_HOST_MEDIA", "http://localhost:8085/media/api/v1"),
+    "jp": os.getenv("JP_REGION_HOST_MEDIA", "http://localhost:8085/media/api/v1"),
+    "ge": os.getenv("GE_REGION_HOST_MEDIA", "http://localhost:8085/media/api/v1"),
+    "us": os.getenv("US_REGION_HOST_MEDIA", "http://localhost:8085/media/api/v1"),
 }
 
 

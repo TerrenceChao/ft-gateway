@@ -66,7 +66,7 @@ def gen_token(data: dict, fields: List):
 
 # url_path = "//api/v1/match/teachers/6994696629320454/resumes/0"
 # url_path = "//api/v1/match/teachers/"
-def get_role_id(url_path: str) -> Union[int, None]:
+def get_role_id(url_path: str) -> (Union[int, None]):
     try:
         return int(url_path.split('/')[6])
     except Exception as e:
@@ -171,7 +171,7 @@ async def verify_token(request: Request):
     token = await parse_token_from_request(request)
     secret = __get_secret(role_id)
     data = __jwt_decode(jwt=token, key=secret, algorithms=["HS256"], msg=f"invalid {role} user")
-    if not __valid_role(data, request.url.path) or \
+    if not __valid_role(data, url_path) or \
         not __valid_role_id(data, role_id):
         raise UnauthorizedException(msg=f"invalid {role} user")
 
@@ -179,13 +179,13 @@ async def verify_token(request: Request):
 
 
 class AuthMatchRoute(APIRoute):
-    def get_route_handler(self) -> Callable:
+    def get_route_handler(self) -> (Callable):
         original_route_handler = super().get_route_handler()
 
         async def custom_route_handler(request: Request) -> Response:
             before = time.time()
             
-            if self.__get_role_id(request):
+            if self.__verifiable(request):
                 await verify_token(request)
             
             response: Response = await original_route_handler(request)
@@ -198,8 +198,8 @@ class AuthMatchRoute(APIRoute):
 
         return custom_route_handler
     
-    def __get_role(self, request: Request):
-        return get_role(request.url.path)
-    
-    def __get_role_id(self, request: Request):
-        return get_role_id(request.url.path)
+    def __verifiable(self, request: Request):
+        url_path = request.url.path
+        return get_role(url_path) != None and \
+            get_role_id(url_path) != None
+
