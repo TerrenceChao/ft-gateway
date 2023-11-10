@@ -178,7 +178,7 @@ async def verify_token(request: Request):
 
 
 
-class AuthMatchRoute(APIRoute):
+class AuthRoute(APIRoute):
     def get_route_handler(self) -> (Callable):
         original_route_handler = super().get_route_handler()
 

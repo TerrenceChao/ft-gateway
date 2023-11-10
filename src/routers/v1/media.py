@@ -5,7 +5,7 @@ from fastapi import APIRouter, \
     File, UploadFile, status
 from starlette.requests import Request
 from starlette.responses import Response, StreamingResponse
-from ..req.authorization import AuthMatchRoute, token_required
+from ..req.authorization import AuthRoute, token_required
 from ..res.response import res_success
 from ...domains.cache import ICache
 from ...infra.cache.dynamodb_cache_adapter import DynamoDbCacheAdapter, get_cache
@@ -24,7 +24,7 @@ router = APIRouter(
     prefix="/media",
     tags=["Media"],
     dependencies=[Depends(token_required)],
-    route_class=AuthMatchRoute,
+    route_class=AuthRoute,
     responses={404: {"description": "Not found"}},
 )
 
