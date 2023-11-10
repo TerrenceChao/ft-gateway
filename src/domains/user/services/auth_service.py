@@ -299,7 +299,7 @@ class AuthService:
             raise UnauthorizedException(msg="invalid user")
         auth_res = self.__req_reset_password(auth_host, body)
         self.__cache_remove_by_reset_password(verify_token, checked_email)
-        return {'auth_res': auth_res}
+        return None
     
     def __cache_check_for_reset_password(self, email: EmailStr):
         data = self.cache.get(email + ':reset_pw')
@@ -320,7 +320,7 @@ class AuthService:
     def update_password(self, auth_host: str, role_id: int, body: UpdatePasswordVO):
         self.__cache_check_for_email_validation(role_id, body.register_email)
         auth_res = self.__req_update_password(auth_host, body)
-        return {'auth_res': auth_res}
+        return None
 
     def __req_send_reset_password_comfirm_email(self, auth_host: str, email: EmailStr):
         return self.req.simple_get(

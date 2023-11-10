@@ -162,7 +162,7 @@ def logout(role_id: int = Body(..., embed=True),
     return res_success(data=data, msg=msg)
 
 
-@router.put('/password/{role_id}/update/')
+@router.put('/password/{role_id}/update')
 def update_password(role_id: int,
                     update_password_vo: UpdatePasswordVO = Body(...),
                     auth_host=Depends(get_auth_host),
