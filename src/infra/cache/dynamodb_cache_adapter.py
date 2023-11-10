@@ -64,6 +64,16 @@ class DynamoDbCacheAdapter(ICache):
                       key, val, ex, res, result, e.__str__())
             raise ServerException(msg="d2_server_error")
 
+    def delete(self, key: str):
+        try:
+            table = self.db.Table(TABLE_CACHE)
+            table.delete_item(Key={'cache_key': key})
+        except Exception as e:
+            log.error(f"cache {self.__cls_name}.set fail \
+                    key:%s, err:%s",
+                      key, e.__str__())
+            raise ServerException(msg="d2_server_error")
+
 
 def get_cache():
     try:

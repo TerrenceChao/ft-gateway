@@ -5,9 +5,7 @@ from ...cache import ICache
 from ...service_api import IServiceApi
 from ....infra.utils.util import gen_confirm_code
 from ....infra.utils.time_util import gen_timestamp
-from ....configs.conf import SHORT_TERM_TTL, LONG_TERM_TTL,\
-    MY_STATUS_OF_COMPANY_APPLY, STATUS_OF_COMPANY_APPLY,\
-    MY_STATUS_OF_TEACHER_APPLY, STATUS_OF_TEACHER_APPLY
+from ....configs.conf import *
 from ....configs.constants import PATHS, PREFETCH
 from ....configs.region_hosts import get_auth_region_host, get_match_region_host
 from ....configs.exceptions import *
@@ -282,3 +280,62 @@ class AuthService:
                 role_id_key:%s, user_logout_status:%s, ex:%s, cache data:%s",
                 role_id_key, user_logout_status, LONG_TERM_TTL, updated)
             raise ServerException(msg="server_error")
+
+    '''
+    password
+    '''
+    def send_reset_password_comfirm_email(self, auth_host: str, email: EmailStr):
+        self.__cache_check_for_reset_password(email)
+        data = self.__req_send_reset_password_comfirm_email(auth_host, email)
+        self.__cache_token_by_reset_password(data['token'], email)
+        #TEST: log
+        return f'''send_email_success {data['token']}'''
+
+    def reset_passwrod(self, auth_host: str, verify_token: str, body: ResetPasswordVO):
+        checked_email = self.cache.get(verify_token)
+        if not checked_email:
+            raise UnauthorizedException(msg="invalid token") 
+        if checked_email != body.register_email:
+            raise UnauthorizedException(msg="invalid user")
+        auth_res = self.__req_reset_password(auth_host, body)
+        self.__cache_remove_by_reset_password(verify_token, checked_email)
+        return {'auth_res': auth_res}
+    
+    def __cache_check_for_reset_password(self, email: EmailStr):
+        data = self.cache.get(email + ':reset_pw')
+        if data:
+            log.error(f"AuthService.__cache_check_for_reset_password:[too many reqeusts error],\
+                email:%s, cache data:%s", email, data)
+            raise TooManyRequestsException(msg="frequent_requests")
+    
+    def __cache_token_by_reset_password(self, verify_token: str, email: EmailStr):
+        self.cache.set(email + ':reset_pw', '1', REQUEST_INTERVAL_TTL)
+        self.cache.set(verify_token, email, SHORT_TERM_TTL)
+        
+    def __cache_remove_by_reset_password(self, verify_token: str, email: EmailStr):
+        self.cache.delete(email + ':reset_pw')
+        self.cache.delete(verify_token)
+        
+
+    def update_password(self, auth_host: str, role_id: int, body: UpdatePasswordVO):
+        self.__cache_check_for_email_validation(role_id, body.register_email)
+        auth_res = self.__req_update_password(auth_host, body)
+        return {'auth_res': auth_res}
+
+    def __req_send_reset_password_comfirm_email(self, auth_host: str, email: EmailStr):
+        return self.req.simple_get(
+            f"{auth_host}/password/reset/email", params={'email': email}) 
+
+    def __cache_check_for_email_validation(self, role_id: int, register_email: EmailStr):
+        role_id_key = str(role_id)
+        data = self.cache.get(role_id_key)
+        if not 'email' in data or str(register_email) != data['email']:
+            raise UnauthorizedException(msg='invalid email')
+
+    def __req_update_password(self, auth_host: str, body: UpdatePasswordVO):
+        return self.req.simple_put(
+            f"{auth_host}/password/update", json=body.dict())
+
+    def __req_reset_password(self, auth_host: str, body: ResetPasswordVO):
+        return self.req.simple_put(
+            f"{auth_host}/password/update", json=body.dict()) 

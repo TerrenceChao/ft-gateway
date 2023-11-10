@@ -19,6 +19,8 @@ REDIS_PASS = os.getenv("REDIS_PASSWORD", None)
 JWT_SECRET = os.getenv("TOKEN_EXPIRE_TIME", None)
 TOKEN_EXPIRE_TIME = int(os.getenv("TOKEN_EXPIRE_TIME", 60 * 60 * 24 * 7))
 
+# default = 20 secs
+REQUEST_INTERVAL_TTL = int(os.getenv("REQUEST_INTERVAL_TTL", "20"))
 # default = 5 mins (300 secs)
 SHORT_TERM_TTL = int(os.getenv("SHORT_TERM_TTL", "300"))
 # default = 14 days (14 * 86400 secs)
