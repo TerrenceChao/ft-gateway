@@ -135,8 +135,6 @@ class AuthService:
 
     def login(self, auth_host: str, match_host: str, body: LoginVO):
         # request login & auth data
-        region = None
-        auth_res = None
         (auth_res, region) = self.__req_login_or_register_region(auth_host, match_host, body)
         if auth_res is None:
             auth_host = get_auth_region_host(region)
@@ -176,9 +174,8 @@ class AuthService:
         except ForbiddenException as exp_payload:
             # found in S3, and region != "current_region"(在 meta, 解密後才會知道)(找錯地方)
             # S3 有記錄但該地區的 auth-service 沒記錄，auth 從 S3 找 region 後回傳
-            log.warn("WRONG REGION: \n \
-                    has record in S3, but no record in DB of current region, ready to request user record from register region")
-            log.error(f"AuthService.login fail: [request res: WRONG REGION], \
+            log.error(f"AuthService.login fail: [WRONG REGION: there is the user record in S3, \
+                but no record in the DB of current region, it's ready to request the user record from register region], \
                 auth_host:%s, match_host:%s, body:%s, register_region:%s, auth_res:%s, exp_payload:%s", 
                 auth_host, match_host, body, register_region, auth_res, exp_payload.msg)
                 
@@ -253,9 +250,7 @@ class AuthService:
 
     def __cache_check_for_auth(self, role_id_key: str):
         user = self.cache.get(role_id_key)
-        if not user or \
-            not "online" in user or \
-            user["online"] == False:
+        if not user or user.get("online", False):
             raise ClientException(msg="logged out")
 
         return user
@@ -297,30 +292,29 @@ class AuthService:
             raise UnauthorizedException(msg="invalid token") 
         if checked_email != body.register_email:
             raise UnauthorizedException(msg="invalid user")
-        auth_res = self.__req_reset_password(auth_host, body)
+        self.__req_reset_password(auth_host, body)
         self.__cache_remove_by_reset_password(verify_token, checked_email)
-        return None
+
     
     def __cache_check_for_reset_password(self, email: EmailStr):
-        data = self.cache.get(email + ':reset_pw')
+        data = self.cache.get(f'{email}:reset_pw')
         if data:
             log.error(f"AuthService.__cache_check_for_reset_password:[too many reqeusts error],\
                 email:%s, cache data:%s", email, data)
             raise TooManyRequestsException(msg="frequent_requests")
     
     def __cache_token_by_reset_password(self, verify_token: str, email: EmailStr):
-        self.cache.set(email + ':reset_pw', '1', REQUEST_INTERVAL_TTL)
+        self.cache.set(f'{email}:reset_pw', '1', REQUEST_INTERVAL_TTL)
         self.cache.set(verify_token, email, SHORT_TERM_TTL)
         
     def __cache_remove_by_reset_password(self, verify_token: str, email: EmailStr):
-        self.cache.delete(email + ':reset_pw')
+        self.cache.delete(f'{email}:reset_pw')
         self.cache.delete(verify_token)
         
 
     def update_password(self, auth_host: str, role_id: int, body: UpdatePasswordVO):
         self.__cache_check_for_email_validation(role_id, body.register_email)
-        auth_res = self.__req_update_password(auth_host, body)
-        return None
+        self.__req_update_password(auth_host, body)
 
     def __req_send_reset_password_comfirm_email(self, auth_host: str, email: EmailStr):
         return self.req.simple_get(

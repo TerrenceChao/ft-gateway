@@ -9,7 +9,7 @@ from fastapi.routing import APIRoute
 from ...infra.db.nosql import match_companies_schemas as com_schema, \
     match_teachers_schemas as teacher_schema
 from ...configs.conf import JWT_SECRET, JWT_ALGORITHM, TOKEN_EXPIRE_TIME
-from ...configs.exceptions import ServerException, UnauthorizedException, NotFoundException
+from ...configs.exceptions import *
 import logging as log
 
 log.basicConfig(level=log.INFO)
@@ -23,7 +23,7 @@ def token_required(credentials: HTTPAuthorizationCredentials = Depends(auth_sche
 def parse_token(credentials: HTTPAuthorizationCredentials):
     token = credentials.credentials
     if not token:
-        log.error(f"parse_token fail: ['token' is required in credentials], credentials:%s", credentials)
+        log.error(f"parse_token fail: ['token' is required in credentials], credentials:{credentials}")
         raise UnauthorizedException(msg="Authorization failed")
     
     return token
@@ -37,7 +37,7 @@ async def parse_token_from_request(request: Request):
 
 
 def __get_secret(role_id):
-    return "secret" + str(role_id)[::-1] # if role_id != None else JWT_SECRET
+    return f"secret{str(role_id)[::-1]}" # if role_id != None else JWT_SECRET
 
 def gen_token(data: dict, fields: List):
     public_info = {}
@@ -59,12 +59,12 @@ def gen_token(data: dict, fields: List):
 
 # url_path = "//api/v1/match/teachers/6994696629320454/resumes/0"
 # url_path = "//api/v1/match/teachers/"
-def get_role_id(url_path: str) -> (Union[int, None]):
+def get_role_id(url_path: str) -> (int):
     try:
         return int(url_path.split('/')[6])
     except Exception as e:
-        log.error(f"cannot get role_id from url path, url_path:{url_path}")
-        return None
+        log.error(f"cannot get role_id from url path, url_path:{url_path}, err:{e}")
+        raise NotFoundException(msg="'role_id' is not found in url path")
 
 def get_role(url_path: str):
     if "/companies" in url_path or "/company" in url_path:
@@ -73,7 +73,7 @@ def get_role(url_path: str):
     if "/teachers" in url_path or "/teacher" in url_path:
         return "teacher"
     
-    raise NotFoundException(msg="invalid role")
+    raise NotFoundException(msg="'role' is not found in url path")
 
 def __jwt_decode(jwt, key, msg):
     try:
@@ -156,8 +156,8 @@ def verify_token_by_update_password(credentials: HTTPAuthorizationCredentials = 
 
 async def verify_token(request: Request):
     url_path = request.url.path
-    role_id = get_role_id(url_path)
     role = get_role(url_path)
+    role_id = get_role_id(url_path)
     
     token = await parse_token_from_request(request)
     secret = __get_secret(role_id)
@@ -176,8 +176,7 @@ class AuthRoute(APIRoute):
         async def custom_route_handler(request: Request) -> Response:
             before = time.time()
             
-            if self.__verifiable(request):
-                await verify_token(request)
+            await verify_token(request)
             
             response: Response = await original_route_handler(request)
             duration = time.time() - before
@@ -188,9 +187,4 @@ class AuthRoute(APIRoute):
             return response
 
         return custom_route_handler
-    
-    def __verifiable(self, request: Request):
-        url_path = request.url.path
-        return get_role(url_path) != None and \
-            get_role_id(url_path) != None
 

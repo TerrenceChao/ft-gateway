@@ -246,7 +246,7 @@ describe("API endpoints /api/v1/*", () => {
         expect(res).to.have.status(200);
         expect(res.body).to.be.an("object");
         expect(res.body).to.have.property("code", "0");
-        expect(res.body).to.have.property("msg", "ok");
+        expect(res.body).to.have.property("msg", "update success");
 
         // check data
         expect(res.body).to.have.property("data").that.is.not.an("object");

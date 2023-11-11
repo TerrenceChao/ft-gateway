@@ -168,9 +168,9 @@ def update_password(role_id: int,
                     auth_host=Depends(get_auth_host),
                     verify=Depends(verify_token_by_update_password),
                     ):
-    data = _auth_service.update_password(
+    _auth_service.update_password(
         auth_host, role_id, update_password_vo)
-    return res_success(data=data)
+    return res_success(msg='update success')
 
 
 @router.get('/password/reset/email')
@@ -188,6 +188,6 @@ def reset_password(
     verify_token: str = Query(...),
     auth_host=Depends(get_auth_host),
 ):
-    data = _auth_service.reset_passwrod(
+    _auth_service.reset_passwrod(
         auth_host, verify_token, reset_passwrod_vo)
-    return res_success(data=data)
+    return res_success(msg='reset success')
