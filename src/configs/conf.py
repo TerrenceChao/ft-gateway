@@ -17,7 +17,7 @@ REDIS_PASS = os.getenv("REDIS_PASSWORD", None)
 
 
 JWT_SECRET = os.getenv("JWT_SECRET", None)
-JWT_ALGORITHM = os.getenv("ALGORITHM", "HS256")
+JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 TOKEN_EXPIRE_TIME = int(os.getenv("TOKEN_EXPIRE_TIME", 60 * 60 * 24 * 7))
 
 # default = 20 secs

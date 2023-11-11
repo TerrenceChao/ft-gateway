@@ -37,7 +37,7 @@ async def parse_token_from_request(request: Request):
 
 
 def __get_secret(role_id):
-    return str(role_id) # if "role_id" in data else JWT_SECRET
+    return "secret" + str(role_id)[::-1] # if role_id != None else JWT_SECRET
 
 def gen_token(data: dict, fields: List):
     public_info = {}
@@ -104,6 +104,13 @@ def __valid_role_id(data: dict, role_id):
 
 
 
+def __verify_token_in_match(role_id: int, url_path: str, credentials: HTTPAuthorizationCredentials, err_msg: str):
+    secret = __get_secret(role_id)
+    token = parse_token(credentials)
+    data = __jwt_decode(jwt=token, key=secret, msg=err_msg)
+    if not __valid_role(data, url_path) or \
+        not __valid_role_id(data, role_id):
+        raise UnauthorizedException(msg=err_msg)
 
 
 def verify_token_by_company_profile(request: Request,
@@ -113,13 +120,7 @@ def verify_token_by_company_profile(request: Request,
     if not profile or not profile.cid:
         raise UnauthorizedException(msg="invalid company user, cid is required")
     
-    company_id = profile.cid
-    secret = __get_secret(company_id)
-    token = parse_token(credentials)
-    data = __jwt_decode(jwt=token, key=secret, msg="invalid company user")
-    if not __valid_role(data, request.url.path) or \
-        not __valid_role_id(data, company_id):
-        raise UnauthorizedException(msg="invalid company user")
+    __verify_token_in_match(profile.cid, request.url.path, credentials, "invalid company user")
 
 
 def verify_token_by_teacher_profile(request: Request,
@@ -129,32 +130,28 @@ def verify_token_by_teacher_profile(request: Request,
     if not profile or not profile.tid:
         raise UnauthorizedException(msg="invalid teacher user, tid is required")
     
-    teacher_id = profile.tid
-    secret = __get_secret(teacher_id)
+    __verify_token_in_match(profile.tid, request.url.path, credentials, "invalid teacher user")
+
+
+
+def __verify_token_in_auth(role_id: int, credentials: HTTPAuthorizationCredentials, err_msg: str):
+    secret = __get_secret(role_id)
     token = parse_token(credentials)
-    data = __jwt_decode(jwt=token, key=secret, msg="invalid teacher user")
-    if not __valid_role(data, request.url.path) or \
-        not __valid_role_id(data, teacher_id):
-        raise UnauthorizedException(msg="invalid teacher user")
+    data = __jwt_decode(jwt=token, key=secret, msg=err_msg)
+    if not __valid_role_id(data, role_id):
+        raise UnauthorizedException(msg=err_msg)
 
 
 def verify_token_by_logout(credentials: HTTPAuthorizationCredentials = Depends(auth_scheme),
                            role_id: int = Body(..., embed=True),
                            ):
-    secret = __get_secret(role_id)
-    token = parse_token(credentials)
-    data = __jwt_decode(jwt=token, key=secret, msg=f"access denied")
-    if not __valid_role_id(data, role_id):
-        raise UnauthorizedException(msg=f"access denied")
+    __verify_token_in_auth(role_id, credentials, "invalid user")
+    
     
 def verify_token_by_update_password(credentials: HTTPAuthorizationCredentials = Depends(auth_scheme),
                                     role_id: int = Path(...),
                                     ):
-    secret = __get_secret(role_id)
-    token = parse_token(credentials)
-    data = __jwt_decode(jwt=token, key=secret, msg=f"access denied")
-    if not __valid_role_id(data, role_id):
-        raise UnauthorizedException(msg=f"access denied")
+    __verify_token_in_auth(role_id, credentials, "access denied")
 
 
 async def verify_token(request: Request):
