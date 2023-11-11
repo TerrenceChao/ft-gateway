@@ -68,7 +68,7 @@ describe("API endpoints /api/v1/*", () => {
         expect(auth).to.have.property("socketid").that.is.a("string");
         expect(auth).to.have.property("online", true);
         expect(auth).to.have.property("created_at").that.is.a("number");
-        token = auth.token;
+        token = "Bearer " + auth.token;
         roleId = auth.role_id;
 
         // check match
@@ -120,9 +120,9 @@ describe("API endpoints /api/v1/*", () => {
         origin_password: USER_PASSWORD,
       })
       .end((err, res) => {
-        expect(res).to.have.status(422);
+        expect(res).to.have.status(403);
         expect(res.body).to.be.an("object");
-        expect(res.body).to.have.property("detail").that.is.an("array");
+        expect(res.body).to.have.property("detail").that.is.an("string");
 
         done();
       });
@@ -135,7 +135,7 @@ describe("API endpoints /api/v1/*", () => {
       .put(`${PREFIX}/password/${invalidRoleId}/update`)
       .timeout(REQUEST_DELAY)
       .set("current-region", REGION)
-      .set("token", token)
+      .set("Authorization", token)
       .send({
         register_email: USER_EMAIL,
         password1: "string1",
@@ -161,7 +161,7 @@ describe("API endpoints /api/v1/*", () => {
       .put(`${PREFIX}/password/${roleId}/update`)
       .timeout(REQUEST_DELAY)
       .set("current-region", REGION)
-      .set("token", "invalid-token")
+      .set("Authorization", "invalid-token")
       .send({
         register_email: USER_EMAIL,
         password1: "string",
@@ -169,13 +169,9 @@ describe("API endpoints /api/v1/*", () => {
         origin_password: USER_PASSWORD,
       })
       .end((err, res) => {
-        expect(res).to.have.status(401);
+        expect(res).to.have.status(403);
         expect(res.body).to.be.an("object");
-        expect(res.body).to.have.property("code", "40100");
-        expect(res.body).to.have.property("msg", "access denied");
-
-        // check data
-        expect(res.body).to.have.property("data").that.is.not.an("object");
+        expect(res.body).to.have.property("detail", "Not authenticated");
 
         done();
       });
@@ -187,7 +183,7 @@ describe("API endpoints /api/v1/*", () => {
       .put(`${PREFIX}/password/${roleId}/update`)
       .timeout(REQUEST_DELAY)
       .set("current-region", REGION)
-      .set("token", token)
+      .set("Authorization", token)
       .send({
         register_email: USER_EMAIL,
         password1: "string1",
@@ -213,7 +209,7 @@ describe("API endpoints /api/v1/*", () => {
       .put(`${PREFIX}/password/${roleId}/update`)
       .timeout(REQUEST_DELAY)
       .set("current-region", REGION)
-      .set("token", token)
+      .set("Authorization", token)
       .send({
         register_email: USER_EMAIL,
         password1: "string",
@@ -239,7 +235,7 @@ describe("API endpoints /api/v1/*", () => {
       .put(`${PREFIX}/password/${roleId}/update`)
       .timeout(REQUEST_DELAY)
       .set("current-region", REGION)
-      .set("token", token)
+      .set("Authorization", token)
       .send({
         register_email: USER_EMAIL,
         password1: USER_PASSWORD,

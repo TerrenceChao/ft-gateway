@@ -21,17 +21,10 @@ def token_required(credentials: HTTPAuthorizationCredentials = Depends(auth_sche
     pass
 
 def parse_token(credentials: HTTPAuthorizationCredentials):
-    try:
-        scheme, _, token = credentials.credentials.partition(' ')
-        if scheme.lower() != credentials.scheme.lower():
-            raise UnauthorizedException(msg="Invalid authentication scheme")
-        
-        if not token:
-            raise UnauthorizedException(msg="Invalid authorization format")
-    
-    except Exception as e:
-        log.error(f"parse_token fail, credentials:{credentials}, e:{e}")
-        raise UnauthorizedException(msg="Invalid authorization format")
+    token = credentials.credentials
+    if not token:
+        log.error(f"parse_token fail: ['token' is required in credentials], credentials:%s", credentials)
+        raise UnauthorizedException(msg="Authorization failed")
     
     return token
 
