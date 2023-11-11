@@ -8,7 +8,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.routing import APIRoute
 from ...infra.db.nosql import match_companies_schemas as com_schema, \
     match_teachers_schemas as teacher_schema
-from ...configs.conf import JWT_SECRET, TOKEN_EXPIRE_TIME
+from ...configs.conf import JWT_SECRET, JWT_ALGORITHM, TOKEN_EXPIRE_TIME
 from ...configs.exceptions import ServerException, UnauthorizedException, NotFoundException
 import logging as log
 
@@ -52,7 +52,7 @@ def gen_token(data: dict, fields: List):
         
     exp = datetime.now().timestamp() + TOKEN_EXPIRE_TIME
     public_info.update({ "exp": exp })
-    return jwt_util.encode(payload=public_info, key=secret, algorithm="HS256")
+    return jwt_util.encode(payload=public_info, key=secret, algorithm=JWT_ALGORITHM)
 
 
 
@@ -75,8 +75,9 @@ def get_role(url_path: str):
     
     raise NotFoundException(msg="invalid role")
 
-def __jwt_decode(jwt, key, algorithms, msg):
+def __jwt_decode(jwt, key, msg):
     try:
+        algorithms = [JWT_ALGORITHM]
         return jwt_util.decode(jwt, key, algorithms)
     except Exception as e:
         log.error(f"__jwt_decode fail, key:{key}, algorithms:{algorithms}, msg:{msg}, jwt:{jwt}, \ne:{e}")
@@ -115,7 +116,7 @@ def verify_token_by_company_profile(request: Request,
     company_id = profile.cid
     secret = __get_secret(company_id)
     token = parse_token(credentials)
-    data = __jwt_decode(jwt=token, key=secret, algorithms=["HS256"], msg="invalid company user")
+    data = __jwt_decode(jwt=token, key=secret, msg="invalid company user")
     if not __valid_role(data, request.url.path) or \
         not __valid_role_id(data, company_id):
         raise UnauthorizedException(msg="invalid company user")
@@ -131,7 +132,7 @@ def verify_token_by_teacher_profile(request: Request,
     teacher_id = profile.tid
     secret = __get_secret(teacher_id)
     token = parse_token(credentials)
-    data = __jwt_decode(jwt=token, key=secret, algorithms=["HS256"], msg="invalid teacher user")
+    data = __jwt_decode(jwt=token, key=secret, msg="invalid teacher user")
     if not __valid_role(data, request.url.path) or \
         not __valid_role_id(data, teacher_id):
         raise UnauthorizedException(msg="invalid teacher user")
@@ -142,7 +143,7 @@ def verify_token_by_logout(credentials: HTTPAuthorizationCredentials = Depends(a
                            ):
     secret = __get_secret(role_id)
     token = parse_token(credentials)
-    data = __jwt_decode(jwt=token, key=secret, algorithms=["HS256"], msg=f"access denied")
+    data = __jwt_decode(jwt=token, key=secret, msg=f"access denied")
     if not __valid_role_id(data, role_id):
         raise UnauthorizedException(msg=f"access denied")
     
@@ -151,7 +152,7 @@ def verify_token_by_update_password(credentials: HTTPAuthorizationCredentials = 
                                     ):
     secret = __get_secret(role_id)
     token = parse_token(credentials)
-    data = __jwt_decode(jwt=token, key=secret, algorithms=["HS256"], msg=f"access denied")
+    data = __jwt_decode(jwt=token, key=secret, msg=f"access denied")
     if not __valid_role_id(data, role_id):
         raise UnauthorizedException(msg=f"access denied")
 
@@ -163,7 +164,7 @@ async def verify_token(request: Request):
     
     token = await parse_token_from_request(request)
     secret = __get_secret(role_id)
-    data = __jwt_decode(jwt=token, key=secret, algorithms=["HS256"], msg=f"invalid {role} user")
+    data = __jwt_decode(jwt=token, key=secret, msg=f"invalid {role} user")
     if not __valid_role(data, url_path) or \
         not __valid_role_id(data, role_id):
         raise UnauthorizedException(msg=f"invalid {role} user")
