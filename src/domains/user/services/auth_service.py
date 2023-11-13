@@ -285,6 +285,10 @@ class AuthService:
         self.__cache_token_by_reset_password(data['token'], email)
         #TEST: log
         return f'''send_email_success {data['token']}'''
+    
+    def __req_send_reset_password_comfirm_email(self, auth_host: str, email: EmailStr):
+        return self.req.simple_get(
+            f"{auth_host}/password/reset/email", params={'email': email})
 
     def reset_passwrod(self, auth_host: str, verify_token: str, body: ResetPasswordVO):
         checked_email = self.cache.get(verify_token)
@@ -311,14 +315,15 @@ class AuthService:
         self.cache.delete(f'{email}:reset_pw')
         self.cache.delete(verify_token)
         
+    def __req_reset_password(self, auth_host: str, body: ResetPasswordVO):
+        return self.req.simple_put(
+            f"{auth_host}/password/update", json=body.dict())
+
 
     def update_password(self, auth_host: str, role_id: int, body: UpdatePasswordVO):
         self.__cache_check_for_email_validation(role_id, body.register_email)
         self.__req_update_password(auth_host, body)
 
-    def __req_send_reset_password_comfirm_email(self, auth_host: str, email: EmailStr):
-        return self.req.simple_get(
-            f"{auth_host}/password/reset/email", params={'email': email}) 
 
     def __cache_check_for_email_validation(self, role_id: int, register_email: EmailStr):
         role_id_key = str(role_id)
@@ -330,6 +335,3 @@ class AuthService:
         return self.req.simple_put(
             f"{auth_host}/password/update", json=body.dict())
 
-    def __req_reset_password(self, auth_host: str, body: ResetPasswordVO):
-        return self.req.simple_put(
-            f"{auth_host}/password/update", json=body.dict()) 

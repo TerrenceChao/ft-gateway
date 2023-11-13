@@ -5,54 +5,26 @@ from ....configs.constants import VALID_ROLES
 from ....configs.exceptions import *
 
 
-def meta_validator(meta: str, pubkey: str = None):
-    try:
-        # TODO: need pubkey to decrypt meta
-        meta_json = json.loads(meta)
-        if not 'role' in meta_json:
-            raise ClientException(msg=f'role is required')
-        
-        if not meta_json['role'] in VALID_ROLES:
-            raise ClientException(msg=f'role allowed only in {VALID_ROLES}')
-
-        if not 'pass' in meta_json:
-            raise ClientException(msg=f'pass is required')
-
-        return meta
-
-    except json.JSONDecodeError as e:
-        log.error(
-            f'func: meta_validator error [json_decode_error] meta:%s, err:%s', meta, e.__str__())
-        raise ClientException(msg='invalid json format of meta')
-
-    except ClientException as e:
-        raise ClientException(msg=e.msg)
+class PubkeyVO(BaseModel):
+    pubkey: str = None
 
 
 class SignupVO(BaseModel):
     email: EmailStr
-    pubkey: str = None
     meta: str
-
-    @validator('meta')
-    def check_meta(cls, v, values, **kwargs):
-        return meta_validator(v, values['pubkey'])
 
     class Config:
         schema_extra = {
             "example": {
                 "email": "user@example.com",
-                "pubkey": "the-pubkey",
                 "meta": "{\"role\":\"teacher\",\"pass\":\"secret\"}",
             },
-            "description": "ignore 'pubkey' in the body",
         }
 
 
-class SignupConfirmVO(BaseModel):
+class SignupConfirmVO(PubkeyVO):
     email: EmailStr
     confirm_code: str
-    pubkey: str = None
 
     class Config:
         schema_extra = {
@@ -65,10 +37,9 @@ class SignupConfirmVO(BaseModel):
         }
 
 
-class LoginVO(BaseModel):
+class LoginVO(PubkeyVO):
     current_region: str = None  # in headers
     email: EmailStr
-    pubkey: str = None
     meta: str
     prefetch: int = None
 
@@ -83,13 +54,33 @@ class LoginVO(BaseModel):
             "description": "ignore 'current_region' in the body, it will be set in headers; ignore 'pubkey' in the body",
         }
 
-class ResetPasswordVO(BaseModel):
+class ResetPasswordVO(PubkeyVO):
     register_email: EmailStr
-    password1: str
-    password2: str
-
+    meta: str
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "register_email": "user@example.com",
+                "pubkey": "the-pubkey",
+                "meta": "{\"password1\":\"new_pass\",\"password2\":\"new_pass\"}",
+            },
+            "description": "ignore 'pubkey' in the body",
+        }
+    
 class UpdatePasswordVO(ResetPasswordVO):
-    origin_password: str
+    pass
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "register_email": "user@example.com",
+                "pubkey": "the-pubkey",
+                "meta": "{\"password1\":\"new_pass\",\"password2\":\"new_pass\",\"origin_password\":\"password\"}",
+            },
+            "description": "ignore 'pubkey' in the body",
+        }
+
 
 class AuthVO(BaseModel):
     email: EmailStr
@@ -103,5 +94,3 @@ class AuthVO(BaseModel):
     created_at: int
 
 
-class PubkeyVO(BaseModel):
-    pubkey: str

@@ -15,6 +15,7 @@ const USER_PASSWORD = process.env.USER_PASSWORD;
 
 const PREFIX = `/${STAGE}/api/v1/auth`;
 
+let pubkey = "the-pubkey";
 let token = null;
 let roleId = null;
 
@@ -31,6 +32,7 @@ describe("API endpoints /api/v1/*", () => {
         expect(res.body).to.have.property("code", "0");
         expect(res.body).to.have.property("msg", "ok");
         expect(res.body.data).to.have.property("pubkey").that.is.a("string");
+        pubkey = res.body.data.pubkey;
         done();
       });
   });
@@ -43,7 +45,7 @@ describe("API endpoints /api/v1/*", () => {
       .set("current-region", REGION)
       .send({
         email: USER_EMAIL,
-        pubkey: "the-pubkey",
+        pubkey: pubkey,
         meta: `{"pass":"${USER_PASSWORD}"}`,
         prefetch: 3,
       })
@@ -90,7 +92,7 @@ describe("API endpoints /api/v1/*", () => {
       .set("current-region", REGION)
       .send({
         email: USER_EMAIL,
-        pubkey: "the-pubkey",
+        pubkey: pubkey,
         meta: '{"pass":"password2"}',
         prefetch: 3,
       })
@@ -115,9 +117,8 @@ describe("API endpoints /api/v1/*", () => {
       .set("current-region", REGION)
       .send({
         register_email: USER_EMAIL,
-        password1: "string1",
-        password2: "string2",
-        origin_password: USER_PASSWORD,
+        publey: pubkey,
+        meta: `{"password1":"new_pass","password2":"new_pass","origin_password":"${USER_PASSWORD}"}`,
       })
       .end((err, res) => {
         expect(res).to.have.status(403);
@@ -138,9 +139,8 @@ describe("API endpoints /api/v1/*", () => {
       .set("Authorization", token)
       .send({
         register_email: USER_EMAIL,
-        password1: "string1",
-        password2: "string2",
-        origin_password: USER_PASSWORD,
+        publey: pubkey,
+        meta: `{"password1":"new_pass","password2":"new_pass","origin_password":"${USER_PASSWORD}"}`,
       })
       .end((err, res) => {
         expect(res).to.have.status(401);
@@ -164,9 +164,8 @@ describe("API endpoints /api/v1/*", () => {
       .set("Authorization", "invalid-token")
       .send({
         register_email: USER_EMAIL,
-        password1: "string",
-        password2: "string",
-        origin_password: USER_PASSWORD,
+        publey: pubkey,
+        meta: `{"password1":"new_pass","password2":"new_pass","origin_password":"${USER_PASSWORD}"}`,
       })
       .end((err, res) => {
         expect(res).to.have.status(403);
@@ -186,9 +185,8 @@ describe("API endpoints /api/v1/*", () => {
       .set("Authorization", token)
       .send({
         register_email: USER_EMAIL,
-        password1: "string1",
-        password2: "string2",
-        origin_password: USER_PASSWORD,
+        pubkey: pubkey,
+        meta: `{"password1":"new_pass_1","password2":"new_pass_2","origin_password":"${USER_PASSWORD}"}`,
       })
       .end((err, res) => {
         expect(res).to.have.status(400);
@@ -212,9 +210,8 @@ describe("API endpoints /api/v1/*", () => {
       .set("Authorization", token)
       .send({
         register_email: USER_EMAIL,
-        password1: "string",
-        password2: "string",
-        origin_password: "invalid-password",
+        pubkey: pubkey,
+        meta: "{\"password1\":\"secret\",\"password2\":\"secret\",\"origin_password\":\"invalid-password\"}",
       })
       .end((err, res) => {
         expect(res).to.have.status(403);
@@ -238,9 +235,8 @@ describe("API endpoints /api/v1/*", () => {
       .set("Authorization", token)
       .send({
         register_email: USER_EMAIL,
-        password1: USER_PASSWORD,
-        password2: USER_PASSWORD,
-        origin_password: USER_PASSWORD,
+        pubkey: pubkey,
+        meta: `{"password1":"${USER_PASSWORD}","password2":"${USER_PASSWORD}","origin_password":"${USER_PASSWORD}"}`,
       })
       .end((err, res) => {
         expect(res).to.have.status(200);

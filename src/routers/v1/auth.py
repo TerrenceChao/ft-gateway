@@ -5,7 +5,7 @@ from fastapi import APIRouter, \
     File, UploadFile, status, \
     HTTPException
 from pydantic import EmailStr
-from ...domains.user.value_objects.auth_vo import SignupVO, SignupConfirmVO, LoginVO, UpdatePasswordVO, ResetPasswordVO
+from ...domains.user.value_objects.auth_vo import *
 from ..req.authorization import verify_token_by_logout, verify_token_by_update_password
 from ..req.auth_validation import *
 from ..res.auth_response import *
