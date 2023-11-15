@@ -8,7 +8,7 @@ from fastapi import APIRouter, \
     Cookie, Header, Path, Query, Body, Form, \
     File, UploadFile, status, \
     HTTPException
-from ..req.authorization import AuthMatchRoute, token_required, verify_token_by_company_profile
+from ..req.authorization import AuthRoute, token_required, verify_token_by_company_profile
 from ..req.company_validation import *
 from ..res.response import res_success, response_vo
 from ..res import company_response as com_res
@@ -33,7 +33,7 @@ router = APIRouter(
     prefix="/match/companies",
     tags=["Match Companies"],
     dependencies=[Depends(token_required)],
-    route_class=AuthMatchRoute,
+    route_class=AuthRoute,
     responses={404: {"description": "Not found"}},
 )
 

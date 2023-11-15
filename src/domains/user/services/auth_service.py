@@ -109,16 +109,9 @@ class AuthService:
                                         })
 
         role_id_key = str(auth_res["role_id"])
+        self.__cache_auth_res(role_id_key, auth_res)
         auth_res = self.__apply_token(auth_res)
-        updated = self.cache.set(
-            role_id_key, auth_res, ex=LONG_TERM_TTL)
-        if not updated:
-            log.error(f"AuthService.confirm_signup:[cache set],\
-                role_id_key:%s, auth_res:%s, ex:%s, cache data:%s",
-                role_id_key, auth_res, LONG_TERM_TTL, updated)
-            raise ServerException(msg="server_error")
-        else:
-            return {"auth": auth_res}
+        return {"auth": auth_res}
 
     def __verify_confirmcode(self, confirm_code: str, user: Any):
         if not user or not "confirm_code" in user:
@@ -142,59 +135,67 @@ class AuthService:
 
     def login(self, auth_host: str, match_host: str, body: LoginVO):
         # request login & auth data
-        region = None
-        auth_res = None
-        try:
+        (auth_res, region) = self.__req_login_or_register_region(auth_host, match_host, body)
+        if auth_res is None:
+            auth_host = get_auth_region_host(region)
+            match_host = get_match_region_host(region)
             auth_res = self.__req_login(auth_host, body)
-            
-        except ForbiddenException as err_payload:
-            # found in S3, and region != "current_region"(在 meta, 解密後才會知道)(找錯地方)
-            # S3 有記錄但該地區的 auth-service 沒記錄，auth 從 S3 找 region 後回傳
-            log.warn("WRONG REGION: \n \
-                    has record in S3, but no record in DB of current region, ready to request user record from register region")
-            log.error(f"AuthService.login fail: [request res: WRONG REGION], \
-                auth_host:%s, match_host:%s, body:%s, region:%s, auth_res:%s, err_payload:%s", 
-                auth_host, match_host, body, region, auth_res, err_payload.msg)
-                
-            try:
-                email_info = err_payload.data
-                region = email_info["region"]  # 換其他 region 再請求一次
-                auth_host = get_auth_region_host(region)
-                match_host = get_match_region_host(region)
-                auth_res = self.__req_login(auth_host, body)
-                
-            except Exception as redirect_err:
-                log.error(f"AuthService.login fail: [redirect_fail], \
-                    auth_host:%s, match_host:%s, body:%s, region:%s, auth_res:%s, err:%s", 
-                    auth_host, match_host, body, region, auth_res, redirect_err.__str__())
-                raise ServerException(msg="redirect_fail")
-        
-        except Exception as e:
-            log.error(f"AuthService.login fail: [unknow_error], \
-                auth_host:%s, match_host:%s, body:%s, region:%s, auth_res:%s, err:%s", 
-                auth_host, match_host, body, region, auth_res, e.__str__())
-            raise ServerException(msg="unknow_error")
 
         # cache auth data
         role_id_key = str(auth_res["role_id"])
-        auth_res = self.__apply_token(auth_res)
         auth_res.update({
             "current_region": body.current_region,
             "socketid": "it's socketid",
-            "online": True,
         })
         self.__cache_auth_res(role_id_key, auth_res)
+        auth_res = self.__apply_token(auth_res)
 
         # request match data
         role_path = PATHS[auth_res["role"]]
-        size = body.prefetch or PREFETCH
         match_res = self.__req_match_data(
-            match_host, role_path, role_id_key, size)
+            match_host,
+            role_path,
+            role_id_key,
+            body.prefetch
+        )
 
         return {
             "auth": auth_res,
             "match": match_res,
         }
+        
+    def __req_login_or_register_region(self, auth_host: str, match_host: str, body: LoginVO):
+        register_region = None
+        auth_res = None
+        try:
+            auth_res = self.__req_login(auth_host, body)
+            return (auth_res, None)
+            
+        except ForbiddenException as exp_payload:
+            # found in S3, and region != "current_region"(在 meta, 解密後才會知道)(找錯地方)
+            # S3 有記錄但該地區的 auth-service 沒記錄，auth 從 S3 找 region 後回傳
+            log.error(f"AuthService.login fail: [WRONG REGION: there is the user record in S3, \
+                but no record in the DB of current region, it's ready to request the user record from register region], \
+                auth_host:%s, match_host:%s, body:%s, register_region:%s, auth_res:%s, exp_payload:%s", 
+                auth_host, match_host, body, register_region, auth_res, exp_payload.msg)
+                
+            try:
+                email_info = exp_payload.data
+                register_region = email_info["region"]  # 換其他 region 再請求一次
+                return (None, register_region)
+                
+            except Exception as format_err:
+                log.error(f"AuthService.login fail: [exp_payload format_err], \
+                    auth_host:%s, match_host:%s, body:%s, auth_res:%s, exp_payload:%s, format_err:%s", 
+                    auth_host, match_host, body, auth_res, exp_payload, format_err.__str__())
+                raise ServerException(msg="format_err")
+            
+        except Exception as e:
+            log.error(f"AuthService.login fail: [unknow_error], \
+                auth_host:%s, match_host:%s, body:%s, register_region:%s, auth_res:%s, err:%s", 
+                auth_host, match_host, body, register_region, auth_res, e.__str__())
+            raise_http_exception(e)
+        
 
     def __req_login(self, auth_host: str, body: LoginVO):
         return self.req.simple_post(
@@ -202,6 +203,9 @@ class AuthService:
         
 
     def __cache_auth_res(self, role_id_key: str, auth_res: Dict):
+        auth_res.update({
+            "online": True,
+        })
         updated = self.cache.set(
             role_id_key, auth_res, ex=LONG_TERM_TTL)
         if not updated:
@@ -210,7 +214,7 @@ class AuthService:
                 role_id_key, auth_res, LONG_TERM_TTL, updated)
             raise ServerException(msg="server_error")
 
-    def __req_match_data(self, match_host: str, role_path: str, role_id_key: str, size: int):
+    def __req_match_data(self, match_host: str, role_path: str, role_id_key: str, size: int = PREFETCH):
         my_statuses, statuses = [], []
         
         if role_path == "companies" or role_path == "company":
@@ -235,23 +239,19 @@ class AuthService:
     logout
     """
 
-    def logout(self, role_id: int, token: str):
+    def logout(self, role_id: int):
         role_id_key = str(role_id)
-        user = self.__cache_check_for_auth(role_id_key, token)
+        user = self.__cache_check_for_auth(role_id_key)
         user_logout_status = self.__logout_status(user)
 
         # "LONG_TERM_TTL" for redirct notification
         self.__cache_logout_status(role_id_key, user_logout_status)
         return (None, "successfully logged out")
 
-    def __cache_check_for_auth(self, role_id_key: str, token: str):
+    def __cache_check_for_auth(self, role_id_key: str):
         user = self.cache.get(role_id_key)
-
-        if not user or not "token" in user:
+        if not user or user.get("online", False):
             raise ClientException(msg="logged out")
-
-        if user["token"] != token:
-            raise UnauthorizedException(msg="invalid user")
 
         return user
 
@@ -292,30 +292,29 @@ class AuthService:
             raise UnauthorizedException(msg="invalid token") 
         if checked_email != body.register_email:
             raise UnauthorizedException(msg="invalid user")
-        auth_res = self.__req_reset_password(auth_host, body)
+        self.__req_reset_password(auth_host, body)
         self.__cache_remove_by_reset_password(verify_token, checked_email)
-        return {'auth_res': auth_res}
+
     
     def __cache_check_for_reset_password(self, email: EmailStr):
-        data = self.cache.get(email + ':reset_pw')
+        data = self.cache.get(f'{email}:reset_pw')
         if data:
             log.error(f"AuthService.__cache_check_for_reset_password:[too many reqeusts error],\
                 email:%s, cache data:%s", email, data)
             raise TooManyRequestsException(msg="frequent_requests")
     
     def __cache_token_by_reset_password(self, verify_token: str, email: EmailStr):
-        self.cache.set(email + ':reset_pw', '1', REQUEST_INTERVAL_TTL)
+        self.cache.set(f'{email}:reset_pw', '1', REQUEST_INTERVAL_TTL)
         self.cache.set(verify_token, email, SHORT_TERM_TTL)
         
     def __cache_remove_by_reset_password(self, verify_token: str, email: EmailStr):
-        self.cache.delete(email + ':reset_pw')
+        self.cache.delete(f'{email}:reset_pw')
         self.cache.delete(verify_token)
         
 
     def update_password(self, auth_host: str, role_id: int, body: UpdatePasswordVO):
         self.__cache_check_for_email_validation(role_id, body.register_email)
-        auth_res = self.__req_update_password(auth_host, body)
-        return {'auth_res': auth_res}
+        self.__req_update_password(auth_host, body)
 
     def __req_send_reset_password_comfirm_email(self, auth_host: str, email: EmailStr):
         return self.req.simple_get(
