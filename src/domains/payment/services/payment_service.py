@@ -26,14 +26,18 @@ class PaymentService:
 
     def __set_cache(self, role_id: int, payment_status: Dict) -> (bool):
         return self.cache.set(key=f'pay:{str(role_id)}', val=payment_status, ex=SHORT_TERM_TTL)
+    
+    def __delete_cache(self, role_id: int) -> (bool):
+        return self.cache.delete(key=f'pay:{str(role_id)}')
 
-    def __get_customer(self, customer_id: str) -> (Optional[bool]):
-        return self.cache.get(key=f'pay_handling:{customer_id}')
+    def __get_role_id_by_cus_id(self, customer_id: str) -> (Optional[int]):
+        role_id_str = self.cache.get(key=f'pay_handling:{customer_id}')
+        return int(role_id_str)
 
-    def __set_customer(self, customer_id: str) -> (bool):
-        return self.cache.set(key=f'pay_handling:{customer_id}', val='1', ex=SHORT_TERM_TTL)
+    def __set_role_id_by_cus_id(self, customer_id: str, role_id: int) -> (bool):
+        return self.cache.set(key=f'pay_handling:{customer_id}', val=str(role_id), ex=SHORT_TERM_TTL)
 
-    def __delete_customer(self, customer_id: str) -> (bool):
+    def __delete_role_id_by_cus_id(self, customer_id: str) -> (bool):
         return self.cache.delete(key=f'pay_handling:{customer_id}')
 
     '''
@@ -75,55 +79,45 @@ class PaymentService:
             self.__set_cache(role_id, payment_status)
 
         return payment_status
-
-    def __handling_status(self, host: str, role_id: int) -> (Dict):
-        payment_status = self.get_payment_status(host, role_id)
-        if payment_status['status'] == 'handling':
-            raise ClientException(msg='subscription_is_being_handled')
-
-        else:
-            payment_status['status'] = 'handling'
-            self.__set_cache(role_id, payment_status)
-            self.__set_customer(payment_status['customer_id'])
             
-        return payment_status
 
-    def __bg_post_request(self, bg_tasks: BackgroundTasks, url: str, json: Dict) -> (None):
+    def __bg_processing(self, bg_tasks: BackgroundTasks, url: str, json: Dict, role_id: int) -> (None):
         bg_tasks.add_task(self.req.simple_post, url=url, json=json)
+        bg_tasks.add_task(log.error, msg=f'role_id:{role_id}, req:{url}')
+        bg_tasks.add_task(self.__delete_cache, role_id=role_id)
+        bg_tasks.add_task(log.error, msg=f'role_id:{role_id}, delete payment cache')
 
-    '''
-    3. Subscribe (耗時操作)
-        1. [step 2:  Get payment status]
-            1. Reject if payment_status: handling (不允許用戶頻繁改變策略或不斷重試)
-            2. Set payment_status: handling if UNPAID/PAID/CANCELED;
-            3. 當需要 Stripe 透過 gateway callback 時：
-                1. Set cache:  <costumer_id:True>
-        2. Return 202(accepted)
-        3. [async] 
-            1. Call POST subscribe API
-    '''
+
+    def __refresh_payment_status(self, host: str, role_id: int) -> (Dict):
+        self.__delete_cache(role_id)
+        return self.get_payment_status(host, role_id)
+
 
     def subscribe(self, bg_tasks: BackgroundTasks, host: str, subscription: dtos.SubscribeRequestDTO) -> (None):
-        self.__handling_status(host, subscription.role_id)
-        self.__bg_post_request(
-            bg_tasks, f'{host}/{STRIPE}/subscribe', subscription.dict())
+        role_id = subscription.role_id
+        payment_status = self.__refresh_payment_status(host, role_id)
+        
+        if payment_status['status'] in UNABLE_TO_SUBSCRIBE:
+            raise ClientException(msg=payment_status['status'])
+        
+        if payment_status['valid']:
+            raise ClientException(msg='not_yet_expired')
+        
+        self.__set_role_id_by_cus_id(payment_status['customer_id'], role_id)
+        self.__bg_processing(
+            bg_tasks, f'{host}/{STRIPE}/subscribe', subscription.dict(), role_id)
 
-    '''
-    4. Unsubscribe (耗時操作)
-        1. [step 2:  Get payment status] 
-            1. Reject if payment_status: handling (不允許用戶頻繁改變策略或不斷重試)
-            2. Set payment_status: handling if UNPAID/PAID/CANCELED;
-            3. 當需要 Stripe 透過 gateway callback 時：
-                1. Set cache:  <costumer_id:True>
-        2. Return 202(accepted) 
-        3. [async] 
-            1. Call POST unsubscribe API
-    '''
 
     def unsubscribe(self, bg_tasks: BackgroundTasks, host: str, unsubscription: dtos.UnsubscribeRequestDTO) -> (None):
-        self.__handling_status(host, unsubscription.role_id)
-        self.__bg_post_request(
-            bg_tasks, f'{host}/{STRIPE}/unsubscribe', unsubscription.dict())
+        role_id = unsubscription.role_id
+        payment_status = self.__refresh_payment_status(host, role_id)
+        
+        if payment_status['status'] in UNABLE_TO_CANCEL_SUBSCRIBE:
+            raise ClientException(msg=payment_status['status'])
+        
+        self.__set_role_id_by_cus_id(payment_status['customer_id'], role_id)
+        self.__bg_processing(
+            bg_tasks, f'{host}/{STRIPE}/unsubscribe', unsubscription.dict(), role_id)
 
     '''
     6. Stripe -> gateway -> payment service
@@ -133,7 +127,8 @@ class PaymentService:
         try:
             byte_data = await req.body()
             customer_id = self.__parse_stripe_customer_id(byte_data)
-            if self.__get_customer(customer_id) is None:
+            role_id = self.__get_role_id_by_cus_id(customer_id)
+            if role_id is None:
                 res_body = res_success(msg='accepted', code='20200')
                 return JSONResponse(content=res_body, status_code=202)
 
@@ -147,7 +142,8 @@ class PaymentService:
                 headers=headers,
             )
             
-            self.__delete_customer(customer_id)
+            self.__delete_role_id_by_cus_id(customer_id)
+            self.__delete_cache(role_id)
             return JSONResponse(content=event_data, status_code=201)
         
         except Exception as e:
