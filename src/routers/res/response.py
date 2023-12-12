@@ -1,9 +1,22 @@
-from typing import Optional, Any
+from typing import Optional, Any, Dict
 from pydantic import create_model, BaseModel
 
 # ref: https://github.com/tiangolo/fastapi/issues/3737
-def response_vo(route: str, schema: Any):
-    return create_model(route, code=(str, ...), msg=(str, ...), data=(schema, ...))
+def idempotent_response(route: str, model: Any) -> (Dict):
+    responses: Dict = {
+        200: {
+            'model': create_model(route, code=(str, ...), msg=(str, ...), data=(model, ...))
+        }
+    }
+    return responses
+
+def post_responses(route: str, model: Any) -> (Dict):
+    responses: Dict = {
+        201: {
+            'model': create_model(route, code=(str, ...), msg=(str, ...), data=(model, ...))
+        }
+    }
+    return responses
 
 
 def res_success(data=None, msg="ok", code="0"):

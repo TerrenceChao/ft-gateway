@@ -21,7 +21,7 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result
     """
-    def simple_get(self, url: str, params: Dict = None, headers: Dict = None) -> (Union[Any, None], Union[str, None]):
+    def simple_get(self, url: str, params: Dict = None, headers: Dict = None) -> (Union[Any, None]):
         result = None
         response = None
         try:
@@ -97,7 +97,7 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result
     """
-    def simple_post(self, url: str, json: Dict, headers: Dict = None) -> (Union[Any, None], Union[str, None]):
+    def simple_post(self, url: str, json: Dict, headers: Dict = None) -> (Union[Any, None]):
         result = None
         response = None
         try:
@@ -121,6 +121,30 @@ class ServiceApiAdapter(IServiceApi):
 
         return result
 
+    def post_data(self, url: str, byte_data: bytes, headers: Dict = None) -> (Union[Any, None]):
+        result = None
+        response = None
+        try:
+            response = self.requests.post(url, data=byte_data, headers=headers)
+        except Exception as e:
+            log.error(f"simple_post request error, url:%s, data:%s, headers:%s, resp:%s, err:%s",
+                    url, byte_data.decode(), headers, response, e.__str__())
+            raise ServerException(msg='post_connection_error')
+            
+        self.__status_code_validation(
+            response=response,
+            method='POST',
+            url=url,
+            body=None,
+            params=None,
+            headers=headers,
+        )
+
+        result = response.json()
+        result = result["data"]
+
+        return result
+    
     """
     return result, msg, err
     """
@@ -173,7 +197,7 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result
     """
-    def simple_put(self, url: str, json: Dict = None, headers: Dict = None) -> (Union[Any, None], Union[str, None]):
+    def simple_put(self, url: str, json: Dict = None, headers: Dict = None) -> (Union[Any, None]):
         result = None
         response = None
         try:
@@ -249,7 +273,7 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result
     """
-    def simple_delete(self, url: str, params: Dict = None, headers: Dict = None) -> (Union[Any, None], Union[str, None]):
+    def simple_delete(self, url: str, params: Dict = None, headers: Dict = None) -> (Union[Any, None]):
         result = None
         response = None
         try:

@@ -10,7 +10,7 @@ from fastapi import APIRouter, \
     HTTPException
 from ..req.authorization import AuthRoute, token_required, verify_token_by_teacher_profile
 from ..req.teacher_validation import *
-from ..res.response import res_success, response_vo
+from ..res.response import res_success
 from ..res import teacher_response as teach_res
 from ...domains.match.teacher.value_objects import t_value_objects as teach_vo
 from ...domains.match.teacher.services.teacher_service import TeacherProfileService, TeacherAggregateService

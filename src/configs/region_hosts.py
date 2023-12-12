@@ -27,10 +27,17 @@ search_region_hosts = {
 }
 
 media_region_hosts = {
-    # "default": os.getenv("REGION_HOST_MEDIA", "http://localhost:8085/media/api/v1"),
+    "default": os.getenv("REGION_HOST_MEDIA", "http://localhost:8085/media/api/v1"),
     "jp": os.getenv("JP_REGION_HOST_MEDIA", "http://localhost:8085/media/api/v1"),
     "ge": os.getenv("GE_REGION_HOST_MEDIA", "http://localhost:8085/media/api/v1"),
     "us": os.getenv("US_REGION_HOST_MEDIA", "http://localhost:8085/media/api/v1"),
+}
+
+payment_region_hosts = {
+    "default": os.getenv("REGION_HOST_PAYMENT", "http://localhost:8086/payment/api/v1"),
+    "jp": os.getenv("JP_REGION_HOST_PAYMENT", "http://localhost:8086/payment/api/v1"),
+    "ge": os.getenv("GE_REGION_HOST_PAYMENT", "http://localhost:8086/payment/api/v1"),
+    "us": os.getenv("US_REGION_HOST_PAYMENT", "http://localhost:8086/payment/api/v1"),
 }
 
 
@@ -73,5 +80,16 @@ def get_media_region_host(region: str):
             return media_region_hosts['default']
     except Exception as e:
         log.error(f"get_media_region_host fail, region:%s err:%s", region, e.__str__())
+        raise RegionException(region=region)
+    
+def get_payment_region_host(region: str):
+    try:
+        region = region.lower()
+        if region in payment_region_hosts:
+            return payment_region_hosts[region]
+        else:
+            return payment_region_hosts['default']
+    except Exception as e:
+        log.error(f"get_payment_region_host fail, region:%s err:%s", region, e.__str__())
         raise RegionException(region=region)
 

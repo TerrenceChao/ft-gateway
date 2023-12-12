@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Union, Any
+from fastapi import Request
 
 
 class IServiceApi(ABC):
     @abstractmethod
-    def simple_get(self, url: str, params: Dict = None, headers: Dict = None) -> (Union[Any, None], Union[str, None]):
+    def simple_get(self, url: str, params: Dict = None, headers: Dict = None) -> (Union[Any, None]):
         pass
     
     @abstractmethod
@@ -14,9 +15,13 @@ class IServiceApi(ABC):
     @abstractmethod
     def get_with_statuscode(self, url: str, params: Dict = None, headers: Dict = None) -> (Union[Any, None], Union[str, None], Union[int, None], Union[str, None]):
         pass
+    
+    @abstractmethod
+    def simple_post(self, url: str, json: Dict, headers: Dict = None) -> (Union[Any, None]):
+        pass
 
     @abstractmethod
-    def simple_post(self, url: str, json: Dict, headers: Dict = None) -> (Union[Any, None], Union[str, None]):
+    def post_data(self, url: str, byte_data: bytes, headers: Dict = None) -> (Union[Any, None]):
         pass
     
     @abstractmethod
@@ -28,7 +33,7 @@ class IServiceApi(ABC):
         pass
 
     @abstractmethod
-    def simple_put(self, url: str, json: Dict = None, headers: Dict = None) -> (Union[Any, None], Union[str, None]):
+    def simple_put(self, url: str, json: Dict = None, headers: Dict = None) -> (Union[Any, None]):
         pass
     
     @abstractmethod
@@ -40,7 +45,7 @@ class IServiceApi(ABC):
         pass
     
     @abstractmethod
-    def simple_delete(self, url: str, params: Dict = None, headers: Dict = None) -> (Union[Any, None], Union[str, None]):
+    def simple_delete(self, url: str, params: Dict = None, headers: Dict = None) -> (Union[Any, None]):
         pass
 
     @abstractmethod

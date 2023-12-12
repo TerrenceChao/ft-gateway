@@ -10,7 +10,7 @@ from fastapi import APIRouter, \
     HTTPException
 from ..req.authorization import AuthRoute, token_required, verify_token_by_company_profile
 from ..req.company_validation import *
-from ..res.response import res_success, response_vo
+from ..res.response import res_success
 from ..res import company_response as com_res
 from ...domains.match.company.value_objects import c_value_objects as com_vo
 from ...domains.match.company.services.company_service import CompanyProfileService, CompanyAggregateService
