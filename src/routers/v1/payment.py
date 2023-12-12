@@ -77,7 +77,9 @@ async def unsubscribe(
     _payment_service.unsubscribe(bg_tasks, payment_host, body)
     return res_success(msg='canceling', code='20200')
 
-
+'''
+TODO: get_payment_host('jp') is a static value, need to be configured
+'''
 @router.post('/webhook', status_code=201)
 async def webhook(req: Request):
     payment_host = get_payment_host('jp')
