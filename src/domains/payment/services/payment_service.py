@@ -45,18 +45,32 @@ class PaymentService:
         1. Get payment status (with customer_id) from cache
         2. Cache missed:  
             1. Call PUT customer API
-            2. [step 2:  Get payment status]
+            2. Call GET subscribe API
+            3. Cache payment status and return
         3. Cache hit:
             1. return payment status (with customer_id)
     '''
 
     def upsert_customer(self, host: str, user: dtos.UserDTO) -> (Dict):
-        payment_status = self.__get_cache(user.role_id)
+        role_id = user.role_id
+        payment_status = self.__get_cache(role_id)
         if payment_status is None:
+            # create customer
             url = f'{host}/{STRIPE}/customer'
             self.req.simple_put(url=url, json=user.dict())
-            payment_status = self.get_payment_status(host, user.role_id)
+            
+            # get payment status & cache it
+            payment_status = self.__get_latest_cached_payment_status(host, role_id)
 
+        return payment_status
+    
+    def __get_latest_cached_payment_status(self, host: str, role_id: int) -> (Dict):
+        url = f'{host}/{STRIPE}/subscribe'
+        payment_status = self.req.simple_get(url=url, params={
+            'role_id': role_id,
+        })
+        self.__set_cache(role_id, payment_status)
+        
         return payment_status
 
     '''
@@ -72,11 +86,7 @@ class PaymentService:
     def get_payment_status(self, host: str, role_id: int) -> (Dict):
         payment_status = self.__get_cache(role_id)
         if payment_status is None:
-            url = f'{host}/{STRIPE}/subscribe'
-            payment_status = self.req.simple_get(url=url, params={
-                'role_id': role_id,
-            })
-            self.__set_cache(role_id, payment_status)
+            payment_status = self.__get_latest_cached_payment_status(host, role_id)
 
         return payment_status
             
@@ -90,7 +100,7 @@ class PaymentService:
 
     def __refresh_payment_status(self, host: str, role_id: int) -> (Dict):
         self.__delete_cache(role_id)
-        return self.get_payment_status(host, role_id)
+        return self.__get_latest_cached_payment_status(host, role_id)
 
 
     def subscribe(self, bg_tasks: BackgroundTasks, host: str, subscription: dtos.SubscribeRequestDTO) -> (None):
@@ -150,6 +160,7 @@ class PaymentService:
             log.error(f'webhook error: host:%s, req_header:%s, req_body:%s, error:%s', 
                       host, req.headers, byte_data.decode(), e.__str__())
             raise ServerException(msg='internal server error')
+        
         
     def __parse_stripe_customer_id(self, byte_data: bytes) -> (str):
         s = byte_data.decode()
