@@ -16,11 +16,14 @@ from ...domains.match.company.value_objects import c_value_objects as com_vo
 from ...domains.match.company.services.company_service import CompanyProfileService, CompanyAggregateService
 from ...domains.match.company.services.company_job_service import CompanyJobService
 from ...domains.match.company.services.follow_and_contact_resume_service import FollowResumeService, ContactResumeService
+from ...domains.payment.services.payment_service import PaymentService
 from ...apps.service_api_dapter import ServiceApiAdapter
+from ...infra.cache.dynamodb_cache_adapter import DynamoDbCacheAdapter
+from ...configs.dynamodb import dynamodb
 from ...configs.conf import \
     MY_STATUS_OF_COMPANY_APPLY, STATUS_OF_COMPANY_APPLY, MY_STATUS_OF_COMPANY_REACTION, STATUS_OF_COMPANY_REACTION
 from ...configs.constants import Apply
-from ...configs.region_hosts import get_match_region_host
+from ...configs.region_hosts import get_match_region_host, get_payment_region_host
 from ...configs.exceptions import ClientException, \
     NotFoundException, \
     ServerException
@@ -41,11 +44,21 @@ router = APIRouter(
 def get_match_host(current_region: str = Header(...)):
     return get_match_region_host(region=current_region)
 
+def get_payment_host(current_region: str = Header(...)):
+    return get_payment_region_host(region=current_region)
 
+
+_payment_service = PaymentService(
+    ServiceApiAdapter(requests), 
+    DynamoDbCacheAdapter(dynamodb),
+)
 _company_profile_service = CompanyProfileService(ServiceApiAdapter(requests))
 _company_job_service = CompanyJobService(ServiceApiAdapter(requests))
 _follow_resume_service = FollowResumeService(ServiceApiAdapter(requests))
-_contact_resume_service = ContactResumeService(ServiceApiAdapter(requests))
+_contact_resume_service = ContactResumeService(
+    ServiceApiAdapter(requests),
+    _payment_service,
+)
 _company_aggregate_service = CompanyAggregateService(
     ServiceApiAdapter(requests))
 
@@ -236,10 +249,11 @@ def delete_followed_resume(company_id: int,
             response_model=com_res.ContactResumeResponseVO)
 def apply_resume(company_id: int = Path(...),
                  body: com_vo.ApplyResumeVO = Depends(apply_resume_check),
-                 match_host=Depends(get_match_host),
+                 match_host=Depends(get_match_host), 
+                 payment_host=Depends(get_payment_host),
                  ):
     contact_resume = _contact_resume_service.apply_resume(
-        host=match_host, company_id=company_id, body=body)
+        host=match_host, payment_host=payment_host, company_id=company_id, body=body)
 
     return res_success(data=contact_resume)
 
