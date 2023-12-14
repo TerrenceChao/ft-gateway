@@ -40,7 +40,7 @@ _media_service = MediaService(ServiceApiAdapter(requests))
 def upload_params(role: str,
                   role_id: str,
                   filename: str = Query(...),
-                  mime_type: str = Query(...),
+                  # mime_type: str = Query(...),
                   media_host: str = Depends(get_media_host),
                   cache: ICache = Depends(get_cache),
                   ):
@@ -56,7 +56,33 @@ def upload_params(role: str,
             "role": PATHS[role],
             "role_id": role_id,
             "filename": filename,
-            "mime_type": mime_type,
+            # "mime_type": mime_type,
+        })
+
+    return res_success(data=result)
+
+
+@router.get("/{role}/{role_id}/upload-params/icon")
+def icon_upload_params(role: str,
+                  role_id: str,
+                  filename: str = Query(...),
+                  # mime_type: str = Query(...),
+                  media_host: str = Depends(get_media_host),
+                  cache: ICache = Depends(get_cache),
+                  ):
+    if not role in PATHS.keys():
+        raise ClientException(
+            msg="The 'role' should be 'teacher' or 'company'")
+
+    serial_num = get_serial_num(cache=cache, role_id=role_id)
+    result = _media_service.get_overwritable_upload_params(
+        host=media_host,
+        params={
+            "serial_num": serial_num,
+            "role": PATHS[role],
+            "role_id": role_id,
+            "filename": filename,
+            # "mime_type": mime_type,
         })
 
     return res_success(data=result)
