@@ -10,9 +10,8 @@ from fastapi import APIRouter, \
     HTTPException
 from ..req.authorization import AuthRoute, token_required, verify_token_by_teacher_profile
 from ..req.teacher_validation import *
-from ..res.response import res_success, response_vo
-from ..res import teacher_response as teach_res
-from ...domains.match.teacher.value_objects import t_value_objects as teach_vo
+from ..res.response import *
+from ...domains.match.teacher.value_objects import t_value_objects as vo
 from ...domains.match.teacher.services.teacher_service import TeacherProfileService, TeacherAggregateService
 from ...domains.match.teacher.services.teacher_resume_service import TeacherResumeService
 from ...domains.match.teacher.services.follow_and_contact_job_service import FollowJobService, ContactJobService
@@ -42,6 +41,7 @@ def get_match_host(current_region: str = Header(...)):
     return get_match_region_host(region=current_region)
 
 
+TEACHER = 'teacher'
 _teacher_profile_service = TeacherProfileService(ServiceApiAdapter(requests))
 _teacher_resume_service = TeacherResumeService(ServiceApiAdapter(requests))
 _follow_job_service = FollowJobService(ServiceApiAdapter(requests))
@@ -59,10 +59,10 @@ Returns:
 
 
 @router.post("/{teacher_id}",
-             response_model=teach_res.TeacherProfileResponseVO,
+             responses=post_response(f'{TEACHER}.create_profile', vo.TeacherProfileVO),
              status_code=201)
 def create_profile(teacher_id: int,
-                   profile: teach_vo.TeacherProfileVO,
+                   profile: vo.TeacherProfileVO,
                    match_host=Depends(get_match_host),
                    #    verify=Depends(verify_token_by_teacher_profile),
                    ):
@@ -71,16 +71,18 @@ def create_profile(teacher_id: int,
     return res_success(data=data)
 
 
-@router.get("/{teacher_id}", response_model=teach_res.TeacherProfileResponseVO)
+@router.get("/{teacher_id}", 
+            responses=idempotent_response(f'{TEACHER}.get_profile', vo.TeacherProfileVO))
 def get_profile(teacher_id: int, match_host=Depends(get_match_host)):
     data = _teacher_profile_service.get_profile(
         host=match_host, teacher_id=teacher_id)
     return res_success(data=data)
 
 
-@router.put("/{teacher_id}", response_model=teach_res.TeacherProfileResponseVO)
+@router.put("/{teacher_id}", 
+            responses=idempotent_response(f'{TEACHER}.update_profile', vo.TeacherProfileVO))
 def update_profile(teacher_id: int,
-                   profile: teach_vo.UpdateTeacherProfileVO = Body(...),
+                   profile: vo.UpdateTeacherProfileVO = Body(...),
                    match_host=Depends(get_match_host),
                    ):
     data = _teacher_profile_service.update_profile(
@@ -93,12 +95,12 @@ def update_profile(teacher_id: int,
 
 # TODO: 未來如果允許使用多個 resumes, 須考慮 idempotent
 @router.post("/{teacher_id}/resumes",
-             response_model=teach_res.TeacherProfileAndResumeResponseVO,
+             responses=post_response(f'{TEACHER}.create_resume', vo.TeacherProfileAndResumeVO),
              status_code=201)
 def create_resume(teacher_id: int,
-                  profile: teach_vo.UpdateTeacherProfileVO = Body(
+                  profile: vo.UpdateTeacherProfileVO = Body(
                       None, embed=True),  # Nullable
-                  resume: teach_vo.ResumeVO = Depends(
+                  resume: vo.ResumeVO = Depends(
                       create_resume_check_resume),
                   register_region: str = Header(...),
                   match_host=Depends(get_match_host),
@@ -111,7 +113,7 @@ def create_resume(teacher_id: int,
 # TODO: 當 route pattern 一樣時，明確的 route 要先執行("/{teacher_id}/resumes/brief")，
 # 然後才是有變數的 ("/{teacher_id}/resumes/{resume_id}")
 @router.get("/{teacher_id}/brief-resumes",
-            response_model=teach_res.ResumeListResponseVO)
+            responses=idempotent_response(f'{TEACHER}.get_brief_resumes', vo.ResumeListVO))
 def get_brief_resumes(teacher_id: int,
                       match_host=Depends(get_match_host),
                       ):
@@ -121,7 +123,7 @@ def get_brief_resumes(teacher_id: int,
 
 
 @router.get("/{teacher_id}/resumes/{resume_id}",
-            response_model=teach_res.TeacherProfileAndResumeResponseVO)
+            responses=post_response(f'{TEACHER}.get_resume', vo.TeacherProfileAndResumeVO))
 def get_resume(teacher_id: int,
                resume_id: int,
                match_host=Depends(get_match_host),
@@ -133,12 +135,12 @@ def get_resume(teacher_id: int,
 
 # TODO: 未來如果允許使用多個 resumes, 須考慮 idempotent
 @router.put("/{teacher_id}/resumes/{resume_id}",
-            response_model=teach_res.TeacherProfileAndResumeResponseVO)
+            responses=idempotent_response(f'{TEACHER}.update_resume', vo.TeacherProfileAndResumeVO))
 def update_resume(teacher_id: int,
                   resume_id: int,
-                  profile: teach_vo.UpdateTeacherProfileVO = Body(
+                  profile: vo.UpdateTeacherProfileVO = Body(
                       None, embed=True),  # Nullable
-                  resume: teach_vo.UpdateResumeVO = Body(
+                  resume: vo.UpdateResumeVO = Body(
                       None, embed=True),  # Nullable
                   match_host=Depends(get_match_host),
                   ):
@@ -158,7 +160,7 @@ B. 可同時使用多個 resumes. 針對不同 com/job 投遞不同 resume
 
 
 @router.put("/{teacher_id}/resumes/{resume_id}/enable/{enable}",
-            response_model=teach_res.EnableResumeResponseVO)
+            responses=idempotent_response(f'{TEACHER}.enable_resume', vo.EnableResumeVO))
 def enable_resume(teacher_id: int,
                   resume_id: int,
                   enable: bool,
@@ -169,7 +171,8 @@ def enable_resume(teacher_id: int,
     return res_success(data=data)
 
 
-@router.delete("/{teacher_id}/resumes/{resume_id}")
+@router.delete("/{teacher_id}/resumes/{resume_id}",
+               responses=idempotent_response(f'{TEACHER}.delete_resume', bool))
 def delete_resume(teacher_id: int,
                   resume_id: int,
                   match_host=Depends(get_match_host)
@@ -183,10 +186,10 @@ def delete_resume(teacher_id: int,
 
 
 @router.put("/{teacher_id}/job-follows/{job_id}",
-            response_model=teach_res.FollowJobResponseVO)
+            responses=idempotent_response(f'{TEACHER}.upsert_follow_job', vo.FollowJobVO))
 def upsert_follow_job(teacher_id: int,
                       job_id: int,
-                      job_info: teach_vo.BaseJobVO = Body(...),
+                      job_info: vo.BaseJobVO = Body(...),
                       match_host=Depends(get_match_host),
                       ):
     data = _follow_job_service.upsert_follow_job(
@@ -196,7 +199,7 @@ def upsert_follow_job(teacher_id: int,
 
 
 @router.get("/{teacher_id}/job-follows",
-            response_model=teach_res.FollowJobListResponseVO)
+            responses=idempotent_response(f'{TEACHER}.get_followed_job_list', vo.FollowJobListVO))
 def get_followed_job_list(teacher_id: int,
                           size: int,
                           next_ts: int = None,
@@ -209,14 +212,15 @@ def get_followed_job_list(teacher_id: int,
 
 
 # @router.get("/{teacher_id}/job-follows/{job_id}",
-#             response_model=teach_res.FollowJobResponseVO)
+#             response_model=vo.FollowJobVO)
 # def get_followed_job(teacher_id: int, job_id: int,
 #                      match_host=Depends(get_match_host),
 #                      ):
 #     pass
 
 
-@router.delete("/{teacher_id}/job-follows/{job_id}")
+@router.delete("/{teacher_id}/job-follows/{job_id}",
+               responses=idempotent_response(f'{TEACHER}.delete_followed_job', bool))
 def delete_followed_job(teacher_id: int,
                         job_id: int,
                         match_host=Depends(get_match_host),
@@ -232,9 +236,9 @@ def delete_followed_job(teacher_id: int,
 
 # TODO: job_info: Dict >> job_info 是 "ContactJob".job_info (Dict/JSON, 是 Contact!!)
 @router.put("/{teacher_id}/apply-job",
-            response_model=teach_res.ContactJobResponseVO)
+            responses=idempotent_response(f'{TEACHER}.apply_job', vo.ContactJobVO))
 def apply_job(teacher_id: int = Path(...),
-              body: teach_vo.ApplyJobVO = Depends(apply_job_check),
+              body: vo.ApplyJobVO = Depends(apply_job_check),
               match_host=Depends(get_match_host),
               ):
     contact_job = _contact_job_service.apply_job(
@@ -244,7 +248,7 @@ def apply_job(teacher_id: int = Path(...),
 
 
 @router.get("/{teacher_id}/job-applications",
-            response_model=teach_res.ContactJobListResponseVO)
+            responses=idempotent_response(f'{TEACHER}.get_applied_job_list', vo.ContactJobListVO))
 def get_applied_job_list(teacher_id: int = Path(...),
                          size: int = Query(None),
                          next_ts: int = Query(None),
@@ -265,7 +269,7 @@ def get_applied_job_list(teacher_id: int = Path(...),
 
 
 @router.get("/{teacher_id}/job-positions",
-            response_model=teach_res.ContactJobListResponseVO)
+            responses=idempotent_response(f'{TEACHER}.get_job_position_list', vo.ContactJobListVO))
 def get_job_position_list(teacher_id: int = Path(...),
                           size: int = Query(None),
                           next_ts: int = Query(None),
@@ -285,7 +289,8 @@ def get_job_position_list(teacher_id: int = Path(...),
     return res_success(data=data)
 
 
-@router.delete("/{teacher_id}/job-contacts/{job_id}")
+@router.delete("/{teacher_id}/job-contacts/{job_id}",
+               responses=idempotent_response(f'{TEACHER}.delete_any_contacted_job', bool))
 def delete_any_contacted_job(teacher_id: int,
                              job_id: int,
                              match_host=Depends(get_match_host),
@@ -300,7 +305,7 @@ def delete_any_contacted_job(teacher_id: int,
 
 
 @router.get("/{teacher_id}/follow-and-application/jobs",
-            response_model=teach_res.TeacherFollowAndContactResponseVO)
+            responses=idempotent_response(f'{TEACHER}.get_follows_and_applications_at_first', vo.TeacherFollowAndContactVO))
 def get_follows_and_applications_at_first(teacher_id: int,
                                           size: int = None,
                                           match_host=Depends(get_match_host),
@@ -312,7 +317,7 @@ def get_follows_and_applications_at_first(teacher_id: int,
 
 
 @router.get("/{teacher_id}/matchdata",
-            response_model=teach_res.TeacherMatchDataResponseVO)
+            responses=idempotent_response(f'{TEACHER}.get_matchdata', vo.TeacherMatchDataVO))
 def get_matchdata(teacher_id: int,
                   size: int = None,
                   match_host=Depends(get_match_host),

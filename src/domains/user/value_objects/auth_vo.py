@@ -1,8 +1,10 @@
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel, EmailStr, validator
 from ....configs.constants import VALID_ROLES
 from ....configs.exceptions import *
+from ...match.company.value_objects.c_value_objects import CompanyMatchDataVO
+from ...match.teacher.value_objects.t_value_objects import TeacherMatchDataVO
 
 
 def meta_validator(meta: str, pubkey: str = None):
@@ -105,3 +107,9 @@ class AuthVO(BaseModel):
 
 class PubkeyVO(BaseModel):
     pubkey: str
+
+class SignupResponseVO(BaseModel):
+    auth: AuthVO    
+    
+class LoginResponseVO(SignupResponseVO):
+    match: Union[CompanyMatchDataVO, TeacherMatchDataVO]
