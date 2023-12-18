@@ -213,7 +213,7 @@ def get_followed_resume_list(company_id: int,
 
 
 # @router.get("/{company_id}/resume-follows/{resume_id}",
-#             response_model=vo.FollowResumeVO)
+#             responses=idempotent_response(f'{COMPANY}.get_followed_resume', vo.FollowResumeVO))
 # def get_followed_resume(company_id: int, resume_id: int,
 #                         match_host=Depends(get_match_host),
 #                         ):

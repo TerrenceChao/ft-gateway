@@ -123,7 +123,7 @@ def get_brief_resumes(teacher_id: int,
 
 
 @router.get("/{teacher_id}/resumes/{resume_id}",
-            responses=post_response(f'{TEACHER}.get_resume', vo.TeacherProfileAndResumeVO))
+            responses=idempotent_response(f'{TEACHER}.get_resume', vo.TeacherProfileAndResumeVO))
 def get_resume(teacher_id: int,
                resume_id: int,
                match_host=Depends(get_match_host),
@@ -212,7 +212,7 @@ def get_followed_job_list(teacher_id: int,
 
 
 # @router.get("/{teacher_id}/job-follows/{job_id}",
-#             response_model=vo.FollowJobVO)
+#             responses=idempotent_response(f'{TEACHER}.get_followed_job', vo.FollowJobVO))
 # def get_followed_job(teacher_id: int, job_id: int,
 #                      match_host=Depends(get_match_host),
 #                      ):
