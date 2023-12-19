@@ -4,12 +4,12 @@ from fastapi import APIRouter, \
     Cookie, Header, Path, Query, Body, Form, \
     File, UploadFile, status, \
     HTTPException
+from typing import Union
 from pydantic import EmailStr
-from ...domains.user.value_objects.auth_vo import SignupVO, SignupConfirmVO, LoginVO, UpdatePasswordVO, ResetPasswordVO
+from ...domains.user.value_objects.auth_vo import *
 from ..req.authorization import verify_token_by_logout, verify_token_by_update_password
 from ..req.auth_validation import *
-from ..res.auth_response import *
-from ..res.response import res_success
+from ..res.response import *
 from ...domains.user.services.auth_service import AuthService
 from ...infra.cache.dynamodb_cache_adapter import DynamoDbCacheAdapter
 from ...apps.service_api_dapter import ServiceApiAdapter
@@ -50,7 +50,8 @@ def get_match_host(current_region: str = Header(...)):
     return get_match_region_host(region=current_region)
 
 
-@router.get("/welcome", response_model=WelcomeResponseVO)
+@router.get("/welcome", 
+            responses=idempotent_response("get_public_key", PubkeyVO))
 def get_public_key(auth_host=Depends(get_auth_host)):
     pubkey_vo = _auth_service.get_public_key(auth_host)
     return res_success(data=pubkey_vo)
@@ -65,7 +66,9 @@ def signup(body: SignupVO = Body(...),
     return res_success(data=data, msg="email_sent")
 
 
-@router.post("/signup/confirm", status_code=201, response_model=SignupResponseVO)
+@router.post("/signup/confirm", 
+             responses=post_response("confirm_signup", SignupResponseVO),
+             status_code=201)
 def confirm_signup(body: SignupConfirmVO = Body(...),
                    auth_host=Depends(get_auth_host_for_signup),
                    ):
@@ -145,7 +148,9 @@ TODO: current_region 和其他 metadata 需改為多份
 """
 
 
-@router.post("/login", status_code=201, response_model=LoginResponseVO)
+@router.post("/login",
+             responses=post_response("login", LoginResponseVO),
+             status_code=201)
 def login(body: LoginVO = Depends(login_check_body),
           auth_host=Depends(get_auth_host),
           match_host=Depends(get_match_host),

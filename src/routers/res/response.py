@@ -10,7 +10,8 @@ def idempotent_response(route: str, model: Any) -> (Dict):
     }
     return responses
 
-def post_responses(route: str, model: Any) -> (Dict):
+
+def post_response(route: str, model: Any) -> (Dict):
     responses: Dict = {
         201: {
             'model': create_model(route, code=(str, ...), msg=(str, ...), data=(model, ...))
@@ -34,6 +35,7 @@ def res_err(data=None, msg="error", code="1"):
         "data": data,
     }
 
+
 class ResponseVO(BaseModel):
     code: str = '0'
     msg: str = 'ok'
@@ -45,4 +47,3 @@ class ResponseVO(BaseModel):
 
 class DeleteVO(ResponseVO):
     data: Optional[bool] = None
-    

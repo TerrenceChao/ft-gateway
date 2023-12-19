@@ -10,9 +10,8 @@ from fastapi import APIRouter, \
     HTTPException
 from ..req.authorization import AuthRoute, token_required, verify_token_by_company_profile
 from ..req.company_validation import *
-from ..res.response import res_success
-from ..res import company_response as com_res
-from ...domains.match.company.value_objects import c_value_objects as com_vo
+from ..res.response import *
+from ...domains.match.company.value_objects import c_value_objects as vo
 from ...domains.match.company.services.company_service import CompanyProfileService, CompanyAggregateService
 from ...domains.match.company.services.company_job_service import CompanyJobService
 from ...domains.match.company.services.follow_and_contact_resume_service import FollowResumeService, ContactResumeService
@@ -42,6 +41,7 @@ def get_match_host(current_region: str = Header(...)):
     return get_match_region_host(region=current_region)
 
 
+COMPANY = 'company'
 _company_profile_service = CompanyProfileService(ServiceApiAdapter(requests))
 _company_job_service = CompanyJobService(ServiceApiAdapter(requests))
 _follow_resume_service = FollowResumeService(ServiceApiAdapter(requests))
@@ -59,10 +59,10 @@ Returns:
 
 
 @router.post("/{company_id}",
-             response_model=com_res.CompanyProfileResponseVO,
+             responses=post_response(f'{COMPANY}.create_profile', vo.CompanyProfileVO),
              status_code=201)
 def create_profile(company_id: int,
-                   profile: com_vo.CompanyProfileVO,
+                   profile: vo.CompanyProfileVO,
                    match_host=Depends(get_match_host),
                    #    verify=Depends(verify_token_by_company_profile),
                    ):
@@ -71,16 +71,18 @@ def create_profile(company_id: int,
     return res_success(data=data)
 
 
-@router.get("/{company_id}", response_model=com_res.CompanyProfileResponseVO)
+@router.get("/{company_id}", 
+            responses=idempotent_response(f'{COMPANY}.get_profile', vo.CompanyProfileVO))
 def get_profile(company_id: int, match_host=Depends(get_match_host)):
     data = _company_profile_service.get_profile(
         host=match_host, company_id=company_id)
     return res_success(data=data)
 
 
-@router.put("/{company_id}", response_model=com_res.CompanyProfileResponseVO)
+@router.put("/{company_id}", 
+            responses=idempotent_response(f'{COMPANY}.update_profile', vo.CompanyProfileVO))
 def update_profile(company_id: int,
-                   profile: com_vo.UpdateCompanyProfileVO = Body(...),
+                   profile: vo.UpdateCompanyProfileVO = Body(...),
                    match_host=Depends(get_match_host),
                    ):
     data = _company_profile_service.update_profile(
@@ -93,12 +95,12 @@ def update_profile(company_id: int,
 
 # TODO: 未來如果允許使用多個 jobs, 須考慮 idempotent
 @router.post("/{company_id}/jobs",
-             response_model=com_res.CompanyProfileAndJobResponseVO,
+             responses=post_response(f'{COMPANY}.create_job', vo.CompanyProfileAndJobVO),
              status_code=201)
 def create_job(company_id: int,
-               profile: com_vo.UpdateCompanyProfileVO = Body(
+               profile: vo.UpdateCompanyProfileVO = Body(
                    None, embed=True),  # Nullable
-               job: com_vo.JobVO = Depends(create_job_check_job),
+               job: vo.JobVO = Depends(create_job_check_job),
                register_region: str = Header(...),
                match_host=Depends(get_match_host),
                ):
@@ -110,7 +112,7 @@ def create_job(company_id: int,
 # TODO: 當 route pattern 一樣時，明確的 route 要先執行("/{company_id}/jobs/brief")，
 # 然後才是有變數的 ("/{company_id}/jobs/{job_id}")
 @router.get("/{company_id}/brief-jobs",
-            response_model=com_res.JobListResponseVO)
+            responses=idempotent_response(f'{COMPANY}.get_brief_jobs', vo.JobListVO))
 def get_brief_jobs(company_id: int,
                    size: int = Query(None),
                    job_id: int = Query(None),
@@ -122,7 +124,7 @@ def get_brief_jobs(company_id: int,
 
 
 @router.get("/{company_id}/jobs/{job_id}",
-            response_model=com_res.CompanyProfileAndJobResponseVO)
+            responses=idempotent_response(f'{COMPANY}.get_job', vo.CompanyProfileAndJobVO))
 def get_job(company_id: int,
             job_id: int,
             match_host=Depends(get_match_host),
@@ -134,12 +136,12 @@ def get_job(company_id: int,
 
 # TODO: 未來如果允許使用多個 resumes, 須考慮 idempotent
 @router.put("/{company_id}/jobs/{job_id}",
-            response_model=com_res.CompanyProfileAndJobResponseVO)
+            responses=idempotent_response(f'{COMPANY}.update_job', vo.CompanyProfileAndJobVO))
 def update_job(company_id: int,
                job_id: int,
-               profile: com_vo.UpdateCompanyProfileVO = Body(
+               profile: vo.UpdateCompanyProfileVO = Body(
                    None, embed=True),  # Nullable
-               job: com_vo.UpdateJobVO = Body(
+               job: vo.UpdateJobVO = Body(
                    None, embed=True),  # Nullable,
                match_host=Depends(get_match_host),
                ):
@@ -159,7 +161,7 @@ B. 可同時使用多個 jobs. 針對不同 teacher/resume 配對不同 job
 
 
 @router.put("/{company_id}/jobs/{job_id}/enable/{enable}",
-            response_model=com_res.EnableJobResponseVO)
+            responses=idempotent_response(f'{COMPANY}.enable_job', vo.EnableJobVO))
 def enable_job(company_id: int,
                job_id: int,
                enable: bool,
@@ -170,7 +172,8 @@ def enable_job(company_id: int,
     return res_success(data=data)
 
 
-@router.delete("/{company_id}/jobs/{job_id}")
+@router.delete("/{company_id}/jobs/{job_id}",
+               responses=idempotent_response(f'{COMPANY}.delete_job', bool))
 def delete_job(company_id: int,
                job_id: int,
                match_host=Depends(get_match_host)
@@ -184,10 +187,10 @@ def delete_job(company_id: int,
 
 
 @router.put("/{company_id}/resume-follows/{resume_id}",
-            response_model=com_res.FollowResumeResponseVO)
+            responses=idempotent_response(f'{COMPANY}.upsert_follow_resume', vo.FollowResumeVO))
 def upsert_follow_resume(company_id: int,
                          resume_id: int,
-                         resume_info: com_vo.BaseResumeVO = Body(None),
+                         resume_info: vo.BaseResumeVO = Body(None),
                          match_host=Depends(get_match_host),
                          ):
     data = _follow_resume_service.upsert_follow_resume(
@@ -197,7 +200,7 @@ def upsert_follow_resume(company_id: int,
 
 
 @router.get("/{company_id}/resume-follows",
-            response_model=com_res.FollowResumeListResponseVO)
+            responses=idempotent_response(f'{COMPANY}.get_followed_resume_list', vo.FollowResumeListVO))
 def get_followed_resume_list(company_id: int,
                              size: int,
                              next_ts: int = None,
@@ -210,14 +213,15 @@ def get_followed_resume_list(company_id: int,
 
 
 # @router.get("/{company_id}/resume-follows/{resume_id}",
-#             response_model=com_res.FollowResumeResponseVO)
+#             responses=idempotent_response(f'{COMPANY}.get_followed_resume', vo.FollowResumeVO))
 # def get_followed_resume(company_id: int, resume_id: int,
 #                         match_host=Depends(get_match_host),
 #                         ):
 #     pass
 
 
-@router.delete("/{company_id}/resume-follows/{resume_id}")
+@router.delete("/{company_id}/resume-follows/{resume_id}",
+               responses=idempotent_response(f'{COMPANY}.delete_followed_resume', bool))
 def delete_followed_resume(company_id: int,
                            resume_id: int,
                            match_host=Depends(get_match_host),
@@ -233,9 +237,9 @@ def delete_followed_resume(company_id: int,
 
 # TODO: resume_info: Dict >> resume_info 是 "ContactResume".resume_info (Dict/JSON, 是 Contact!!)
 @router.put("/{company_id}/apply-resume",
-            response_model=com_res.ContactResumeResponseVO)
+            responses=idempotent_response(f'{COMPANY}.apply_resume', vo.ContactResumeVO))
 def apply_resume(company_id: int = Path(...),
-                 body: com_vo.ApplyResumeVO = Depends(apply_resume_check),
+                 body: vo.ApplyResumeVO = Depends(apply_resume_check),
                  match_host=Depends(get_match_host),
                  ):
     contact_resume = _contact_resume_service.apply_resume(
@@ -245,7 +249,7 @@ def apply_resume(company_id: int = Path(...),
 
 
 @router.get("/{company_id}/resume-contacts",
-            response_model=com_res.ContactResumeListResponseVO)
+            responses=idempotent_response(f'{COMPANY}.get_applied_resume_list', vo.ContactResumeListVO))
 def get_applied_resume_list(company_id: int = Path(...),
                               size: int = Query(None),
                               next_ts: int = Query(None),
@@ -266,7 +270,7 @@ def get_applied_resume_list(company_id: int = Path(...),
 
 
 @router.get("/{company_id}/resume-applications",
-            response_model=com_res.ContactResumeListResponseVO)
+            responses=idempotent_response(f'{COMPANY}.get_resume_application_list', vo.ContactResumeListVO))
 def get_resume_application_list(company_id: int = Path(...),
                                 size: int = Query(None),
                                 next_ts: int = Query(None),
@@ -286,7 +290,8 @@ def get_resume_application_list(company_id: int = Path(...),
     return res_success(data=data)
 
 
-@router.delete("/{company_id}/resume-contacts/{resume_id}")
+@router.delete("/{company_id}/resume-contacts/{resume_id}",
+               responses=idempotent_response(f'{COMPANY}.delete_any_contacted_resume', bool))
 def delete_any_contacted_resume(company_id: int,
                                 resume_id: int,
                                 match_host=Depends(get_match_host),
@@ -301,7 +306,7 @@ def delete_any_contacted_resume(company_id: int,
 
 
 @router.get("/{company_id}/follow-and-contact/resumes",
-            response_model=com_res.CompanyFollowAndContactResponseVO)
+            responses=idempotent_response(f'{COMPANY}.get_follows_and_contacts_at_first', vo.CompanyFollowAndContactVO))
 def get_follows_and_contacts_at_first(company_id: int,
                                       size: int = None,
                                       match_host=Depends(get_match_host),
@@ -313,7 +318,7 @@ def get_follows_and_contacts_at_first(company_id: int,
 
 
 @router.get("/{company_id}/matchdata",
-            response_model=com_res.CompanyMatchDataResponseVO)
+            responses=idempotent_response(f'{COMPANY}.get_matchdata', vo.CompanyMatchDataVO))
 def get_matchdata(company_id: int,
                   size: int = None,
                   match_host=Depends(get_match_host),
