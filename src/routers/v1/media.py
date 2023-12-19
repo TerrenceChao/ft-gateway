@@ -40,7 +40,7 @@ _media_service = MediaService(ServiceApiAdapter(requests))
 def upload_params(role: str,
                   role_id: str,
                   filename: str = Query(...),
-                  mime_type: str = Query(...),
+                  overwrite: bool = Query(True),
                   media_host: str = Depends(get_media_host),
                   cache: ICache = Depends(get_cache),
                   ):
@@ -56,8 +56,9 @@ def upload_params(role: str,
             "role": PATHS[role],
             "role_id": role_id,
             "filename": filename,
-            "mime_type": mime_type,
-        })
+        },
+        overwrite=overwrite,
+    )
 
     return res_success(data=result)
 
