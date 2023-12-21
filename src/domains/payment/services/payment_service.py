@@ -22,13 +22,13 @@ class PaymentService:
         self.sign_header = 'Stripe-Signature'
 
     def __get_cache(self, role_id: int) -> (Optional[Dict]):
-        return self.cache.get(key=f'pay:{str(role_id)}')
+        return self.cache.get(key=f'pay:{role_id}')
 
     def __set_cache(self, role_id: int, payment_status: Dict) -> (bool):
-        return self.cache.set(key=f'pay:{str(role_id)}', val=payment_status, ex=SHORT_TERM_TTL)
+        return self.cache.set(key=f'pay:{role_id}', val=payment_status, ex=SHORT_TERM_TTL)
     
     def __delete_cache(self, role_id: int) -> (bool):
-        return self.cache.delete(key=f'pay:{str(role_id)}')
+        return self.cache.delete(key=f'pay:{role_id}')
 
     def __get_role_id_by_cus_id(self, customer_id: str) -> (Optional[int]):
         role_id_str = self.cache.get(key=f'pay_handling:{customer_id}')
@@ -133,7 +133,7 @@ class PaymentService:
     6. Stripe -> gateway -> payment service
     '''
     async def webhook(self, host: str, req: Request) -> (JSONResponse):
-        byte_data: bytes = None
+        byte_data: Optional[bytes] = None
         try:
             byte_data = await req.body()
             customer_id = self.__parse_stripe_customer_id(byte_data)

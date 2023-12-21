@@ -26,16 +26,11 @@ class PaymentStatusModel(BasePaymentChannel, BaseUserPayment):
 
 class PaymentRecordModel(PaymentStatusModel):
     # customer_id: str # partition key
-    created_at: Optional[int] # order key
+    created_at: Optional[int] = gen_timestamp() # order key
     plan_id: str
     plan: Optional[Dict]
     amount: Optional[str]
     currency: Optional[str]
-    
-    def __init__(self, **data):
-        super().__init__(**data)
-        if self.created_at is None:
-            self.created_at = gen_timestamp()
         
     def base_user_payment(self) -> (BaseUserPayment):
         return BaseUserPayment(

@@ -1,7 +1,7 @@
 import requests as RequestsHTTPLibrary
 from fastapi import status
 from requests.models import Response
-from typing import Dict, Union, Any
+from typing import Dict, Union, Any, Optional
 from ..domains.service_api import IServiceApi
 from ..configs.exceptions import \
     ClientException, UnauthorizedException, ForbiddenException, NotFoundException, NotAcceptableException,\
@@ -21,7 +21,7 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result
     """
-    def simple_get(self, url: str, params: Dict = None, headers: Dict = None) -> (Union[Any, None]):
+    def simple_get(self, url: str, params: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]]):
         result = None
         response = None
         try:
@@ -48,7 +48,7 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result, msg, err
     """
-    def get(self, url: str, params: Dict = None, headers: Dict = None) -> (Union[Any, None], Union[str, None], Union[str, None]):
+    def get(self, url: str, params: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]], Optional[str], Optional[str]):
         err: str = None
         msg: str = None
         result = None
@@ -73,7 +73,7 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result, msg, status_code, err
     """
-    def get_with_statuscode(self, url: str, params: Dict = None, headers: Dict = None) -> (Union[Any, None], Union[str, None], Union[int, None], Union[str, None]):
+    def get_with_statuscode(self, url: str, params: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]], Optional[str], Optional[int], Optional[str]):
         err: str = None
         status_code: int = 500
         msg: str = None
@@ -97,7 +97,7 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result
     """
-    def simple_post(self, url: str, json: Dict, headers: Dict = None) -> (Union[Any, None]):
+    def simple_post(self, url: str, json: Dict, headers: Dict = None) -> (Optional[Dict[str, str]]):
         result = None
         response = None
         try:
@@ -121,7 +121,7 @@ class ServiceApiAdapter(IServiceApi):
 
         return result
 
-    def post_data(self, url: str, byte_data: bytes, headers: Dict = None) -> (Union[Any, None]):
+    def post_data(self, url: str, byte_data: bytes, headers: Dict = None) -> (Optional[Dict[str, str]]):
         result = None
         response = None
         try:
@@ -148,7 +148,7 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result, msg, err
     """
-    def post(self, url: str, json: Dict, headers: Dict = None) -> (Union[Any, None], Union[str, None], Union[str, None]):
+    def post(self, url: str, json: Dict, headers: Dict = None) -> (Optional[Dict[str, str]], Optional[str], Optional[str]):
         err: str = None
         msg: str = None
         result = None
@@ -173,7 +173,7 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result, msg, status_code, err
     """
-    def post_with_statuscode(self, url: str, json: Dict, headers: Dict = None) -> (Union[Any, None], Union[str, None], Union[int, None], Union[str, None]):
+    def post_with_statuscode(self, url: str, json: Dict, headers: Dict = None) -> (Optional[Dict[str, str]], Optional[str], Optional[int], Optional[str]):
         err: str = None
         status_code: int = 500
         msg: str = None
@@ -197,7 +197,7 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result
     """
-    def simple_put(self, url: str, json: Dict = None, headers: Dict = None) -> (Union[Any, None]):
+    def simple_put(self, url: str, json: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]]):
         result = None
         response = None
         try:
@@ -224,7 +224,7 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result, msg, err
     """
-    def put(self, url: str, json: Dict = None, headers: Dict = None) -> (Union[Any, None], Union[str, None], Union[str, None]):
+    def put(self, url: str, json: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]], Optional[str], Optional[str]):
         err: str = None
         msg: str = None
         result = None
@@ -249,7 +249,7 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result, msg, status_code, err
     """
-    def put_with_statuscode(self, url: str, json: Dict = None, headers: Dict = None) -> (Union[Any, None], Union[str, None], Union[int, None], Union[str, None]):
+    def put_with_statuscode(self, url: str, json: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]], Optional[str], Optional[int], Optional[str]):
         err: str = None
         status_code: int = 500
         msg: str = None
@@ -273,7 +273,7 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result
     """
-    def simple_delete(self, url: str, params: Dict = None, headers: Dict = None) -> (Union[Any, None]):
+    def simple_delete(self, url: str, params: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]]):
         result = None
         response = None
         try:
@@ -300,7 +300,7 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result, msg, err
     """
-    def delete(self, url: str, params: Dict = None, headers: Dict = None) -> (Union[Any, None], Union[str, None], Union[str, None]):
+    def delete(self, url: str, params: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]], Optional[str], Optional[str]):
         err: str = None
         msg: str = None
         result = None
@@ -326,7 +326,7 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result, msg, status_code, err
     """
-    def delete_with_statuscode(self, url: str, params: Dict = None, headers: Dict = None) -> (Union[Any, None], Union[str, None], Union[int, None], Union[str, None]):
+    def delete_with_statuscode(self, url: str, params: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]], Optional[str], Optional[int], Optional[str]):
         err: str = None
         status_code: int = 500
         msg: str = None
