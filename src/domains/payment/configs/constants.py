@@ -17,18 +17,18 @@ class PaymentStatusEnum(Enum):
 
 
 PAYMENT_PERIOD = {
-    PaymentStatusEnum.PROCESSING.value,
-    PaymentStatusEnum.PAID.value,
+    PaymentStatusEnum.PROCESSING,
+    PaymentStatusEnum.PAID,
 }
 UNABLE_TO_SUBSCRIBE = {
-    PaymentStatusEnum.PROCESSING.value,
-    PaymentStatusEnum.PAID.value,
-    PaymentStatusEnum.CANCELING.value,
+    PaymentStatusEnum.PROCESSING,
+    PaymentStatusEnum.PAID,
+    PaymentStatusEnum.CANCELING,
 }
 UNABLE_TO_CANCEL_SUBSCRIBE = {
-    PaymentStatusEnum.PROCESSING.value,
-    PaymentStatusEnum.UNPAID.value,
-    PaymentStatusEnum.CANCELING.value,
-    PaymentStatusEnum.CANCELED.value,
+    PaymentStatusEnum.PROCESSING,
+    PaymentStatusEnum.UNPAID,
+    PaymentStatusEnum.CANCELING,
+    PaymentStatusEnum.CANCELED,
 }
 SECONDS_OF_DAY = 86400
