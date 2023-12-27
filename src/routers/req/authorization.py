@@ -1,9 +1,9 @@
 import os
 import time
 from datetime import datetime
-from typing import Callable, List, Union
+from typing import Callable, List, Union, Dict
 import jwt as jwt_util
-from fastapi import APIRouter, FastAPI, Header, Path, Body, Request, Response, Depends
+from fastapi import APIRouter, FastAPI, Header, Path, Query, Body, Request, Response, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.routing import APIRoute
 from ...infra.db.nosql import match_companies_schemas as com_schema, \
@@ -152,6 +152,32 @@ def verify_token_by_update_password(credentials: HTTPAuthorizationCredentials = 
                                     role_id: int = Path(...),
                                     ):
     __verify_token_in_auth(role_id, credentials, "access denied")
+
+
+# payment
+def __verify_token_in_payment(role_id: int, credentials: HTTPAuthorizationCredentials, err_msg: str):
+    secret = __get_secret(role_id)
+    token = parse_token(credentials)
+    data = __jwt_decode(jwt=token, key=secret, msg=err_msg)
+    
+    if data.get('role', None) != 'company':
+        raise UnauthorizedException(msg='payments are only allowed for company role')
+    
+    if not __valid_role_id(data, role_id):
+        raise UnauthorizedException(msg=err_msg)
+    
+def verify_token_by_subscribe_status(credentials: HTTPAuthorizationCredentials = Depends(auth_scheme),
+                                    role_id: int = Query(...),
+                                    ):
+    __verify_token_in_payment(role_id, credentials, 'unauthorized user')
+    
+def verify_token_by_payment_operation(credentials: HTTPAuthorizationCredentials = Depends(auth_scheme),
+                                      body: Dict = Body(...),
+                                      ):
+    if not 'role_id' in body:
+        raise UnauthorizedException(msg='unauthorized payment user') 
+    
+    __verify_token_in_payment(body.get('role_id'), credentials, 'unauthorized payment user')
 
 
 async def verify_token(request: Request):

@@ -15,7 +15,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from src.routers.v1 import auth, \
     match_companies, match_teachers, \
-    search, media
+    search, media, payment
 
 from src.routers.v2 import auth as authv2
 from src.routers.res.response import res_err
@@ -74,6 +74,7 @@ router_v1.include_router(match_companies.router)
 router_v1.include_router(match_teachers.router)
 router_v1.include_router(search.router)
 router_v1.include_router(media.router)
+router_v1.include_router(payment.router)
 
 
 router_v2 = APIRouter(prefix="/api/v2")
