@@ -20,12 +20,18 @@ class ClientException(HTTPException, ErrorLogger):
         self.data = data
         self.status_code = status.HTTP_400_BAD_REQUEST
         
+    def __str__(self) -> str:
+        return self.msg
+        
 class UnauthorizedException(HTTPException, ErrorLogger):
     def __init__(self, msg: str, code: str = '40100', data: Any = None):
         self.msg = msg
         self.code = code
         self.data = data
         self.status_code = status.HTTP_401_UNAUTHORIZED
+        
+    def __str__(self) -> str:
+        return self.msg
 
 class ForbiddenException(HTTPException, ErrorLogger):
     def __init__(self, msg: str, code: str = '40300', data: Any = None):
@@ -33,6 +39,9 @@ class ForbiddenException(HTTPException, ErrorLogger):
         self.code = code
         self.data = data
         self.status_code = status.HTTP_403_FORBIDDEN
+        
+    def __str__(self) -> str:
+        return self.msg
 
 class NotFoundException(HTTPException, ErrorLogger):
     def __init__(self, msg: str, code: str = '40400', data: Any = None):
@@ -41,12 +50,18 @@ class NotFoundException(HTTPException, ErrorLogger):
         self.data = data
         self.status_code = status.HTTP_404_NOT_FOUND
         
+    def __str__(self) -> str:
+        return self.msg
+        
 class NotAcceptableException(HTTPException, ErrorLogger):
     def __init__(self, msg: str, code: str = '40600', data: Any = None):
         self.msg = msg
         self.code = code
         self.data = data
         self.status_code = status.HTTP_406_NOT_ACCEPTABLE
+        
+    def __str__(self) -> str:
+        return self.msg
 
 class DuplicateUserException(HTTPException, ErrorLogger):
     def __init__(self, msg: str, code: str = '40600', data: Any = None):
@@ -55,6 +70,9 @@ class DuplicateUserException(HTTPException, ErrorLogger):
         self.data = data
         self.status_code = status.HTTP_406_NOT_ACCEPTABLE
         
+    def __str__(self) -> str:
+        return self.msg
+        
 class TooManyRequestsException(HTTPException, ErrorLogger):
     def __init__(self, msg: str, code: str = '42900', data: Any = None):
         self.msg = msg
@@ -62,12 +80,18 @@ class TooManyRequestsException(HTTPException, ErrorLogger):
         self.data = data
         self.status_code = status.HTTP_429_TOO_MANY_REQUESTS
         
+    def __str__(self) -> str:
+        return self.msg
+        
 class ServerException(HTTPException, ErrorLogger):
     def __init__(self, msg: str, code: str = '50000', data: Any = None):
         self.msg = msg
         self.code = code
         self.data = data
         self.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        
+    def __str__(self) -> str:
+        return self.msg
 
 
 def __client_exception_handler(request: Request, exc: ClientException):
@@ -107,7 +131,7 @@ def include_app(app: FastAPI):
     app.add_exception_handler(TooManyRequestsException, __too_many_requests_exception_handler)
     app.add_exception_handler(ServerException, __server_exception_handler)
 
-def raise_http_exception(e: Exception):
+def raise_http_exception(e: Exception, msg='unknow_error'):
     if isinstance(e, ClientException):
         raise ClientException(msg=e.msg, data=e.data)
     
@@ -129,4 +153,4 @@ def raise_http_exception(e: Exception):
     if isinstance(e, ServerException):
         raise ServerException(msg=e.msg, data=e.data)
     
-    raise ServerException(msg="unknow_error")
+    raise ServerException(msg=msg)

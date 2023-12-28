@@ -11,13 +11,16 @@ class MediaService:
     def __init__(self, req: IServiceApi):
         self.req = req
 
-    def get_upload_params(self, host: str, params: Dict, overwrite: bool = True):
-        if overwrite:
-            url = f"{host}/users/upload-params/overwritable"
-        else:
-            url = f"{host}/users/upload-params"
-            
+    def get_upload_params(self, host: str, params: Dict):
+        url = f"{host}/users/upload-params"
         result = self.req.simple_get(url=url, params=params)
+        
+        return result
+    
+    def get_overwritable_upload_params(self, host: str, params: Dict):
+        url = f"{host}/users/upload-params/overwritable"
+        result = self.req.simple_get(url=url, params=params)
+
         return result
 
     def delete_file(self, host: str, params: Dict):
