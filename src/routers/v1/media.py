@@ -83,7 +83,8 @@ def icon_upload_params(role: str,
             "role_id": role_id,
             "filename": filename,
             # "mime_type": mime_type,
-        })
+        }
+    )
 
     return res_success(data=result)
 

@@ -22,13 +22,13 @@ class PaymentService:
         self.sign_header = 'Stripe-Signature'
 
     def __get_cache(self, role_id: int) -> (Optional[Dict]):
-        return self.cache.get(key=f'pay:{str(role_id)}')
+        return self.cache.get(key=f'pay:{role_id}')
 
     def __set_cache(self, role_id: int, payment_status: Dict) -> (bool):
-        return self.cache.set(key=f'pay:{str(role_id)}', val=payment_status, ex=SHORT_TERM_TTL)
+        return self.cache.set(key=f'pay:{role_id}', val=payment_status, ex=SHORT_TERM_TTL)
     
     def __delete_cache(self, role_id: int) -> (bool):
-        return self.cache.delete(key=f'pay:{str(role_id)}')
+        return self.cache.delete(key=f'pay:{role_id}')
 
     def __get_role_id_by_cus_id(self, customer_id: str) -> (Optional[int]):
         role_id_str = self.cache.get(key=f'pay_handling:{customer_id}')
@@ -45,18 +45,32 @@ class PaymentService:
         1. Get payment status (with customer_id) from cache
         2. Cache missed:  
             1. Call PUT customer API
-            2. [step 2:  Get payment status]
+            2. Call GET subscribe API
+            3. Cache payment status and return
         3. Cache hit:
             1. return payment status (with customer_id)
     '''
 
     def upsert_customer(self, host: str, user: dtos.UserDTO) -> (Dict):
-        payment_status = self.__get_cache(user.role_id)
+        role_id = user.role_id
+        payment_status = self.__get_cache(role_id)
         if payment_status is None:
+            # create customer
             url = f'{host}/{STRIPE}/customer'
             self.req.simple_put(url=url, json=user.dict())
-            payment_status = self.get_payment_status(host, user.role_id)
+            
+            # get payment status & cache it
+            payment_status = self.__get_latest_cached_payment_status(host, role_id)
 
+        return payment_status
+    
+    def __get_latest_cached_payment_status(self, host: str, role_id: int) -> (Dict):
+        url = f'{host}/{STRIPE}/subscribe'
+        payment_status = self.req.simple_get(url=url, params={
+            'role_id': role_id,
+        })
+        self.__set_cache(role_id, payment_status)
+        
         return payment_status
 
     '''
@@ -72,11 +86,7 @@ class PaymentService:
     def get_payment_status(self, host: str, role_id: int) -> (Dict):
         payment_status = self.__get_cache(role_id)
         if payment_status is None:
-            url = f'{host}/{STRIPE}/subscribe'
-            payment_status = self.req.simple_get(url=url, params={
-                'role_id': role_id,
-            })
-            self.__set_cache(role_id, payment_status)
+            payment_status = self.__get_latest_cached_payment_status(host, role_id)
 
         return payment_status
             
@@ -90,15 +100,16 @@ class PaymentService:
 
     def __refresh_payment_status(self, host: str, role_id: int) -> (Dict):
         self.__delete_cache(role_id)
-        return self.get_payment_status(host, role_id)
+        return self.__get_latest_cached_payment_status(host, role_id)
 
 
     def subscribe(self, bg_tasks: BackgroundTasks, host: str, subscription: dtos.SubscribeRequestDTO) -> (None):
         role_id = subscription.role_id
         payment_status = self.__refresh_payment_status(host, role_id)
         
-        if payment_status['status'] in UNABLE_TO_SUBSCRIBE:
-            raise ClientException(msg=payment_status['status'])
+        status = PaymentStatusEnum(payment_status['status'])
+        if status in UNABLE_TO_SUBSCRIBE:
+            raise ClientException(msg=status)
         
         if payment_status['valid']:
             raise ClientException(msg='not_yet_expired')
@@ -112,8 +123,9 @@ class PaymentService:
         role_id = unsubscription.role_id
         payment_status = self.__refresh_payment_status(host, role_id)
         
-        if payment_status['status'] in UNABLE_TO_CANCEL_SUBSCRIBE:
-            raise ClientException(msg=payment_status['status'])
+        status = PaymentStatusEnum(payment_status['status'])
+        if status in UNABLE_TO_CANCEL_SUBSCRIBE:
+            raise ClientException(msg=status)
         
         self.__set_role_id_by_cus_id(payment_status['customer_id'], role_id)
         self.__bg_processing(
@@ -123,7 +135,7 @@ class PaymentService:
     6. Stripe -> gateway -> payment service
     '''
     async def webhook(self, host: str, req: Request) -> (JSONResponse):
-        byte_data: bytes = None
+        byte_data: Optional[bytes] = None
         try:
             byte_data = await req.body()
             customer_id = self.__parse_stripe_customer_id(byte_data)
@@ -150,6 +162,7 @@ class PaymentService:
             log.error(f'webhook error: host:%s, req_header:%s, req_body:%s, error:%s', 
                       host, req.headers, byte_data.decode(), e.__str__())
             raise ServerException(msg='internal server error')
+        
         
     def __parse_stripe_customer_id(self, byte_data: bytes) -> (str):
         s = byte_data.decode()

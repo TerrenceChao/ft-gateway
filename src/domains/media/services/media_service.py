@@ -14,7 +14,7 @@ class MediaService:
     def get_upload_params(self, host: str, params: Dict):
         url = f"{host}/users/upload-params"
         result = self.req.simple_get(url=url, params=params)
-
+        
         return result
     
     def get_overwritable_upload_params(self, host: str, params: Dict):

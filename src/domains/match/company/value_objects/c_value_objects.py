@@ -6,7 +6,11 @@ from ...public_value_objects import JobIndexVO, BaseResumeVO
 from .....configs.constants import Apply
 
 
-class ContactResumeVO(BaseModel):
+class _BaseResumeData(BaseModel):
+    url_path: Optional[str] = None
+
+
+class ContactResumeVO(_BaseResumeData):
     rid: int
     cid: int
     jid: int  # NOT ForeignKey
@@ -16,11 +20,21 @@ class ContactResumeVO(BaseModel):
     created_at: Optional[int] = None
 
 
-class FollowResumeVO(BaseModel):
+class ContactResumeListVO(BaseModel):
+    list: List[ContactResumeVO] = []
+    next_ts: Optional[int] = None
+
+
+class FollowResumeVO(_BaseResumeData):
     rid: int
     cid: int
     resume_info: BaseResumeVO
     created_at: Optional[int] = None
+
+
+class FollowResumeListVO(BaseModel):
+    list: List[FollowResumeVO] = []
+    next_ts: Optional[int] = None
 
 
 class JobVO(BaseModel):
@@ -35,21 +49,7 @@ class JobVO(BaseModel):
     tags: Optional[List[str]] = []
     enable: bool = True
     # it's optional in gateway
-    published_in: Optional[str] = None
-
-    def model(self, company_id: int):
-        return company.Job(
-            # jid=self.jid,
-            cid=company_id,
-            title=self.title,
-            region=self.region,
-            salary=self.salary,
-            job_desc=self.job_desc,
-            others=self.others,
-            tags=self.tags,
-            enable=self.enable,
-            published_in=self.published_in,
-        )
+    published_in: str
 
 
 class UpdateJobVO(BaseModel):
@@ -64,23 +64,17 @@ class UpdateJobVO(BaseModel):
     tags: Optional[List[str]] = []
     enable: Optional[bool] = True
 
-    def model(self, company_id: int, job_id: int):
-        return company.Job(
-            jid=job_id,
-            cid=company_id,
-            title=self.title,
-            region=self.region,
-            salary=self.salary,
-            job_desc=self.job_desc,
-            others=self.others,
-            tags=self.tags,
-            enable=self.enable,
-        )
-
 
 class ReturnJobVO(UpdateJobVO):
     jid: Optional[int] = None
     cid: int
+    # it's optional in gateway
+    published_in: str
+
+
+class JobListVO(BaseModel):
+    list: List[ReturnJobVO] = []
+    next_jid: Optional[int] = None
 
 
 class EnableJobVO(BaseModel):
@@ -100,17 +94,6 @@ class CompanyProfileVO(BaseModel):
     sections: Optional[List[Dict]] = []
     photos: Optional[List[Dict]] = []
 
-    def model(self, company_id: int):
-        return company.CompanyProfile(
-            cid=company_id,
-            name=self.name,
-            intro=self.intro,
-            logo=self.logo,
-            overview=self.overview,
-            sections=self.sections,
-            photos=self.photos,
-        )
-
 
 class UpdateCompanyProfileVO(BaseModel):
     # cid: int
@@ -122,17 +105,6 @@ class UpdateCompanyProfileVO(BaseModel):
     # who, what, where, ... etc (json array)
     sections: Optional[List[Dict]] = []
     photos: Optional[List[Dict]] = []
-
-    def model(self, company_id: int):
-        return company.CompanyProfile(
-            cid=company_id,
-            name=self.name,
-            intro=self.intro,
-            logo=self.logo,
-            overview=self.overview,
-            sections=self.sections,
-            photos=self.photos,
-        )
 
 
 class ReturnCompanyProfileVO(UpdateCompanyProfileVO):
@@ -164,27 +136,17 @@ class ApplyResumeVO(BaseModel):
     resume: BaseResumeVO
     job_info: JobIndexVO
 
-    # TODO: resume 需要 hash code + 驗證，防竄改
-    # resume 是從外部傳入，不須在內部查找 DB
-    def gen_contact_resume(self, cid: int):
-        return company.ContactResume(
-            rid=self.resume.rid,
-            cid=cid,
-            jid=self.job_info.jid,
-            my_status=self.my_status,
-            resume_info=self.resume.dict(),
-        )
-
-    def gen_contact_job(self, job: Dict):
-        return teacher.ContactJob(
-            jid=self.job_info.jid,
-            tid=self.resume.tid,
-            rid=self.resume.rid,
-            status=self.my_status,  # ContactJob.status is my_status
-            job_info=job,
-        )
-        
     def fine_dict(self):
         dictionary = self.dict()
         dictionary["my_status"] = self.my_status.value
         return dictionary
+
+
+class SearchJobDetailVO(company.Job, company.CompanyProfile):
+    pass
+
+
+class CompanyProfileAndJobVO(BaseModel):
+    profile: ReturnCompanyProfileVO
+    # for search API, need created/updated/last_updated time
+    job: Optional[company.Job] = None

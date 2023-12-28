@@ -16,19 +16,19 @@ class PaymentStatusEnum(Enum):
     CANCELED = 'canceled'
 
 
-PAYMENT_PERIOD = set([
-    PaymentStatusEnum.PROCESSING.value,
-    PaymentStatusEnum.PAID.value,
-])
-UNABLE_TO_SUBSCRIBE = set([
-    PaymentStatusEnum.PROCESSING.value,
-    PaymentStatusEnum.PAID.value,
-    PaymentStatusEnum.CANCELING.value,
-    ])
-UNABLE_TO_CANCEL_SUBSCRIBE = set([
-    PaymentStatusEnum.PROCESSING.value,
-    PaymentStatusEnum.UNPAID.value,
-    PaymentStatusEnum.CANCELING.value,
-    PaymentStatusEnum.CANCELED.value,
-])
+PAYMENT_PERIOD = {
+    PaymentStatusEnum.PROCESSING,
+    PaymentStatusEnum.PAID,
+}
+UNABLE_TO_SUBSCRIBE = {
+    PaymentStatusEnum.PROCESSING,
+    PaymentStatusEnum.PAID,
+    PaymentStatusEnum.CANCELING,
+}
+UNABLE_TO_CANCEL_SUBSCRIBE = {
+    PaymentStatusEnum.PROCESSING,
+    PaymentStatusEnum.UNPAID,
+    PaymentStatusEnum.CANCELING,
+    PaymentStatusEnum.CANCELED,
+}
 SECONDS_OF_DAY = 86400

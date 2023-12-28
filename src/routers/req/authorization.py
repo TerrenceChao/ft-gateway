@@ -159,6 +159,10 @@ def __verify_token_in_payment(role_id: int, credentials: HTTPAuthorizationCreden
     secret = __get_secret(role_id)
     token = parse_token(credentials)
     data = __jwt_decode(jwt=token, key=secret, msg=err_msg)
+    
+    if data.get('role', None) != 'company':
+        raise UnauthorizedException(msg='payments are only allowed for company role')
+    
     if not __valid_role_id(data, role_id):
         raise UnauthorizedException(msg=err_msg)
     
