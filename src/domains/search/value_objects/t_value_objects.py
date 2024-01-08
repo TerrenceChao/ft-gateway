@@ -4,7 +4,7 @@ from ....configs.constants import *
 from ....infra.db.nosql import match_teachers_schemas as teacher
 
 
-class BaseResumeVO(BaseModel):
+class SearchResumeDTO(BaseModel):
     rid: Optional[int] = None
     tid: Optional[int] = None
     avator: Optional[str] = None
@@ -18,12 +18,12 @@ class BaseResumeVO(BaseModel):
     url_path: Optional[str] = None  # must
 
 
-class ResumeListVO(BaseModel):
-    items: Optional[List[BaseResumeVO]] = []
+class SearchResumeListVO(BaseModel):
+    items: Optional[List[SearchResumeDTO]] = []
     next: Optional[str] = None
 
 
-class SearchResumeListVO(BaseModel):
+class SearchResumeListQueryDTO(BaseModel):
     size: int
     sort_by: SortField = SortField.UPDATED_AT
     sort_dirction: SortDirection = SortDirection.DESC
@@ -35,9 +35,3 @@ class SearchResumeListVO(BaseModel):
         dictionary['sort_dirction'] = self.sort_dirction.value
         return dictionary
 
-
-class SearchResumeDetailVO(teacher.Resume):
-    fullname: Optional[str] = None
-    avator: Optional[str] = None
-    url_path: Optional[str] = None
-    views: int = 0

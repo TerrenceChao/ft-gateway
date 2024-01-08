@@ -142,10 +142,6 @@ class ApplyResumeVO(BaseModel):
         return dictionary
 
 
-class SearchJobDetailVO(company.Job, company.CompanyProfile):
-    pass
-
-
 class CompanyProfileAndJobVO(BaseModel):
     profile: ReturnCompanyProfileVO
     # for search API, need created/updated/last_updated time

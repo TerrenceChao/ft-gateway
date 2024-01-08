@@ -137,11 +137,6 @@ class ApplyJobVO(BaseModel):
         return dictionary
 
 
-class SearchResumeDetailVO(teacher.Resume):
-    fullname: Optional[str] = None
-    avator: Optional[str] = None
-
-
 class TeacherProfileAndResumeVO(BaseModel):
     profile: ReturnTeacherProfileVO
     # for search API, need created/updated/last_updated time

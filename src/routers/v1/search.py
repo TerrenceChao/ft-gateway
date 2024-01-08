@@ -42,7 +42,7 @@ _search_service = SearchService(
 
 
 @router.get("/resumes",
-            responses=idempotent_response(f'{SEARCH}.get_resumes', search_t.ResumeListVO))
+            responses=idempotent_response(f'{SEARCH}.get_resumes', search_t.SearchResumeListVO))
 def get_resumes(
     size: int = Query(10, gt=0, le=100),
     sort_by: SortField = Query(SortField.UPDATED_AT),
@@ -50,7 +50,7 @@ def get_resumes(
     search_after: str = Query(None),
     search_host=Depends(get_search_host),
 ):
-    query = search_t.SearchResumeListVO(
+    query = search_t.SearchResumeListQueryDTO(
         size=size,
         sort_by=sort_by,
         sort_dirction=sort_dirction,
@@ -72,7 +72,7 @@ def get_resume_by_id(
 
 
 @router.get("/jobs",
-            responses=idempotent_response(f'{SEARCH}.get_jobs', search_c.JobListVO))
+            responses=idempotent_response(f'{SEARCH}.get_jobs', search_c.SearchJobListVO))
 def get_jobs(
     size: int = Query(10, gt=0, le=100),
     sort_by: SortField = Query(SortField.UPDATED_AT),
@@ -80,7 +80,7 @@ def get_jobs(
     search_after: str = Query(None),
     search_host=Depends(get_search_host),
 ):
-    query = search_c.SearchJobListVO(
+    query = search_c.SearchJobListQueryDTO(
         size=size,
         sort_by=sort_by,
         sort_dirction=sort_dirction,

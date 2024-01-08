@@ -4,7 +4,7 @@ from ....configs.constants import *
 from ....infra.db.nosql import match_companies_schemas as company
 
 
-class BaseJobVO(BaseModel):
+class SearchJobDTO(BaseModel):
     jid: Optional[int] = None
     cid: Optional[int] = None
     name: Optional[str] = None  # school/company/organization name
@@ -22,12 +22,12 @@ class BaseJobVO(BaseModel):
     url_path: Optional[str] = None  # must
 
 
-class JobListVO(BaseModel):
-    items: Optional[List[BaseJobVO]] = []
+class SearchJobListVO(BaseModel):
+    items: Optional[List[SearchJobDTO]] = []
     next: Optional[str] = None
 
 
-class SearchJobListVO(BaseModel):
+class SearchJobListQueryDTO(BaseModel):
     size: int
     sort_by: SortField = SortField.UPDATED_AT
     sort_dirction: SortDirection = SortDirection.DESC
@@ -39,7 +39,3 @@ class SearchJobListVO(BaseModel):
         dictionary['sort_dirction'] = self.sort_dirction.value
         return dictionary
 
-
-class SearchJobDetailVO(company.Job, company.CompanyProfile):
-    url_path: Optional[str] = None
-    views: int = 0

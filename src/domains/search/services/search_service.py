@@ -11,7 +11,7 @@ class SearchService:
     def __init__(self, req: IServiceApi):
         self.req = req
 
-    def get_resumes(self, search_host: str, query: t.SearchResumeListVO):
+    def get_resumes(self, search_host: str, query: t.SearchResumeListQueryDTO):
         url = f"{search_host}/resumes"
         data = self.req.simple_get(
             url=url,
@@ -31,7 +31,7 @@ class SearchService:
         data = self.req.simple_get(url)
         return data
 
-    def get_jobs(self, search_host: str, query: c.SearchJobListVO):
+    def get_jobs(self, search_host: str, query: c.SearchJobListQueryDTO):
         url = f"{search_host}/jobs"
         data = self.req.simple_get(
             url=url,
