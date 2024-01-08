@@ -1,4 +1,4 @@
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Optional
 from ....service_api import IServiceApi
 from .....domains.match.teacher.value_objects import t_value_objects as teach_vo
 from .....configs.exceptions import \
@@ -12,7 +12,7 @@ class TeacherResumeService:
     def __init__(self, req: IServiceApi):
         self.req = req
 
-    def create_resume(self, host: str, register_region: str, teacher_id: int, resume: teach_vo.ResumeVO, profile: teach_vo.UpdateTeacherProfileVO = None):
+    def create_resume(self, host: str, register_region: str, teacher_id: int, resume: teach_vo.ResumeVO, profile: Optional[teach_vo.UpdateTeacherProfileVO] = None):
         resume.published_in = register_region
         data = self.req.simple_post(
             url=f"{host}/teachers/{teacher_id}/resumes",
@@ -36,7 +36,7 @@ class TeacherResumeService:
 
         return data
 
-    def update_resume(self, host: str, teacher_id: int, resume_id: int, resume: teach_vo.UpdateResumeVO = None, profile: teach_vo.UpdateTeacherProfileVO = None):
+    def update_resume(self, host: str, teacher_id: int, resume_id: int, resume: Optional[teach_vo.UpdateResumeVO] = None, profile: Optional[teach_vo.UpdateTeacherProfileVO] = None):
         if profile == None and resume == None:
             raise ClientException(
                 msg="at least one of the profile or resume is required")

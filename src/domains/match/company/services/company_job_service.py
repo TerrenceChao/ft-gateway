@@ -1,4 +1,4 @@
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Optional
 from ....service_api import IServiceApi
 from .....domains.match.company.value_objects import c_value_objects as com_vo
 from .....configs.constants import BRIEF_JOB_SIZE
@@ -13,7 +13,7 @@ class CompanyJobService:
     def __init__(self, req: IServiceApi):
         self.req = req
 
-    def create_job(self, host: str, register_region: str, company_id: int, job: com_vo.JobVO, profile: com_vo.UpdateCompanyProfileVO = None):
+    def create_job(self, host: str, register_region: str, company_id: int, job: com_vo.JobVO, profile: Optional[com_vo.UpdateCompanyProfileVO] = None):
         job.published_in = register_region
         data = self.req.simple_post(
             url=f"{host}/companies/{company_id}/jobs",
@@ -41,7 +41,7 @@ class CompanyJobService:
 
         return data
 
-    def update_job(self, host: str, company_id: int, job_id: int, job: com_vo.UpdateJobVO = None, profile: com_vo.UpdateCompanyProfileVO = None):
+    def update_job(self, host: str, company_id: int, job_id: int, job: Optional[com_vo.UpdateJobVO] = None, profile: Optional[com_vo.UpdateCompanyProfileVO] = None):
         if profile == None and job == None:
             raise ClientException(
                 msg="at least one of the profile or job is required")
