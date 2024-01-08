@@ -41,3 +41,13 @@ BRIEF_JOB_SIZE = 20
 
 # serial_key is a field of the collection in the user's cache
 SERIAL_KEY = "created_at"
+
+
+class SortDirection(Enum):
+    ASC = 'asc'
+    DESC = 'desc'
+
+
+class SortField(Enum):
+    UPDATED_AT = 'updated_at'
+    VIEWS = 'views'
