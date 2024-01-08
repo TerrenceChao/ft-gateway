@@ -32,6 +32,12 @@ class SearchJobListVO(BaseModel):
     sort_by: SortField = SortField.UPDATED_AT
     sort_dirction: SortDirection = SortDirection.DESC
     search_after: Optional[int] = None
+    
+    def fine_dict(self):
+        dictionary = self.dict()
+        dictionary['sort_by'] = self.sort_by.value
+        dictionary['sort_dirction'] = self.sort_dirction.value
+        return dictionary
 
 
 class SearchJobDetailVO(company.Job, company.CompanyProfile):

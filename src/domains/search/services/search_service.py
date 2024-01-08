@@ -15,7 +15,7 @@ class SearchService:
         url = f"{search_host}/resumes"
         data = self.req.simple_get(
             url=url,
-            params=query.dict(),
+            params=query.fine_dict(),
         )
 
         return data
@@ -34,7 +34,7 @@ class SearchService:
         url = f"{search_host}/jobs"
         data = self.req.simple_get(
             url=url,
-            params=query.dict(),
+            params=query.fine_dict(),
         )
 
         return data
