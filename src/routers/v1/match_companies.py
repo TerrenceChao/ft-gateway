@@ -47,11 +47,11 @@ def get_payment_host(current_region: str = Header(...)):
     return get_payment_region_host(region=current_region)
 
 
+COMPANY = 'company'
 _payment_service = PaymentService(
     ServiceApiAdapter(requests), 
     DynamoDbCacheAdapter(dynamodb),
 )
-COMPANY = 'company'
 _company_profile_service = CompanyProfileService(ServiceApiAdapter(requests))
 _company_job_service = CompanyJobService(ServiceApiAdapter(requests))
 _follow_resume_service = FollowResumeService(ServiceApiAdapter(requests))
@@ -61,6 +61,10 @@ _contact_resume_service = ContactResumeService(
 )
 _company_aggregate_service = CompanyAggregateService(
     ServiceApiAdapter(requests)
+)
+_payment_service = PaymentService(
+    ServiceApiAdapter(requests), 
+    DynamoDbCacheAdapter(dynamodb),
 )
 
 
