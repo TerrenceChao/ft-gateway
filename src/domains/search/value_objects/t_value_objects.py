@@ -27,7 +27,7 @@ class SearchResumeListVO(BaseModel):
     size: int
     sort_by: SortField = SortField.UPDATED_AT
     sort_dirction: SortDirection = SortDirection.DESC
-    search_after: Optional[int] = None
+    search_after: Optional[str] = None
 
     def fine_dict(self):
         dictionary = self.dict()

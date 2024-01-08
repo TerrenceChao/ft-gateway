@@ -21,6 +21,7 @@ class SearchService:
         return data
 
     '''
+    TODO:
     - calculate the views
       - increse the count in cache
     - read [the resume] from match service
@@ -40,6 +41,7 @@ class SearchService:
         return data
 
     '''
+    TODO:
     - calculate the views
       - increse the count in cache
     - read [the job] from match service

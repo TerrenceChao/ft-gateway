@@ -47,7 +47,7 @@ def get_resumes(
     size: int = Query(10, gt=0, le=100),
     sort_by: SortField = Query(SortField.UPDATED_AT),
     sort_dirction: SortDirection = Query(SortDirection.DESC),
-    search_after: int = Query(None, gt=0),
+    search_after: str = Query(None),
     search_host=Depends(get_search_host),
 ):
     query = search_t.SearchResumeListVO(
@@ -77,7 +77,7 @@ def get_jobs(
     size: int = Query(10, gt=0, le=100),
     sort_by: SortField = Query(SortField.UPDATED_AT),
     sort_dirction: SortDirection = Query(SortDirection.DESC),
-    search_after: int = Query(None, gt=0),
+    search_after: str = Query(None),
     search_host=Depends(get_search_host),
 ):
     query = search_c.SearchJobListVO(

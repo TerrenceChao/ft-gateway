@@ -12,8 +12,8 @@ class BaseJobVO(BaseModel):
     title:  Optional[str] = None  # job title
     region: Optional[str] = None
     salary: Optional[str] = None
-    job_desc: Optional[str] = None
-    others: Optional[str] = None
+    job_desc: Optional[Dict] = None
+    others: Optional[Dict] = None
     tags: Optional[List[str]] = []
     views: Optional[int] = None
     updated_at: Optional[int] = None
@@ -31,7 +31,7 @@ class SearchJobListVO(BaseModel):
     size: int
     sort_by: SortField = SortField.UPDATED_AT
     sort_dirction: SortDirection = SortDirection.DESC
-    search_after: Optional[int] = None
+    search_after: Optional[str] = None
     
     def fine_dict(self):
         dictionary = self.dict()
