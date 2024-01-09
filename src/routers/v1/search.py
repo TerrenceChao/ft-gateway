@@ -67,8 +67,8 @@ def get_resume_by_id(
     rid: int,
     match_host=Depends(get_match_host),
 ):
-    data = _search_service.get_resume_by_id(match_host, tid, rid)
-    return res_success(data=data)
+    (data, msg) = _search_service.get_resume_by_id(match_host, tid, rid)
+    return res_success(data=data, msg=msg)
 
 
 @router.get("/jobs",
@@ -97,5 +97,5 @@ def get_job_by_id(
     jid: int,
     match_host=Depends(get_match_host),
 ):
-    data = _search_service.get_job_by_id(match_host, cid, jid)
-    return res_success(data=data)
+    (data, msg) = _search_service.get_job_by_id(match_host, cid, jid)
+    return res_success(data=data, msg=msg)
