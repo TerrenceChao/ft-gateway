@@ -14,7 +14,7 @@ class SearchResumeDTO(BaseModel):
     tags: Optional[List[str]] = []
     views: Optional[int] = None
     updated_at: Optional[int] = None
-    created_at: Optional[int] = None
+    # created_at: Optional[int] = None
     published_in: Optional[str] = None  # must
     url_path: Optional[str] = None  # must
     

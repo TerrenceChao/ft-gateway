@@ -13,12 +13,12 @@ class SearchJobDTO(BaseModel):
     title:  Optional[str] = None  # job title
     region: Optional[str] = None
     salary: Optional[str] = None
-    job_desc: Optional[Dict] = None
-    others: Optional[Dict] = None
+    # job_desc: Optional[Dict] = None
+    # others: Optional[Dict] = None
     tags: Optional[List[str]] = []
     views: Optional[int] = None
     updated_at: Optional[int] = None
-    created_at: Optional[int] = None
+    # created_at: Optional[int] = None
     published_in: Optional[str] = None  # must
     url_path: Optional[str] = None  # must
     
