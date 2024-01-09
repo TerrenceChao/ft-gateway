@@ -161,3 +161,9 @@ class CompanyProfileAndJobVO(BaseModel):
     profile: ReturnCompanyProfileVO
     # for search API, need created/updated/last_updated time
     job: Optional[company.Job] = None
+
+    '''
+    hide sensitive data
+    '''
+    def public_info(self):
+        return self

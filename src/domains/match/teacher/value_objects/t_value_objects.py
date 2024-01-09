@@ -156,3 +156,11 @@ class TeacherProfileAndResumeVO(BaseModel):
     profile: ReturnTeacherProfileVO
     # for search API, need created/updated/last_updated time
     resume: Optional[teacher.Resume] = None
+    
+    '''
+    hide sensitive data
+    '''
+    def public_info(self):
+        self.profile.email = None
+        self.profile.is_verified = None
+        return self

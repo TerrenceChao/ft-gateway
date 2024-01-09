@@ -35,7 +35,7 @@ class SearchService:
         data = None
         try:
             url = f"{match_host}/teachers/{teacher_id}/resumes/{resume_id}"
-            data = self.req.simple_get(url)
+            data = self.__public_resume_vo(url)
             if self.__resume_closed(data):
                 return (None, 'resume closed')
             return (data, 'ok')
@@ -45,11 +45,13 @@ class SearchService:
                 url:{url}, response_data:{data}, error:{e}")
             raise ClientException(msg='teacher or resume not found')
 
+    def __public_resume_vo(self, url: str) -> (match_t.TeacherProfileAndResumeVO):
+        resp = self.req.simple_get(url)
+        data = match_t.TeacherProfileAndResumeVO.parse_obj(resp)
+        return data.public_info()
 
-    def __resume_closed(self, data: Dict) -> (bool):
-        teacher_resume = match_t.TeacherProfileAndResumeVO.parse_obj(data)
-        return not teacher_resume.resume or not teacher_resume.resume.enable
-
+    def __resume_closed(self, data: match_t.TeacherProfileAndResumeVO) -> (bool):
+        return not data.resume or not data.resume.enable
 
     def get_jobs(self, search_host: str, query: search_c.SearchJobListQueryDTO):
         url = f"{search_host}/jobs"
@@ -71,7 +73,7 @@ class SearchService:
         data = None
         try:
             url = f"{match_host}/companies/{company_id}/jobs/{job_id}"
-            data = self.req.simple_get(url)
+            data = self.__public_job_vo(url)
             if self.__job_closed(data):
                 return (None, 'job closed')
             return (data, 'ok')
@@ -81,7 +83,10 @@ class SearchService:
                 url:{url}, response_data:{data}, error:{e}")
             raise ClientException(msg='company or job not found')
 
+    def __public_job_vo(self, url: str) -> (match_c.CompanyProfileAndJobVO):
+        resp = self.req.simple_get(url)
+        data = match_c.CompanyProfileAndJobVO.parse_obj(resp)
+        return data.public_info()
 
-    def __job_closed(self, data: Dict) -> (bool):
-        company_job = match_c.CompanyProfileAndJobVO.parse_obj(data)
-        return not company_job.job or not company_job.job.enable
+    def __job_closed(self, data: match_c.CompanyProfileAndJobVO) -> (bool):
+        return not data.job or not data.job.enable
