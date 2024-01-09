@@ -47,14 +47,14 @@ def get_resumes(
     size: int = Query(10, gt=0, le=100),
     sort_by: SortField = Query(SortField.UPDATED_AT),
     sort_dirction: SortDirection = Query(SortDirection.DESC),
-    search_after: str = Query(None),
+    next: str = Query(None),
     search_host=Depends(get_search_host),
 ):
     query = search_t.SearchResumeListQueryDTO(
         size=size,
         sort_by=sort_by,
         sort_dirction=sort_dirction,
-        search_after=search_after,
+        search_after=next,
     )
     data = _search_service.get_resumes(search_host, query)
     return res_success(data=data)
@@ -77,14 +77,14 @@ def get_jobs(
     size: int = Query(10, gt=0, le=100),
     sort_by: SortField = Query(SortField.UPDATED_AT),
     sort_dirction: SortDirection = Query(SortDirection.DESC),
-    search_after: str = Query(None),
+    next: str = Query(None),
     search_host=Depends(get_search_host),
 ):
     query = search_c.SearchJobListQueryDTO(
         size=size,
         sort_by=sort_by,
         sort_dirction=sort_dirction,
-        search_after=search_after,
+        search_after=next,
     )
     data = _search_service.get_jobs(search_host, query)
     return res_success(data=data)
