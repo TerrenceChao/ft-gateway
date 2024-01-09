@@ -11,7 +11,7 @@ class SearchJobDTO(BaseModel):
     name: Optional[str] = None  # school/company/organization name
     logo: Optional[str] = None
     title:  Optional[str] = None  # job title
-    region: Optional[str] = None
+    location: Optional[str] = None
     salary: Optional[str] = None
     # job_desc: Optional[Dict] = None
     # others: Optional[Dict] = None
@@ -19,14 +19,14 @@ class SearchJobDTO(BaseModel):
     views: Optional[int] = None
     updated_at: Optional[int] = None
     # created_at: Optional[int] = None
-    published_in: Optional[str] = None  # must
+    region: Optional[str] = None  # must
     url_path: Optional[str] = None  # must
     
     def init(self):
-        if self.published_in and \
+        if self.region and \
             self.cid and \
             self.jid:
-            self.url_path = f'{SEARCH_JOB_URL_PATH}/{self.published_in}/{self.cid}/{self.jid}'
+            self.url_path = f'{SEARCH_JOB_URL_PATH}/{self.region}/{self.cid}/{self.jid}'
         
         return self
 

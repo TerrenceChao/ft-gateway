@@ -14,7 +14,7 @@ class CompanyJobService:
         self.req = req
 
     def create_job(self, host: str, register_region: str, company_id: int, job: com_vo.JobVO, profile: Optional[com_vo.UpdateCompanyProfileVO] = None):
-        job.published_in = register_region
+        job.region = register_region
         data = self.req.simple_post(
             url=f"{host}/companies/{company_id}/jobs",
             json={
