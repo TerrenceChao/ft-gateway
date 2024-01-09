@@ -20,7 +20,7 @@ class FollowResumeService:
             json=resume_info.dict()
         )
 
-        return data
+        return com_vo.FollowResumeVO.parse_obj(data).init() # data
 
     def get_followed_resume_list(self, host: str, company_id: int, size: int, next_ts: int = None):
         data = self.req.simple_get(
@@ -30,9 +30,9 @@ class FollowResumeService:
                 "next_ts": next_ts,
             })
 
-        return data
+        return com_vo.FollowResumeListVO.parse_obj(data).init() # data
 
-    def delete_followed_resume(self, host: str, company_id: int, resume_id: int):
+    def delete_followed_resume(self, host: str, company_id: int, resume_id: int) -> (bool):
         data = self.req.simple_delete(
             url=f"{host}/companies/{company_id}/follow/resumes/{resume_id}")
 
@@ -84,7 +84,7 @@ class ContactResumeService:
                 url=f"{host}/companies/{company_id}/contact/resumes",
                 json=body.fine_dict(),
             )
-            return data
+            return com_vo.ContactResumeVO.parse_obj(data).init() # data
 
         except Exception as e:
             log.error(f'{self.__cls_name}.apply_resume error \n \
@@ -105,9 +105,9 @@ class ContactResumeService:
                 "next_ts": next_ts
             })
 
-        return data
+        return com_vo.ContactResumeListVO.parse_obj(data).init() # data
 
-    def delete_any_contacted_resume(self, host: str, company_id: int, resume_id: int):
+    def delete_any_contacted_resume(self, host: str, company_id: int, resume_id: int) -> (bool):
         data = self.req.simple_delete(
             url=f"{host}/companies/{company_id}/contact/resumes/{resume_id}")
 

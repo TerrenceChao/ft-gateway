@@ -19,7 +19,7 @@ class FollowJobService:
             json=job_info.dict()
         )
 
-        return data
+        return teach_vo.FollowJobVO.parse_obj(data).init() # data
 
     def get_followed_job_list(self, host: str, teacher_id: int, size: int, next_ts: int = None):
         data = self.req.simple_get(
@@ -29,9 +29,9 @@ class FollowJobService:
                 "next_ts": next_ts,
             })
 
-        return data
+        return teach_vo.FollowJobListVO.parse_obj(data).init() # data
 
-    def delete_followed_job(self, host: str, teacher_id: int, job_id: int):
+    def delete_followed_job(self, host: str, teacher_id: int, job_id: int) -> (bool):
         data = self.req.simple_delete(
             url=f"{host}/teachers/{teacher_id}/follow/jobs/{job_id}")
 
@@ -48,7 +48,7 @@ class ContactJobService:
             json=body.fine_dict()
         )
 
-        return data
+        return teach_vo.ContactJobVO.parse_obj(data).init() # data
 
     def get_any_contacted_job_list(self, host: str, teacher_id: int, my_statuses: List[str], statuses: List[str], size: int, next_ts: int = None):
         data = self.req.simple_get(
@@ -60,9 +60,9 @@ class ContactJobService:
                 "next_ts": next_ts
             })
 
-        return data
+        return teach_vo.ContactJobListVO.parse_obj(data).init() # data
 
-    def delete_any_contacted_job(self, host: str, teacher_id: int, job_id: int):
+    def delete_any_contacted_job(self, host: str, teacher_id: int, job_id: int) -> (bool):
         data = self.req.simple_delete(
             url=f"{host}/teachers/{teacher_id}/contact/jobs/{job_id}")
 

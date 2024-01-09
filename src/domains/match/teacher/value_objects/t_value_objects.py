@@ -4,10 +4,17 @@ from .....infra.db.nosql import match_teachers_schemas as teacher
 from .....infra.db.nosql import match_companies_schemas as company
 from ...public_value_objects import ResumeIndexVO, BaseJobVO
 from .....configs.constants import Apply
+from .....configs.conf import SEARCH_JOB_URL_PATH
 
 
 class _BaseJobData(BaseModel):
     url_path: Optional[str] = None
+    
+    def init(self):
+        if self.job_info != None:
+            job = self.job_info
+            self.url_path = f'{SEARCH_JOB_URL_PATH}/{job.published_in}/{job.cid}/{job.jid}'
+        return self
 
 
 class ContactJobVO(_BaseJobData):
@@ -16,13 +23,17 @@ class ContactJobVO(_BaseJobData):
     rid: int  # NOT ForeignKey
     status: Optional[Apply] = Apply.PENDING
     my_status: Optional[Apply] = Apply.PENDING
-    job_info: Optional[Dict] = None
+    job_info: Optional[BaseJobVO] = None
     created_at: Optional[int] = None
 
 
 class ContactJobListVO(BaseModel):
     list: List[ContactJobVO] = []
     next_ts: Optional[int] = None
+    
+    def init(self):
+        [item.init() for item in self.list]
+        return self
 
 
 class FollowJobVO(_BaseJobData):
@@ -35,6 +46,10 @@ class FollowJobVO(_BaseJobData):
 class FollowJobListVO(BaseModel):
     list: List[FollowJobVO] = []
     next_ts: Optional[int] = None
+    
+    def init(self):
+        [item.init() for item in self.list]
+        return self
 
 
 class ResumeSectionVO(BaseModel):

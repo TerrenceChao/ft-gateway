@@ -34,6 +34,10 @@ MULTIPART_THRESHOLD = int(os.getenv("MULTIPART_THRESHOLD", 512))
 MAX_CONCURRENCY = int(os.getenv("MAX_CONCURRENCY", 10))
 MULTIPART_CHUNKSIZE = int(os.getenv("MULTIPART_CHUNKSIZE", 128))
 
+# searh url path
+SEARCH_JOB_URL_PATH = os.getenv("SEARCH_JOB_URL_PATH", "/api/v1/search/jobs")
+SEARCH_RESUME_URL_PATH = os.getenv("SEARCH_RESUME_URL_PATH", "/api/v1/search/resumes")
+
 # aws config
 AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY", None)
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", None)
