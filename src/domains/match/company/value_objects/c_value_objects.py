@@ -4,10 +4,17 @@ from .....infra.db.nosql import match_companies_schemas as company
 from .....infra.db.nosql import match_teachers_schemas as teacher
 from ...public_value_objects import JobIndexVO, BaseResumeVO
 from .....configs.constants import Apply
+from .....configs.conf import SEARCH_RESUME_URL_PATH
 
 
 class _BaseResumeData(BaseModel):
     url_path: Optional[str] = None
+    
+    def init(self):
+        if self.resume_info != None:
+            resume = self.resume_info
+            self.url_path = f'{SEARCH_RESUME_URL_PATH}/{resume.published_in}/{resume.tid}/{resume.rid}'
+        return self
 
 
 class ContactResumeVO(_BaseResumeData):
@@ -23,6 +30,10 @@ class ContactResumeVO(_BaseResumeData):
 class ContactResumeListVO(BaseModel):
     list: List[ContactResumeVO] = []
     next_ts: Optional[int] = None
+    
+    def init(self):
+        [item.init() for item in self.list]
+        return self
 
 
 class FollowResumeVO(_BaseResumeData):
@@ -35,6 +46,10 @@ class FollowResumeVO(_BaseResumeData):
 class FollowResumeListVO(BaseModel):
     list: List[FollowResumeVO] = []
     next_ts: Optional[int] = None
+    
+    def init(self):
+        [item.init() for item in self.list]
+        return self
 
 
 class JobVO(BaseModel):

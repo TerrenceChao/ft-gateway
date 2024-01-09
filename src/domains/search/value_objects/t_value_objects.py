@@ -1,6 +1,7 @@
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
 from ....configs.constants import *
+from ....configs.conf import SEARCH_RESUME_URL_PATH
 from ....infra.db.nosql import match_teachers_schemas as teacher
 
 
@@ -16,11 +17,23 @@ class SearchResumeDTO(BaseModel):
     created_at: Optional[int] = None
     published_in: Optional[str] = None  # must
     url_path: Optional[str] = None  # must
+    
+    def init(self):
+        if self.published_in and \
+            self.tid and \
+            self.rid:
+            self.url_path = f'{SEARCH_RESUME_URL_PATH}/{self.published_in}/{self.tid}/{self.rid}'
+            
+        return self
 
 
 class SearchResumeListVO(BaseModel):
     items: Optional[List[SearchResumeDTO]] = []
     next: Optional[str] = None
+    
+    def init(self):
+        [item.init() for item in self.items]
+        return self
 
 
 class SearchResumeListQueryDTO(BaseModel):
