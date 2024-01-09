@@ -43,7 +43,7 @@ class Resume(BaseEntity):
     tags: Optional[List[str]] = []
     enable: Optional[bool] = True
     # it's optional in gateway
-    published_in: Optional[str] = None
+    region: Optional[str] = None
 
 
 class TeacherProfile(BaseEntity):

@@ -13,7 +13,7 @@ class _BaseResumeData(BaseModel):
     def init(self):
         if self.resume_info != None:
             resume = self.resume_info
-            self.url_path = f'{SEARCH_RESUME_URL_PATH}/{resume.published_in}/{resume.tid}/{resume.rid}'
+            self.url_path = f'{SEARCH_RESUME_URL_PATH}/{resume.region}/{resume.tid}/{resume.rid}'
         return self
 
 
@@ -56,7 +56,7 @@ class JobVO(BaseModel):
     # jid: Optional[int] = None
     # cid: int
     title: str
-    region: str
+    location: str
     salary: str
     job_desc: Optional[Dict] = None
     # extra data, photos
@@ -64,14 +64,14 @@ class JobVO(BaseModel):
     tags: Optional[List[str]] = []
     enable: bool = True
     # it's optional in gateway
-    published_in: str
+    region: str
 
 
 class UpdateJobVO(BaseModel):
     # jid: Optional[int] = None
     # cid: int
     title: Optional[str] = None
-    region: Optional[str] = None
+    location: Optional[str] = None
     salary: Optional[str] = None
     job_desc: Optional[Dict] = None
     # extra data, photos
@@ -84,7 +84,7 @@ class ReturnJobVO(UpdateJobVO):
     jid: Optional[int] = None
     cid: int
     # it's optional in gateway
-    published_in: str
+    region: str
 
 
 class JobListVO(BaseModel):

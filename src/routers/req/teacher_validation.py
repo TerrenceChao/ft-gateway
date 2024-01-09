@@ -33,7 +33,7 @@ def create_resume_check_resume(
     resume: ResumeVO = Body(..., embed=True)
 ) -> (ResumeVO):
     # resume.tid = teacher_id
-    resume.published_in = register_region
+    resume.region = register_region
     if len(resume.tags) > MAX_TAGS:
         raise ClientException(msg=f'The number of tags must be less than {MAX_TAGS}.')
     
@@ -77,5 +77,5 @@ def apply_job_check(register_region: str = Header(...),
                     body: ApplyJobVO = Body(...),
                     ):
     body.current_region = current_region
-    body.resume_info.published_in = register_region
+    body.resume_info.region = register_region
     return body

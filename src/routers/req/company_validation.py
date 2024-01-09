@@ -26,7 +26,7 @@ def create_job_check_job(
     job: JobVO = Body(..., embed=True),
 ) -> (JobVO):
     # job.cid = company_id
-    job.published_in = register_region
+    job.region = register_region
     if len(job.tags) > MAX_TAGS:
         raise ClientException(msg=f'The number of tags must be less than {MAX_TAGS}.')
     
@@ -69,5 +69,5 @@ def apply_resume_check(register_region: str = Header(...),
                        body: ApplyResumeVO = Body(...)
                        ):
     body.current_region = current_region
-    body.job_info.published_in = register_region
+    body.job_info.region = register_region
     return body

@@ -15,14 +15,14 @@ class SearchResumeDTO(BaseModel):
     views: Optional[int] = None
     updated_at: Optional[int] = None
     # created_at: Optional[int] = None
-    published_in: Optional[str] = None  # must
+    region: Optional[str] = None  # must
     url_path: Optional[str] = None  # must
     
     def init(self):
-        if self.published_in and \
+        if self.region and \
             self.tid and \
             self.rid:
-            self.url_path = f'{SEARCH_RESUME_URL_PATH}/{self.published_in}/{self.tid}/{self.rid}'
+            self.url_path = f'{SEARCH_RESUME_URL_PATH}/{self.region}/{self.tid}/{self.rid}'
             
         return self
 
