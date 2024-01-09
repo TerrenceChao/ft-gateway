@@ -194,7 +194,7 @@ class AuthService:
             log.error(f"AuthService.login fail: [unknow_error], \
                 auth_host:%s, match_host:%s, body:%s, register_region:%s, auth_res:%s, err:%s", 
                 auth_host, match_host, body, register_region, auth_res, e.__str__())
-            raise_http_exception(e)
+            raise_http_exception(e, 'unknow_error')
         
 
     def __req_login(self, auth_host: str, body: LoginVO):
