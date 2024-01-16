@@ -109,8 +109,8 @@ class AuthService:
                                         })
 
         role_id_key = str(auth_res["role_id"])
-        self.__cache_auth_res(role_id_key, auth_res)
-        auth_res = self.__apply_token(auth_res)
+        self.cache_auth_res(role_id_key, auth_res)
+        auth_res = self.apply_token(auth_res)
         return {"auth": auth_res}
 
     def __verify_confirmcode(self, confirm_code: str, user: Any):
@@ -123,7 +123,7 @@ class AuthService:
         if confirm_code != str(user["confirm_code"]):
             raise ClientException(msg="wrong confirm_code")
 
-    def __apply_token(self, res: Dict):
+    def apply_token(self, res: Dict):
         # gen jwt token
         token = gen_token(res, ["region", "role_id", "role"])
         res.update({"token": token})
@@ -147,8 +147,8 @@ class AuthService:
             "current_region": body.current_region,
             "socketid": "it's socketid",
         })
-        self.__cache_auth_res(role_id_key, auth_res)
-        auth_res = self.__apply_token(auth_res)
+        self.cache_auth_res(role_id_key, auth_res)
+        auth_res = self.apply_token(auth_res)
 
         # request match data
         role_path = PATHS[auth_res["role"]]
@@ -202,7 +202,7 @@ class AuthService:
             f"{auth_host}/login", json=body.dict())
         
 
-    def __cache_auth_res(self, role_id_key: str, auth_res: Dict):
+    def cache_auth_res(self, role_id_key: str, auth_res: Dict):
         auth_res.update({
             "online": True,
         })
