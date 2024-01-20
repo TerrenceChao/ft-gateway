@@ -250,7 +250,7 @@ class AuthService:
 
     def __cache_check_for_auth(self, role_id_key: str):
         user = self.cache.get(role_id_key)
-        if not user or user.get("online", False):
+        if not user or not user.get("online", False):
             raise ClientException(msg="logged out")
 
         return user
