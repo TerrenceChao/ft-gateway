@@ -16,6 +16,10 @@ class DynamoDbCacheAdapter(ICache):
     def __init__(self, dynamodb: Any):
         self.db = dynamodb
         self.__cls_name = self.__class__.__name__
+        
+    def is_json_obj(self, val: Any) -> (bool):
+        return (val[0] == "{" and val[-1] == "}") or \
+            (val[0] == "[" and val[-1] == "]")
 
     def get(self, key: str):
         res = None
@@ -25,8 +29,7 @@ class DynamoDbCacheAdapter(ICache):
             res = table.get_item(Key={"cache_key": key})
             if "Item" in res and "value" in res["Item"]:
                 val = res["Item"]["value"]
-                result = json.loads(
-                    val) if val[0] == "{" and val[-1] == "}" else val
+                result = json.loads(val) if self.is_json_obj(val) else val
 
             return result
 
@@ -41,7 +44,8 @@ class DynamoDbCacheAdapter(ICache):
         res = None
         result = False
         try:
-            if type(val) == dict:
+            val_type = type(val)
+            if val_type == dict or val_type == list:
                 val = json.dumps(val)
 
             table = self.db.Table(TABLE_CACHE)

@@ -16,6 +16,7 @@ class UserDTO(BaseModel):
         )
 
 
+# TODO: deprecated
 class UserPaymentDTO(BaseModel):
     user: UserDTO
     payment_type: Optional[str]
@@ -34,7 +35,6 @@ class SubscriptionDTO(BaseModel):
     payment_type: Optional[str]
     merchant: Optional[str]
     plan_id: Optional[str]
-    plan: Optional[Dict]
 
     def user_model(self) -> (BaseUserPayment):
         return BaseUserPayment(
@@ -59,39 +59,22 @@ class UnsubscribeRequestDTO(BaseModel):
         )
 
 
-class SubscribeRequestDTO(UnsubscribeRequestDTO):
-    plan_id: Optional[str]
-    plan: Optional[Dict]
-
-    def subscription(self, payment_type: str, merchant: str) -> (SubscriptionDTO):
-        return SubscriptionDTO(
-            user=UserDTO(
-                role_id=self.role_id,
-                email=self.email,
-            ),
-            payment_type=payment_type,
-            merchant=merchant,
-            plan_id=self.plan_id,
-            plan=self.plan,
-        )
-
-
 class WebhookRequestDTO(BaseModel):
     signature: str
     body: bytes
-    
+
     def __str__(self) -> (str):
         try:
             dao = {
                 'signature': self.signature,
                 'body': json.loads(self.body.decode('utf-8')),
             }
-            
+
         except Exception as e:
             dao = {
                 'signature': self.signature,
                 'body': self.body.decode('utf-8'),
             }
-            
+
         finally:
             return json.dumps(dao, indent=4)
