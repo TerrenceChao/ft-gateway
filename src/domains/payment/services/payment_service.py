@@ -110,7 +110,7 @@ class PaymentService:
 
         status = PaymentStatusEnum(payment_status['status'])
         if status in UNABLE_TO_SUBSCRIBE:
-            raise ClientException(msg=status)
+            raise ClientException(msg=status.value)
 
         if payment_status['valid']:
             raise ClientException(msg='not_yet_expired')
@@ -125,7 +125,7 @@ class PaymentService:
 
         status = PaymentStatusEnum(payment_status['status'])
         if status in UNABLE_TO_CANCEL_SUBSCRIBE:
-            raise ClientException(msg=status)
+            raise ClientException(msg=status.value)
 
         self.__set_role_id_by_cus_id(payment_status['customer_id'], role_id)
         self.__bg_processing(
