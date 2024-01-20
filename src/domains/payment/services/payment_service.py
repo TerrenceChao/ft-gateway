@@ -1,17 +1,17 @@
 from fastapi import BackgroundTasks, Request
 from fastapi.responses import JSONResponse
-from typing import Any, List, Dict, Optional
+from typing import List, Dict, Optional
 import json
 from ..configs.constants import *
 from ...cache import ICache
 from ...service_api import IServiceApi
-from ..models import dtos, value_objects as vo
+from ..models import dtos
 from ..models.stripe import stripe_dtos
-from ....infra.cache.dynamodb_cache_adapter import DynamoDbCacheAdapter
 from ....configs.exceptions import *
 from ....configs.conf import SHORT_TERM_TTL, LONG_TERM_TTL
 from ....routers.res.response import res_success
 import logging as log
+
 
 log.basicConfig(filemode='w', level=log.INFO)
 
@@ -58,11 +58,8 @@ class PaymentService:
         if payment_status is None:
             # create customer
             url = f'{host}/{STRIPE}/payment-method'
-            self.req.simple_put(url=url, json=user_data.dict())
-
-            # get payment status & cache it
-            payment_status = \
-                self.__get_latest_cached_payment_status(host, role_id)
+            payment_status = self.req.simple_put(url=url, json=user_data.dict())
+            self.__cache_payment_status(payment_status, role_id)
 
         return payment_status
 
@@ -71,9 +68,18 @@ class PaymentService:
         payment_status = self.req.simple_get(url=url, params={
             'role_id': role_id,
         })
-        self.__set_cache(role_id, payment_status)
-
+        self.__cache_payment_status(payment_status, role_id)
         return payment_status
+    
+    '''
+    remove 'customer_id' from payment_status
+    cache customer_id: role_id
+    cache role_id: payment_status
+    '''
+    def __cache_payment_status(self, payment_status: Dict, role_id: int):
+        customer_id = payment_status.pop('customer_id')
+        self.__set_role_id_by_cus_id(customer_id, role_id)
+        self.__set_cache(role_id, payment_status)
 
     '''
     2. Get payment status:
@@ -115,7 +121,6 @@ class PaymentService:
         if payment_status['valid']:
             raise ClientException(msg='not_yet_expired')
 
-        self.__set_role_id_by_cus_id(payment_status['customer_id'], role_id)
         self.__bg_processing(
             bg_tasks, f'{host}/{STRIPE}/subscribe', subscription.dict(), role_id)
 
@@ -127,7 +132,6 @@ class PaymentService:
         if status in UNABLE_TO_CANCEL_SUBSCRIBE:
             raise ClientException(msg='already_unsubscribed_or_canceling')
 
-        self.__set_role_id_by_cus_id(payment_status['customer_id'], role_id)
         self.__bg_processing(
             bg_tasks, f'{host}/{STRIPE}/unsubscribe', unsubscription.dict(), role_id)
 
