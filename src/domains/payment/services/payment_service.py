@@ -6,9 +6,10 @@ from ..configs.constants import *
 from ...cache import ICache
 from ...service_api import IServiceApi
 from ..models import dtos, value_objects as vo
+from ..models.stripe import stripe_dtos
 from ....infra.cache.dynamodb_cache_adapter import DynamoDbCacheAdapter
 from ....configs.exceptions import *
-from ....configs.conf import SHORT_TERM_TTL
+from ....configs.conf import SHORT_TERM_TTL, LONG_TERM_TTL
 from ....routers.res.response import res_success
 import logging as log
 
@@ -51,13 +52,13 @@ class PaymentService:
             1. return payment status (with customer_id)
     '''
 
-    def upsert_customer(self, host: str, user: dtos.UserDTO) -> (Dict):
-        role_id = user.role_id
+    def payment_method(self, host: str, user_data: stripe_dtos.StripeUserPaymentRequestDTO) -> (Dict):
+        role_id = user_data.role_id
         payment_status = self.__get_cache(role_id)
         if payment_status is None:
             # create customer
-            url = f'{host}/{STRIPE}/customer'
-            self.req.simple_put(url=url, json=user.dict())
+            url = f'{host}/{STRIPE}/payment-method'
+            self.req.simple_put(url=url, json=user_data.dict())
             
             # get payment status & cache it
             payment_status = self.__get_latest_cached_payment_status(host, role_id)
@@ -103,7 +104,7 @@ class PaymentService:
         return self.__get_latest_cached_payment_status(host, role_id)
 
 
-    def subscribe(self, bg_tasks: BackgroundTasks, host: str, subscription: dtos.SubscribeRequestDTO) -> (None):
+    def subscribe(self, bg_tasks: BackgroundTasks, host: str, subscription: stripe_dtos.StripeSubscribeRequestDTO) -> (None):
         role_id = subscription.role_id
         payment_status = self.__refresh_payment_status(host, role_id)
         
@@ -168,4 +169,28 @@ class PaymentService:
         s = byte_data.decode()
         j = json.loads(s)
         return j['data']['object']['customer']
-        
+
+  
+class PaymentPlanService:
+    def __init__(self, req: IServiceApi, cache: ICache):
+        self.req = req
+        self.cache = cache
+
+
+    async def __get_cache(self) -> (Optional[Dict]):
+        return await self.cache.get(key='pay_plans')
+
+    async def __set_cache(self, payment_plans: List[Dict], exipre: int) -> (bool):
+        return await self.cache.set(key='pay_plans', val=payment_plans, ex=exipre)
+
+    '''
+    long term cache: 14 days as default
+    '''
+    def list_plans(self, host: str) -> (List[Dict]):
+        plans = self.__get_cache()
+        if plans is None:
+            url = f'{host}/{STRIPE}/plans'
+            plans = self.req.simple_get(url=url)
+            self.__set_cache(plans, exipre=LONG_TERM_TTL)
+            
+        return plans
