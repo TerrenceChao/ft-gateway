@@ -30,9 +30,17 @@ class ResumeSection(BaseEntity):
     sid: Optional[int] = None
     tid: int
     rid: int  # NOT ForeignKey
-    order: int
-    subject: str
-    context: Dict
+    order: int # display order
+    category: str # Education, Experience, Project, Certificate, Skill, Language
+    logo: Optional[str] = None
+    name: Optional[str] = None # School, Company, Certificate Name, Skill Name
+    title: Optional[str] = None # Degree, Job Title
+    location: Optional[str] = None # School Location, Company Location
+    start_year: Optional[int] = None
+    start_month: Optional[int] = None
+    end_year: Optional[int] = None
+    end_month: Optional[int] = None
+    context: Dict # Study Subject, Company Industry, Description, image/file urls, others
 
 
 class Resume(BaseEntity):

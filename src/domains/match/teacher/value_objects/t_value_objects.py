@@ -54,10 +54,28 @@ class FollowJobListVO(BaseModel):
 
 class ResumeSectionVO(BaseModel):
     sid: Optional[int] = None
+    tid: Optional[int] = None # validation check
+    rid: Optional[int] = None # validation check
+    order: Optional[int] = None # display order
+    category: Optional[str] = None # Education, Experience, Project, Certificate, Skill, Language
+    logo: Optional[str] = None
+    name: Optional[str] = None # School, Company, Certificate Name, Skill Name
+    title: Optional[str] = None # Degree, Job Title
+    location: Optional[str] = None # School Location, Company Location
+    start_year: Optional[int] = None
+    start_month: Optional[int] = None
+    end_year: Optional[int] = None
+    end_month: Optional[int] = None
+    context: Optional[Dict] = None # Study Subject, Company Industry, Description, image/file urls, others
+    updated_at: Optional[int] = None
+    
+
+class ReturnResumeSectionVO(ResumeSectionVO):
+    sid: int
     tid: int
     rid: int  # NOT ForeignKey
-    order: int
-    subject: str
+    order: int # display order
+    category: str
     context: Dict
 
 
@@ -65,7 +83,7 @@ class ResumeVO(BaseModel):
     # rid: Optional[int] = None
     # tid: int
     intro: str
-    sections: Optional[List[ResumeSectionVO]] = []
+    # sections: Optional[List[ResumeSectionVO]] = []
     tags: Optional[List[str]] = []
     enable: bool = True
     # it's optional in gateway
@@ -76,7 +94,7 @@ class UpdateResumeVO(BaseModel):
     # rid: Optional[int] = None
     # tid: int
     intro: Optional[str] = None
-    sections: Optional[List[ResumeSectionVO]] = []
+    # sections: Optional[List[ResumeSectionVO]] = []
     tags: Optional[List[str]] = []
     enable: Optional[bool] = True
 
@@ -84,6 +102,7 @@ class UpdateResumeVO(BaseModel):
 class ReturnResumeVO(UpdateResumeVO):
     rid: Optional[int] = None
     tid: int
+    sections: Optional[List[ResumeSectionVO]] = []
     # it's optional in gateway
     region: str
 

@@ -7,8 +7,7 @@ from fastapi import APIRouter, \
 from ...configs.conf import MAX_TAGS
 from ...configs.exceptions import ClientException
 from ...domains.match.public_value_objects import BaseJobVO
-from ...domains.match.teacher.value_objects.t_value_objects import \
-    UpdateTeacherProfileVO, ResumeVO, UpdateResumeVO, ApplyJobVO
+from ...domains.match.teacher.value_objects.t_value_objects import *
 
 
 def __parse_resume_sections(teacher_id, resume_id, sections):
@@ -37,7 +36,7 @@ def create_resume_check_resume(
     if len(resume.tags) > MAX_TAGS:
         raise ClientException(msg=f'The number of tags must be less than {MAX_TAGS}.')
     
-    __parse_resume_sections(teacher_id, None, resume.sections)
+    # __parse_resume_sections(teacher_id, None, resume.sections)
     return resume
 
 
@@ -61,9 +60,29 @@ def update_resume_check_resume(
         if len(resume.tags) > MAX_TAGS:
             raise ClientException(msg=f'The number of tags must be less than {MAX_TAGS}.')
         
-        __parse_resume_sections(teacher_id, resume_id, resume.sections)
+        # __parse_resume_sections(teacher_id, resume_id, resume.sections)
         
     return resume
+
+def create_resume_section_check(
+    teacher_id: int = Path(...),
+    resume_id: int = Path(...),
+    resume_section: ResumeSectionVO = Body(...),
+):
+    resume_section.tid = teacher_id
+    resume_section.rid = resume_id
+    return resume_section
+
+def update_resume_section_check(
+    teacher_id: int = Path(...),
+    resume_id: int = Path(...),
+    section_id: int = Path(...),
+    resume_section: ResumeSectionVO = Body(...),
+):
+    resume_section.tid = teacher_id
+    resume_section.rid = resume_id
+    resume_section.sid = section_id
+    return resume_section
 
 def upsert_follow_job_check_job(
     job_id: int = Path(...),
