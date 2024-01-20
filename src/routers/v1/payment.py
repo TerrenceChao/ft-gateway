@@ -1,17 +1,15 @@
 import requests
 from typing import List, Dict, Any
 from fastapi import APIRouter, BackgroundTasks, \
-    Request, Depends, \
-    Cookie, Header, Path, Query, Body, Form, \
-    File, UploadFile, status, \
-    HTTPException
+    Request, Depends, Header, Path, Query, Body, Form
 from ..req.authorization import AuthRoute, \
     token_required, \
     verify_token_by_subscribe_status, \
     verify_token_by_payment_operation
 from ..res.response import *
 from ...domains.payment.models import dtos, value_objects as vo
-from ...domains.payment.services.payment_service import PaymentService
+from ...domains.payment.models.stripe import stripe_dtos, stripe_vos
+from ...domains.payment.services.payment_service import PaymentService, PaymentPlanService
 from ...apps.service_api_dapter import ServiceApiAdapter
 from ...infra.cache.dynamodb_cache_adapter import DynamoDbCacheAdapter
 from ...configs.conf import *
@@ -22,6 +20,9 @@ import logging as log
 log.basicConfig(filemode='w', level=log.INFO)
 
 _payment_service = PaymentService(
+    ServiceApiAdapter(requests), DynamoDbCacheAdapter(dynamodb)
+)
+_payment_plan_service = PaymentPlanService(
     ServiceApiAdapter(requests), DynamoDbCacheAdapter(dynamodb)
 )
 
@@ -36,13 +37,19 @@ def get_payment_host(current_region: str = Header(...)):
     return get_payment_region_host(current_region)
 
 
-@router.put('/customer', responses=idempotent_response('create_customer', vo.UserPaymentVO))
-def create_customer(
-    body: dtos.UserDTO = Body(...),
+@router.get('/plans', responses=idempotent_response('plans', List[stripe_vos.StripePlanVO]))
+def list_plans(payment_host=Depends(get_payment_host)):
+    data = _payment_plan_service.list_plans(payment_host)
+    return res_success(data=data)
+
+
+@router.put('/payment-method', responses=idempotent_response(f'payment_method', vo.PaymentStatusVO))
+def payment_method(
+    body: stripe_dtos.StripeUserPaymentRequestDTO = Body(...),
     payment_host=Depends(get_payment_host),
     verify=Depends(verify_token_by_payment_operation),
 ):
-    data = _payment_service.upsert_customer(payment_host, body)
+    data = _payment_service.payment_method(payment_host, body)
     return res_success(data=data)
 
 
@@ -59,7 +66,7 @@ def subscribe_status(
 @router.post('/subscribe', status_code=202)
 async def subscribe(
     bg_tasks: BackgroundTasks,
-    body: dtos.SubscribeRequestDTO = Body(...),
+    body: stripe_dtos.StripeSubscribeRequestDTO = Body(...),
     payment_host=Depends(get_payment_host),
     verify=Depends(verify_token_by_payment_operation),
 ):
@@ -78,9 +85,11 @@ async def unsubscribe(
     return res_success(msg='canceling', code='20200')
 
 '''
-TODO: get_payment_host('jp') is a static value, need to be configured
+TODO: deprecated
 '''
-@router.post('/webhook', status_code=201)
-async def webhook(req: Request):
-    payment_host = get_payment_host('jp')
+# @router.post('/webhook', status_code=201)
+async def webhook(
+    req: Request,
+    payment_host=Depends(get_payment_host)
+):
     return await _payment_service.webhook(payment_host, req)
