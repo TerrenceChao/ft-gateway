@@ -113,3 +113,8 @@ class SignupResponseVO(BaseModel):
     
 class LoginResponseVO(SignupResponseVO):
     match: Union[CompanyMatchDataVO, TeacherMatchDataVO]
+
+class SSOLoginVO(BaseModel):
+    code: str
+    state: str
+    sso_type: Optional[str]
