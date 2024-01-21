@@ -127,6 +127,7 @@ class PaymentService:
                 msg=f'restore_subscription_retry_exceeded:{max_restore}',
                 data=max_restore,
             )
+        return payment_status
 
     def subscribe(self, bg_tasks: BackgroundTasks, host: str, subscription: stripe_dtos.StripeSubscribeRequestDTO) -> (None):
         role_id = subscription.role_id
