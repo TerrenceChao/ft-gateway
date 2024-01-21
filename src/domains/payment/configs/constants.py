@@ -9,6 +9,7 @@ LONG_TERM_SUBSCRIPTION = 'long_term_subscription'
 
 
 class PaymentStatusEnum(Enum):
+    TRIALING = 'trialing'
     UNPAID = 'unpaid'
     PROCESSING = 'processing'
     PAID = 'paid'
@@ -20,15 +21,29 @@ PAYMENT_PERIOD = {
     PaymentStatusEnum.PROCESSING,
     PaymentStatusEnum.PAID,
 }
+SECONDS_OF_DAY = 86400
+
+
+class SubscribeStatusEnum(Enum):
+    SUBSCRIBING = 'subscribing'
+    ACTIVE = 'active'
+    STOPPING = 'stopping'
+    STOPPED = 'stopped'
+    NOT_SUBSCRIBED = 'not_subscribed'
+
+
+SUBSCRIBING = {
+    SubscribeStatusEnum.SUBSCRIBING,
+    SubscribeStatusEnum.ACTIVE,
+    SubscribeStatusEnum.STOPPING,
+    SubscribeStatusEnum.STOPPED,
+}
 UNABLE_TO_SUBSCRIBE = {
-    PaymentStatusEnum.PROCESSING,
-    PaymentStatusEnum.PAID,
-    PaymentStatusEnum.CANCELING,
+    SubscribeStatusEnum.SUBSCRIBING,
+    SubscribeStatusEnum.ACTIVE,
 }
 UNABLE_TO_CANCEL_SUBSCRIBE = {
-    PaymentStatusEnum.PROCESSING,
-    PaymentStatusEnum.UNPAID,
-    PaymentStatusEnum.CANCELING,
-    PaymentStatusEnum.CANCELED,
+    SubscribeStatusEnum.STOPPING,
+    SubscribeStatusEnum.STOPPED,
+    SubscribeStatusEnum.NOT_SUBSCRIBED,
 }
-SECONDS_OF_DAY = 86400
