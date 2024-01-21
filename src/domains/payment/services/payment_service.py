@@ -117,14 +117,14 @@ class PaymentService:
         bg_tasks.add_task(
             log.error, msg=f'role_id:{role_id}, delete payment cache')
 
-    def __refresh_payment_status(self, host: str, role_id: int) -> (Dict):
+    def __refresh_payment_status(self, host: str, role_id: int, subscribe: bool = False) -> (Dict):
         self.__delete_cache(role_id)
         payment_status = self.__get_latest_cached_payment_status(host, role_id)
         max_restore = payment_status.pop('max_restore', 2)
         restore = payment_status.pop('restore', 0)
-        if max_restore <= restore:
+        if subscribe and max_restore <= restore:
             raise ClientException(
-                msg=f'restore_subscription_retry_exceeded:{max_restore}',
+                msg=f'restore subscription retry exceeded:{max_restore}, you cannot subscribe until the next billing cycle',
                 data=max_restore,
             )
         return payment_status
@@ -132,14 +132,11 @@ class PaymentService:
     def subscribe(self, bg_tasks: BackgroundTasks, host: str, subscription: stripe_dtos.StripeSubscribeRequestDTO) -> (None):
         role_id = subscription.role_id
         json_data = self.__bind_registration_email(subscription.dict(), role_id)
-        payment_status = self.__refresh_payment_status(host, role_id)
+        payment_status = self.__refresh_payment_status(host, role_id, True)
 
         subscribe_status = SubscribeStatusEnum(payment_status['subscribe_status'])
         if subscribe_status in UNABLE_TO_SUBSCRIBE:
             raise ClientException(msg='already_subscribed')
-
-        if payment_status['valid']:
-            raise ClientException(msg='not_yet_expired')
 
         self.__bg_processing(
             bg_tasks, f'{host}/{STRIPE}/subscribe', json_data, role_id)

@@ -10,4 +10,5 @@ class PaymentStatusVO(BaseModel):
     status: PaymentStatusEnum
     subscribe_status: SubscribeStatusEnum
     current_period_end: Optional[int]
+    plan_id: Optional[str]
     valid: bool = False
