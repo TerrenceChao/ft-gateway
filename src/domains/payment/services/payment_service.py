@@ -5,7 +5,7 @@ import json
 from ..configs.constants import *
 from ...cache import ICache
 from ...service_api import IServiceApi
-from ..models import dtos
+from ..models import dtos, value_objects as vos
 from ..models.stripe import stripe_dtos
 from ....configs.exceptions import *
 from ....configs.conf import SHORT_TERM_TTL, LONG_TERM_TTL
@@ -61,7 +61,7 @@ class PaymentService:
             1. return payment status (with customer_id)
     '''
 
-    def payment_method(self, host: str, user_data: stripe_dtos.StripeUserPaymentRequestDTO) -> (Dict):
+    def payment_method(self, host: str, user_data: stripe_dtos.StripeUserPaymentRequestDTO) -> (vos.PaymentStatusVO):
         role_id = user_data.role_id
         json_data = self.__bind_registration_email(user_data.dict(), role_id)
         payment_status = self.__get_cache(role_id)
@@ -71,7 +71,7 @@ class PaymentService:
             payment_status = self.req.simple_put(url=url, json=json_data)
             self.__cache_payment_status(payment_status, role_id)
 
-        return payment_status
+        return vos.PaymentStatusVO.parse_obj(payment_status)
 
     def __get_latest_cached_payment_status(self, host: str, role_id: int) -> (Dict):
         url = f'{host}/{STRIPE}/subscribe'
@@ -101,14 +101,14 @@ class PaymentService:
             1. return payment status
     '''
 
-    def get_payment_status(self, host: str, role_id: int) -> (Dict):
+    def get_payment_status(self, host: str, role_id: int) -> (vos.PaymentStatusVO):
         self.__bind_registration_email({}, role_id)
         payment_status = self.__get_cache(role_id)
         if payment_status is None:
             payment_status = \
                 self.__get_latest_cached_payment_status(host, role_id)
 
-        return payment_status
+        return vos.PaymentStatusVO.parse_obj(payment_status)
 
     def __bg_processing(self, bg_tasks: BackgroundTasks, url: str, json: Dict, role_id: int) -> (None):
         bg_tasks.add_task(self.req.simple_post, url=url, json=json)
@@ -117,21 +117,26 @@ class PaymentService:
         bg_tasks.add_task(
             log.error, msg=f'role_id:{role_id}, delete payment cache')
 
-    def __refresh_payment_status(self, host: str, role_id: int) -> (Dict):
+    def __refresh_payment_status(self, host: str, role_id: int, subscribe: bool = False) -> (Dict):
         self.__delete_cache(role_id)
-        return self.__get_latest_cached_payment_status(host, role_id)
+        payment_status = self.__get_latest_cached_payment_status(host, role_id)
+        max_restore = payment_status.pop('max_restore', 2)
+        restore = payment_status.pop('restore', 0)
+        if subscribe and max_restore <= restore:
+            raise ClientException(
+                msg=f'restore subscription retry exceeded:{max_restore}, you cannot subscribe until the next billing cycle',
+                data=max_restore,
+            )
+        return payment_status
 
     def subscribe(self, bg_tasks: BackgroundTasks, host: str, subscription: stripe_dtos.StripeSubscribeRequestDTO) -> (None):
         role_id = subscription.role_id
         json_data = self.__bind_registration_email(subscription.dict(), role_id)
-        payment_status = self.__refresh_payment_status(host, role_id)
+        payment_status = self.__refresh_payment_status(host, role_id, True)
 
-        status = PaymentStatusEnum(payment_status['status'])
-        if status in UNABLE_TO_SUBSCRIBE:
-            raise ClientException(msg='already_subscribed_or_processing')
-
-        if payment_status['valid']:
-            raise ClientException(msg='not_yet_expired')
+        subscribe_status = SubscribeStatusEnum(payment_status['subscribe_status'])
+        if subscribe_status in UNABLE_TO_SUBSCRIBE:
+            raise ClientException(msg='already_subscribed')
 
         self.__bg_processing(
             bg_tasks, f'{host}/{STRIPE}/subscribe', json_data, role_id)
@@ -141,9 +146,9 @@ class PaymentService:
         json_data = self.__bind_registration_email(unsubscription.dict(), role_id)
         payment_status = self.__refresh_payment_status(host, role_id)
 
-        status = PaymentStatusEnum(payment_status['status'])
-        if status in UNABLE_TO_CANCEL_SUBSCRIBE:
-            raise ClientException(msg='already_unsubscribed_or_canceling')
+        subscribe_status = SubscribeStatusEnum(payment_status['subscribe_status'])
+        if subscribe_status in UNABLE_TO_CANCEL_SUBSCRIBE:
+            raise ClientException(msg='subscription_has_been_canceled')
 
         self.__bg_processing(
             bg_tasks, f'{host}/{STRIPE}/unsubscribe', json_data, role_id)
