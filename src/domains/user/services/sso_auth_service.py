@@ -46,7 +46,7 @@ class ISSOAuthService(AuthService):
 
         # request match data
         role_path = PATHS[auth_res["role"]]
-        match_res = self.__req_match_data(
+        match_res = self.req_match_data(
             match_host,
             role_path,
             role_id_key,

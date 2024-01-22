@@ -152,7 +152,7 @@ class AuthService:
 
         # request match data
         role_path = PATHS[auth_res["role"]]
-        match_res = self.__req_match_data(
+        match_res = self.req_match_data(
             match_host,
             role_path,
             role_id_key,
@@ -214,7 +214,7 @@ class AuthService:
                 role_id_key, auth_res, LONG_TERM_TTL, updated)
             raise ServerException(msg="server_error")
 
-    def __req_match_data(self, match_host: str, role_path: str, role_id_key: str, size: int = PREFETCH):
+    def req_match_data(self, match_host: str, role_path: str, role_id_key: str, size: int = PREFETCH):
         my_statuses, statuses = [], []
         
         if role_path == "companies" or role_path == "company":
