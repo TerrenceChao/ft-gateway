@@ -50,6 +50,10 @@ class PaymentService:
         json['email'] = auth_meta['email']
         return json
 
+    def strong_customer_authentication(self, host: str, user_data: dtos.UserDTO) -> (Dict):
+        url = f'{host}/{STRIPE}/strong-customer-authentication'
+        return self.req.simple_put(url=url, json=user_data.dict())
+
     '''
     1. Upsert customer:
         1. Get payment status (with customer_id) from cache
@@ -64,12 +68,11 @@ class PaymentService:
     def payment_method(self, host: str, user_data: stripe_dtos.StripeUserPaymentRequestDTO) -> (vos.PaymentStatusVO):
         role_id = user_data.role_id
         json_data = self.__bind_registration_email(user_data.dict(), role_id)
-        payment_status = self.__get_cache(role_id)
-        if payment_status is None:
-            # create customer
-            url = f'{host}/{STRIPE}/payment-method'
-            payment_status = self.req.simple_put(url=url, json=json_data)
-            self.__cache_payment_status(payment_status, role_id)
+
+        # create customer
+        url = f'{host}/{STRIPE}/payment-method'
+        payment_status = self.req.simple_put(url=url, json=json_data)
+        self.__cache_payment_status(payment_status, role_id)
 
         return vos.PaymentStatusVO.parse_obj(payment_status)
 
