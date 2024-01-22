@@ -51,8 +51,10 @@ class PaymentService:
         return json
 
     def strong_customer_authentication(self, host: str, user_data: dtos.UserDTO) -> (Dict):
+        user_dict = user_data.dict()
+        self.__bind_registration_email(user_dict, user_data.role_id)
         url = f'{host}/{STRIPE}/strong-customer-authentication'
-        return self.req.simple_put(url=url, json=user_data.dict())
+        return self.req.simple_put(url=url, json=user_dict)
 
     '''
     1. Upsert customer:
