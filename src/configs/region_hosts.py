@@ -12,6 +12,13 @@ auth_region_hosts = {
     "us": os.getenv("US_REGION_HOST_AUTH", "http://localhost:8082/auth/api/v1/auth-nosql"),
 }
 
+auth_region_v2_hosts = {
+    # "default": os.getenv("REGION_HOST_AUTH", "http://localhost:8082/auth/api/v2/auth-nosql"),
+    "jp": os.getenv("JP_REGION_HOST_AUTH", "http://localhost:8082/auth/api/v2/auth-nosql"),
+    "ge": os.getenv("GE_REGION_HOST_AUTH", "http://localhost:8082/auth/api/v2/auth-nosql"),
+    "us": os.getenv("US_REGION_HOST_AUTH", "http://localhost:8082/auth/api/v2/auth-nosql"),
+}
+
 match_region_hosts = {
     # "default": os.getenv("REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/match-nosql"),
     "jp": os.getenv("JP_REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/match-nosql"),
@@ -52,6 +59,13 @@ def get_auth_region_host(region: str):
         return auth_region_hosts[region]
     except Exception as e:
         log.error(f"get_auth_region_host fail, region:%s err:%s", region, e.__str__())
+        raise RegionException(region=region)
+
+def get_auth_region_v2_host(region: str):
+    try:
+        return auth_region_v2_hosts[region]
+    except Exception as e:
+        log.error(f"get_auth_region_v2_host fail, region:%s err:%s", region, e.__str__())
         raise RegionException(region=region)
 
 def get_match_region_host(region: str):
