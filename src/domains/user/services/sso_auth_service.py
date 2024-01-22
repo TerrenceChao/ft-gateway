@@ -77,8 +77,8 @@ class ISSOAuthService(AuthService):
             # S3 有記錄但該地區的 auth-service 沒記錄，auth 從 S3 找 region 後回傳
             log.error(f"AuthService.login fail: [WRONG REGION: there is the user record in S3, \
                 but no record in the DB of current region, it's ready to request the user record from register region], \
-                auth_host:%s, match_host:%s, code:%s, state:%s register_region:%s, auth_res:%s, exp_payload:%s, type: %s", 
-                auth_host, match_host, sso_login_vo.code, sso_login_vo.state, register_region, auth_res, exp_payload.msg, sso_login_vo.sso_type)
+                auth_host:%s, match_host:%s, sso_login_vo:%s, register_region:%s, auth_res:%s, exp_payload:%s", 
+                auth_host, match_host, sso_login_vo, register_region, auth_res, exp_payload.msg)
                 
             try:
                 email_info = exp_payload.data
@@ -87,14 +87,14 @@ class ISSOAuthService(AuthService):
                 
             except Exception as format_err:
                 log.error(f"AuthService.login fail: [exp_payload format_err], \
-                    auth_host:%s, match_host:%s, code:%s, state:%s, type:%s, auth_res:%s, exp_payload:%s, format_err:%s", 
-                    auth_host, match_host, sso_login_vo.code, sso_login_vo.state, sso_login_vo.sso_type, auth_res, exp_payload, format_err.__str__())
+                    auth_host:%s, match_host:%s, sso_login_vo:%s, auth_res:%s, exp_payload:%s, format_err:%s", 
+                    auth_host, match_host, sso_login_vo, auth_res, exp_payload, format_err.__str__())
                 raise ServerException(msg="format_err")
             
         except Exception as e:
             log.error(f"AuthService.login fail: [unknow_error], \
-                auth_host:%s, match_host:%s, code:%s, state:%s, type:%s, register_region:%s, auth_res:%s, err:%s", 
-                auth_host, match_host, sso_login_vo.code, sso_login_vo.state, sso_login_vo.sso_type, register_region, auth_res, e.__str__())
+                auth_host:%s, match_host:%s, sso_login_vo:%s, register_region:%s, auth_res:%s, err:%s", 
+                auth_host, match_host, sso_login_vo, register_region, auth_res, e.__str__())
             raise_http_exception(e, 'unknow_error')
 
 class FBAuthService(ISSOAuthService):
@@ -108,7 +108,7 @@ class FBAuthService(ISSOAuthService):
     
     def req_get_login(self, auth_host: str, sso_login_vo: SSOLoginVO):
         return self.req.simple_get(
-            f"{auth_host}/fb/login", params={'code': sso_login_vo.code, 'state': sso_login_vo.state}
+            f"{auth_host}/fb/login", params=sso_login_vo.fine_dict()
         )
 
 class GoogleAuthService(ISSOAuthService):
@@ -122,5 +122,5 @@ class GoogleAuthService(ISSOAuthService):
     
     def req_get_login(self, auth_host: str, sso_login_vo: SSOLoginVO):
         return self.req.simple_get(
-            f"{auth_host}/google/login", params={'code': sso_login_vo.code, 'state': sso_login_vo.state}
+            f"{auth_host}/google/login", params=sso_login_vo.fine_dict()
         )

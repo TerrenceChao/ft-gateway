@@ -32,7 +32,7 @@ router = APIRouter(
 )
 
 
-def get_auth_host_for_signup(region: str = Header('jp')):
+def get_auth_host_for_signup(region: str = Header(...)):
     return get_auth_region_v2_host(region=region)
 
 def get_auth_host(current_region: str = Header(...)):
@@ -44,7 +44,7 @@ def get_match_host(current_region: str = Header(...)):
 fb_auth_service = FBAuthService(ServiceApiAdapter(requests), DynamoDbCacheAdapter(dynamodb))
 google_auth_service = GoogleAuthService(ServiceApiAdapter(requests), DynamoDbCacheAdapter(dynamodb))
 
-@router.get('/google/dialog', status_code=201)
+@router.get('/google/dialog')
 def google_dialog(auth_host = Depends(get_auth_host_for_signup),
                   role: str = Query(...)
                   ):
@@ -52,7 +52,7 @@ def google_dialog(auth_host = Depends(get_auth_host_for_signup),
     return RedirectResponse(redirect_path)
 
 
-@router.get('/google/login', status_code=201)
+@router.get('/google/login')
 def google_login(code: str = Query(...),
                 state: str = Query(...)):
     sso_service_vo = SSOLoginVO(
@@ -64,14 +64,14 @@ def google_login(code: str = Query(...),
     return res_success(data=data)
 
 
-@router.get('/fb/dialog', status_code=201)
+@router.get('/fb/dialog')
 def facebook_dialog(auth_host = Depends(get_auth_host_for_signup),
                     role: str = Query(...)):
     redirect_path = fb_auth_service.dialog(auth_host, role)
     return RedirectResponse(redirect_path)
 
 
-@router.get('/fb/login', status_code=201)
+@router.get('/fb/login')
 def facebook_login(code: str = Query(...),
                     state: str = Query(...)):
     sso_login_vo = SSOLoginVO(

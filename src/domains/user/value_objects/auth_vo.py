@@ -118,3 +118,8 @@ class SSOLoginVO(BaseModel):
     code: str
     state: str
     sso_type: Optional[str]
+
+    def fine_dict(self):
+        d = super().dict()
+        d.pop('sso_type', None)
+        return d
