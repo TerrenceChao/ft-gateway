@@ -43,6 +43,17 @@ def list_plans(payment_host=Depends(get_payment_host)):
     return res_success(data=data)
 
 
+@router.put('/strong-customer-authentication')
+def strong_customer_authentication(
+    body: dtos.UserDTO = Body(...),
+    payment_host=Depends(get_payment_host),
+    verify=Depends(verify_token_by_payment_operation),
+):
+    data = _payment_service.strong_customer_authentication(
+        payment_host, body)
+    return res_success(data=data)
+
+
 @router.put('/payment-method', responses=idempotent_response(f'payment_method', vo.PaymentStatusVO))
 def payment_method(
     body: stripe_dtos.StripeUserPaymentRequestDTO = Body(...),

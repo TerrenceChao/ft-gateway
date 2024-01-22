@@ -50,8 +50,9 @@ def get_match_host(current_region: str = Header(...)):
     return get_match_region_host(region=current_region)
 
 
-@router.get("/welcome", 
-            responses=idempotent_response("get_public_key", PubkeyVO))
+# TODO: deprecated
+# @router.get("/welcome", 
+#             responses=idempotent_response("get_public_key", PubkeyVO))
 def get_public_key(auth_host=Depends(get_auth_host)):
     pubkey_vo = _auth_service.get_public_key(auth_host)
     return res_success(data=pubkey_vo)
