@@ -61,3 +61,18 @@ class TeacherResumeService:
         data = self.req.simple_delete(url=url)
 
         return data
+
+    def upsert_resume_section(self, host: str, resume_section: teach_vo.ResumeSectionVO):
+        teacher_id = resume_section.tid
+        resume_id = resume_section.rid
+        data = self.req.simple_put(
+            url=f"{host}/teachers/{teacher_id}/resumes/{resume_id}/sections",
+            json=resume_section.dict())
+
+        return data
+    
+    def delete_resume_section(self, host: str, teacher_id: int, resume_id: int, section_id: int):
+        data = self.req.simple_delete(
+            url=f"{host}/teachers/{teacher_id}/resumes/{resume_id}/sections/{section_id}")
+
+        return data

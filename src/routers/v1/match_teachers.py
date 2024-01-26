@@ -184,30 +184,16 @@ def delete_resume(teacher_id: int,
 
 """[resume section]"""
 
-@router.post("/{teacher_id}/resumes/{resume_id}/sections",
-             responses=post_response(f'{TEACHER}.create_resume_section', vo.ReturnResumeSectionVO),
-             status_code=201)
-def create_resume_section(
-    resume_section: vo.ResumeSectionVO = Depends(create_resume_section_check),
+@router.put("/{teacher_id}/resumes/{resume_id}/sections",
+             responses=post_response(f'{TEACHER}.upsert_resume_section', vo.ReturnResumeSectionVO))
+def create_or_update_resume_section(
+    resume_section: vo.ResumeSectionVO = Depends(upsert_resume_section_check),
     match_host=Depends(get_match_host),
 ):
     data = None
     # TODO: refresh Resume.updated_at
-    # data = _teacher_resume_service.create_resume_section(
-    #     host=match_host, resume_section=resume_section)
-    return res_success(data=data)
-
-
-@router.put("/{teacher_id}/resumes/{resume_id}/sections/{section_id}",
-             responses=post_response(f'{TEACHER}.update_resume_section', vo.ReturnResumeSectionVO))
-def update_resume_section(
-    resume_section: vo.ResumeSectionVO = Depends(update_resume_section_check),
-    match_host=Depends(get_match_host),
-):
-    data = None
-    # TODO: refresh Resume.updated_at
-    # data = _teacher_resume_service.update_resume_section(
-    #     host=match_host, resume_section=resume_section)
+    data = _teacher_resume_service.upsert_resume_section(
+        host=match_host, resume_section=resume_section)
     return res_success(data=data)
 
 
@@ -221,11 +207,12 @@ def delete_resume_section(
 ):
     data = None
     # TODO: refresh Resume.updated_at
-    resume_section = vo.ResumeSectionVO(
-        tid=teacher_id, rid=resume_id, sid=section_id
+    data = _teacher_resume_service.delete_resume_section(
+        host=match_host,
+        teacher_id=teacher_id,
+        resume_id=resume_id,
+        section_id=section_id,
     )
-    # data = _teacher_resume_service.delete_resume_section(
-    #     host=match_host, resume_section=resume_section)
     return res_success(data=data)
 
 

@@ -53,10 +53,10 @@ class FollowJobListVO(BaseModel):
 
 
 class ResumeSectionVO(BaseModel):
-    sid: Optional[int] = None
+    sid: Optional[int] = 0
     tid: Optional[int] = None # validation check
     rid: Optional[int] = None # validation check
-    order: Optional[int] = None # display order
+    order: Optional[int] = None # validation check | display order
     category: Optional[str] = None # Education, Experience, Project, Certificate, Skill, Language
     logo: Optional[str] = None
     name: Optional[str] = None # School, Company, Certificate Name, Skill Name
@@ -99,16 +99,19 @@ class UpdateResumeVO(BaseModel):
     enable: Optional[bool] = True
 
 
-class ReturnResumeVO(UpdateResumeVO):
+class BriefResumeVO(UpdateResumeVO):
     rid: Optional[int] = None
     tid: int
-    sections: Optional[List[ResumeSectionVO]] = []
     # it's optional in gateway
     region: str
 
 
+class ReturnResumeVO(BriefResumeVO):
+    sections: Optional[List[ResumeSectionVO]] = []
+
+
 class ResumeListVO(BaseModel):
-    list: List[ReturnResumeVO] = []
+    list: List[BriefResumeVO] = []
     next_rid: Optional[int] = None
 
 

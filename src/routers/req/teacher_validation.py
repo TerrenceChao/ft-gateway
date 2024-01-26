@@ -59,9 +59,9 @@ def update_resume_check_resume(
         # resume.rid = resume_id
         if len(resume.tags) > MAX_TAGS:
             raise ClientException(msg=f'The number of tags must be less than {MAX_TAGS}.')
-        
+
         # __parse_resume_sections(teacher_id, resume_id, resume.sections)
-        
+
     return resume
 
 def create_resume_section_check(
@@ -73,15 +73,13 @@ def create_resume_section_check(
     resume_section.rid = resume_id
     return resume_section
 
-def update_resume_section_check(
+def upsert_resume_section_check(
     teacher_id: int = Path(...),
     resume_id: int = Path(...),
-    section_id: int = Path(...),
     resume_section: ResumeSectionVO = Body(...),
 ):
     resume_section.tid = teacher_id
     resume_section.rid = resume_id
-    resume_section.sid = section_id
     return resume_section
 
 def upsert_follow_job_check_job(
