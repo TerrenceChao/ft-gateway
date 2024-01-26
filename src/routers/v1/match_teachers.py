@@ -194,7 +194,7 @@ def create_or_update_resume_section(
     # TODO: refresh Resume.updated_at
     data = _teacher_resume_service.upsert_resume_section(
         host=match_host, resume_section=resume_section)
-    return res_success(data=data)
+    return res_success(data=data, msg=resume_section.upsert_msg())
 
 
 @router.delete("/{teacher_id}/resumes/{resume_id}/sections/{section_id}",

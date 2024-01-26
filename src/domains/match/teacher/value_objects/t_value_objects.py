@@ -69,6 +69,12 @@ class ResumeSectionVO(BaseModel):
     context: Optional[Dict] = None # Study Subject, Company Industry, Description, image/file urls, others
     updated_at: Optional[int] = None
     
+    def upsert_msg(self):
+        if self.sid == 0 or self.sid is None:
+            return 'resume section is created'
+        else:
+            return 'resume section is udpated'
+    
 
 class ReturnResumeSectionVO(ResumeSectionVO):
     sid: int
