@@ -182,6 +182,40 @@ def delete_resume(teacher_id: int,
     return res_success(data=data)
 
 
+"""[resume section]"""
+
+@router.put("/{teacher_id}/resumes/{resume_id}/sections",
+             responses=post_response(f'{TEACHER}.upsert_resume_section', vo.ReturnResumeSectionVO))
+def create_or_update_resume_section(
+    resume_section: vo.ResumeSectionVO = Depends(upsert_resume_section_check),
+    match_host=Depends(get_match_host),
+):
+    data = None
+    # TODO: refresh Resume.updated_at
+    data = _teacher_resume_service.upsert_resume_section(
+        host=match_host, resume_section=resume_section)
+    return res_success(data=data, msg=resume_section.upsert_msg())
+
+
+@router.delete("/{teacher_id}/resumes/{resume_id}/sections/{section_id}",
+             responses=post_response(f'{TEACHER}.delete_resume_section', bool))
+def delete_resume_section(
+    teacher_id: int,
+    resume_id: int,
+    section_id: int,
+    match_host=Depends(get_match_host),
+):
+    data = None
+    # TODO: refresh Resume.updated_at
+    data = _teacher_resume_service.delete_resume_section(
+        host=match_host,
+        teacher_id=teacher_id,
+        resume_id=resume_id,
+        section_id=section_id,
+    )
+    return res_success(data=data)
+
+
 """[follow-job]"""
 
 
