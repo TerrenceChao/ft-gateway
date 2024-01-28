@@ -53,7 +53,9 @@ _contact_job_service = ContactJobService(
     gw_cache,
 )
 _teacher_aggregate_service = TeacherAggregateService(
-    service_client)
+    service_client,
+    gw_cache,
+)
 
 
 """[此 API 在一開始註冊時會用到]

@@ -62,7 +62,8 @@ _contact_resume_service = ContactResumeService(
     _payment_service,
 )
 _company_aggregate_service = CompanyAggregateService(
-    service_client
+    service_client,
+    gw_cache,
 )
 _payment_service = PaymentService(
     service_client, 

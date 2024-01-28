@@ -1,6 +1,8 @@
 from typing import Any, List, Dict
 from ....service_api import IServiceApi
-from .....domains.match.teacher.value_objects import t_value_objects as teach_vo
+from ..value_objects import t_value_objects as teach_vo
+from ...star_tracker_service import StarTrackerService
+from ....cache import ICache
 from .....configs.conf import \
     MY_STATUS_OF_TEACHER_APPLY, STATUS_OF_TEACHER_APPLY
 from .....configs.exceptions import \
@@ -33,9 +35,9 @@ class TeacherProfileService:
         return data
 
 
-class TeacherAggregateService:
-    def __init__(self, req: IServiceApi):
-        self.req = req
+class TeacherAggregateService(StarTrackerService):
+    def __init__(self, req: IServiceApi, cache: ICache):
+        super().__init__(req, cache)
 
     def get_job_follows_and_contacts(self, host: str, teacher_id: int, size: int):
         url = f"{host}/teachers/{teacher_id}/jobs/follow-and-apply"
@@ -48,6 +50,9 @@ class TeacherAggregateService:
             }
         )
 
+        data = teach_vo.TeacherFollowAndContactVO.parse_obj(data)
+        data.followed = self.contact_marks(host, 'teacher', teacher_id, data.followed)
+        data.contact = self.followed_marks(host, 'teacher', teacher_id, data.contact)
         return data
 
     def get_matchdata(self, host: str, teacher_id: int, size: int):
@@ -61,4 +66,7 @@ class TeacherAggregateService:
             }
         )
 
+        data = teach_vo.TeacherMatchDataVO.parse_obj(data)
+        data.followed = self.contact_marks(host, 'teacher', teacher_id, data.followed)
+        data.contact = self.followed_marks(host, 'teacher', teacher_id, data.contact)
         return data
