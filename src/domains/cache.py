@@ -17,7 +17,7 @@ class ICache(ABC):
         pass
     
     @abstractmethod
-    async def smembers(self, key: str) -> (Set[Any]):
+    async def smembers(self, key: str) -> (Optional[Set[Any]]):
         pass
     
     @abstractmethod
@@ -25,7 +25,7 @@ class ICache(ABC):
         pass
 
     @abstractmethod
-    async def sadd(self, key: str, values: List[Any]) -> (int):
+    async def sadd(self, key: str, values: List[Any], ex: int = None) -> (int):
         pass
     
     @abstractmethod

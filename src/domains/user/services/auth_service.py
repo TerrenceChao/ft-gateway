@@ -249,10 +249,17 @@ class AuthService:
         return (None, "successfully logged out")
     
     @staticmethod
-    def is_login(cache: ICache, role_id: int) -> (bool):
-        role_id_key = str(role_id)
+    def is_login(cache: ICache, visitor: BaseAuthDTO = None) -> (bool):
+        if visitor is None:
+            return False
+
+        role_id_key = str(visitor.role_id)
         user: Dict = cache.get(role_id_key)
-        return user and user.get("online", False)
+        if user is None:
+            return False
+
+        return user.get("online", False) and \
+            user.get("role", None) == visitor.role
 
     def __cache_check_for_auth(self, role_id_key: str):
         user = self.cache.get(role_id_key)

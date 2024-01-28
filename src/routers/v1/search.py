@@ -65,7 +65,7 @@ def get_resumes(
         search_after=next,
     )
     data = _search_service.get_resumes(search_host, query)
-    if AuthService.is_login(gw_cache, visitor.role_id):
+    if AuthService.is_login(gw_cache, visitor):
         data.items = _star_tracker_service.all_marks(
             match_host,
             visitor,
@@ -103,7 +103,7 @@ def get_jobs(
         search_after=next,
     )
     data = _search_service.get_jobs(search_host, query)
-    if AuthService.is_login(gw_cache, visitor.role_id):
+    if AuthService.is_login(gw_cache, visitor):
         data.items = _star_tracker_service.all_marks(
             match_host,
             visitor,

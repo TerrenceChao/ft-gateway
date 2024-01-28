@@ -17,9 +17,9 @@ class StarTrackerService:
 
     def __role_target_ids(self, role: str) -> (Tuple[str, str]):
         if role in COM:
-            return ('companies', 'resume_ids')
+            return ('companies', 'resume-ids')
         elif role in TEACH:
-            return ('teachers', 'job_ids')
+            return ('teachers', 'job-ids')
         else:
             raise ClientException(msg='role is not correct')
 
@@ -46,7 +46,10 @@ class StarTrackerService:
 
         follow_set_key = self.__follow_key(role, role_id, target_ids)
         followed_set = self.cache.smembers(follow_set_key)
-        if len(followed_set) > 0:
+
+        # len(followed_set) could be always 0,
+        # user doesn't follows anyone
+        if isinstance(followed_set, set):
             return followed_set
 
         data = self.req.simple_get(
@@ -60,8 +63,9 @@ class StarTrackerService:
 
     def followed_marks(self, match_host: str, role: str, role_id: int, target_list: List[MarkVO]):
         followed_id_set = self.followed_id_set(match_host, role, role_id)
-        for target in target_list:
-            target.followed = target.id() in followed_id_set
+        if len(followed_id_set) > 0:
+            for target in target_list:
+                target.followed = target.id() in followed_id_set
 
         return target_list
 
@@ -88,7 +92,10 @@ class StarTrackerService:
 
         contact_set_key = self.__contact_key(role, role_id, target_ids)
         contact_set = self.cache.smembers(contact_set_key)
-        if len(contact_set) > 0:
+
+        # len(contact_set) could be always 0,
+        # user doesn't contacts anyone
+        if isinstance(contact_set, set):
             return contact_set
 
         data = self.req.simple_get(
@@ -102,8 +109,9 @@ class StarTrackerService:
 
     def contact_marks(self, match_host: str, role: str, role_id: int, target_list: List[MarkVO]):
         contact_id_set = self.contact_id_set(match_host, role, role_id)
-        for target in target_list:
-            target.contacted = target.id() in contact_id_set
+        if len(contact_id_set) > 0:
+            for target in target_list:
+                target.contacted = target.id() in contact_id_set
 
         return target_list
 
@@ -120,4 +128,3 @@ class StarTrackerService:
                 target.contacted = target.id() in contact_id_set
 
         return target_list
-
