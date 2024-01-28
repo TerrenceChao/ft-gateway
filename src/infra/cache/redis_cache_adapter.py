@@ -2,7 +2,7 @@ import os
 import time
 import json
 import re
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Set, Optional
 from redis import Redis
 from ...domains.cache import ICache
 from ...configs.redis import redis
@@ -63,6 +63,18 @@ class RedisCacheAdapter(ICache):
                     key:%s, err:%s",
                       key, e.__str__())
             raise ServerException(msg="r_server_error") 
+
+    def smembers(self, key: str) -> (Set[Any]):
+        pass
+
+    def sismember(self, key: str, value: Any) -> (bool):
+        pass
+
+    def sadd(self, key: str, values: List[Any]) -> (int):
+        pass
+
+    def srem(self, key: str, value: Any) -> (int):
+        pass
 
 def get_cache():
     try:

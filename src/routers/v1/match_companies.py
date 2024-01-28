@@ -1,7 +1,6 @@
 import os
 import time
 import json
-import requests
 from typing import List, Dict, Any
 from fastapi import APIRouter, \
     Request, Depends, \
@@ -16,9 +15,8 @@ from ...domains.match.company.services.company_service import CompanyProfileServ
 from ...domains.match.company.services.company_job_service import CompanyJobService
 from ...domains.match.company.services.follow_and_contact_resume_service import FollowResumeService, ContactResumeService
 from ...domains.payment.services.payment_service import PaymentService
-from ...apps.service_api_dapter import ServiceApiAdapter
-from ...infra.cache.dynamodb_cache_adapter import DynamoDbCacheAdapter
-from ...configs.dynamodb import dynamodb
+from ...configs.service_client import service_client
+from ...configs.cache import gw_cache
 from ...configs.conf import \
     MY_STATUS_OF_COMPANY_APPLY, STATUS_OF_COMPANY_APPLY, MY_STATUS_OF_COMPANY_REACTION, STATUS_OF_COMPANY_REACTION
 from ...configs.constants import Apply
@@ -49,22 +47,26 @@ def get_payment_host(current_region: str = Header(...)):
 
 COMPANY = 'company'
 _payment_service = PaymentService(
-    ServiceApiAdapter(requests), 
-    DynamoDbCacheAdapter(dynamodb),
+    service_client, 
+    gw_cache,
 )
-_company_profile_service = CompanyProfileService(ServiceApiAdapter(requests))
-_company_job_service = CompanyJobService(ServiceApiAdapter(requests))
-_follow_resume_service = FollowResumeService(ServiceApiAdapter(requests))
+_company_profile_service = CompanyProfileService(service_client)
+_company_job_service = CompanyJobService(service_client)
+_follow_resume_service = FollowResumeService(
+    service_client,
+    gw_cache,
+)
 _contact_resume_service = ContactResumeService(
-    ServiceApiAdapter(requests),
+    service_client,
+    gw_cache,
     _payment_service,
 )
 _company_aggregate_service = CompanyAggregateService(
-    ServiceApiAdapter(requests)
+    service_client
 )
 _payment_service = PaymentService(
-    ServiceApiAdapter(requests), 
-    DynamoDbCacheAdapter(dynamodb),
+    service_client, 
+    gw_cache,
 )
 
 

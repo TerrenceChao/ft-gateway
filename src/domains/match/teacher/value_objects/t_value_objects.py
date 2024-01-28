@@ -2,7 +2,7 @@ from typing import Dict, List, Optional
 from pydantic import BaseModel, EmailStr
 from .....infra.db.nosql import match_teachers_schemas as teacher
 from .....infra.db.nosql import match_companies_schemas as company
-from ...public_value_objects import ResumeIndexVO, BaseJobVO
+from ...public_value_objects import ResumeIndexVO, BaseJobVO, MarkVO
 from .....configs.constants import Apply
 from .....configs.conf import SEARCH_JOB_URL_PATH
 
@@ -17,7 +17,7 @@ class _BaseJobData(BaseModel):
         return self
 
 
-class ContactJobVO(_BaseJobData):
+class ContactJobVO(_BaseJobData, MarkVO):
     jid: int
     tid: int
     rid: int  # NOT ForeignKey
@@ -25,6 +25,9 @@ class ContactJobVO(_BaseJobData):
     my_status: Optional[Apply] = Apply.PENDING
     job_info: Optional[BaseJobVO] = None
     created_at: Optional[int] = None
+
+    def id(self) -> (int):
+        return self.jid
 
 
 class ContactJobListVO(BaseModel):
@@ -36,11 +39,14 @@ class ContactJobListVO(BaseModel):
         return self
 
 
-class FollowJobVO(_BaseJobData):
+class FollowJobVO(_BaseJobData, MarkVO):
     jid: int
     tid: int
     job_info: BaseJobVO
     created_at: Optional[int] = None
+
+    def id(self) -> (int):
+        return self.jid
 
 
 class FollowJobListVO(BaseModel):

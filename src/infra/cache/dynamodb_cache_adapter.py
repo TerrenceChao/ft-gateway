@@ -2,7 +2,7 @@ import os
 import time
 import json
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any, List, Set, Optional
 from ...domains.cache import ICache
 from ...configs.dynamodb import dynamodb
 from ...configs.conf import DYNAMODB_URL, TABLE_CACHE
@@ -77,6 +77,18 @@ class DynamoDbCacheAdapter(ICache):
                     key:%s, err:%s",
                       key, e.__str__())
             raise ServerException(msg="d2_server_error")
+
+    def smembers(self, key: str) -> (Set[Any]):
+        pass
+
+    def sismember(self, key: str, value: Any) -> (bool):
+        pass
+
+    def sadd(self, key: str, values: List[Any]) -> (int):
+        pass
+
+    def srem(self, key: str, value: Any) -> (int):
+        pass
 
 
 def get_cache():

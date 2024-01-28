@@ -93,10 +93,12 @@ class ResetPasswordVO(BaseModel):
 class UpdatePasswordVO(ResetPasswordVO):
     origin_password: str
 
-class AuthVO(BaseModel):
-    email: EmailStr
+class BaseAuthDTO(BaseModel):
     role: str
     role_id: int
+    
+class AuthVO(BaseAuthDTO):
+    email: EmailStr
     token: str
     region: str
     current_region: Optional[str] = None
