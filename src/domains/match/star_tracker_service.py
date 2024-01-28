@@ -23,11 +23,24 @@ class StarTrackerService:
             return ('teachers', 'job-ids')
         else:
             raise ClientException(msg='role is not correct')
+        
+    def __shorter(self, role: str, target_ids: str) -> (Tuple[str, str]):
+        if role in COM:
+            role = 'com'
+        elif role in TEACH:
+            role = 'tea'
+
+        if target_ids in 'resume-ids':
+            target_ids = 'rids'
+        elif target_ids in 'job-ids':
+            target_ids = 'jids'
+
+        return role, target_ids
 
     '''follow'''
 
     def __follow_key(self, role: str, role_id: int, target_ids: str) -> (str):
-        role, target_ids = self.__role_target_ids(role)
+        role, target_ids = self.__shorter(role, target_ids)
         return f'{role}:{role_id}:follow:{target_ids}'
 
     def add_followed_star(self, role: str, role_id: int, target_id: int) -> (bool):
@@ -73,7 +86,7 @@ class StarTrackerService:
     '''contact'''
 
     def __contact_key(self, role: str, role_id: int, target_ids: str) -> (str):
-        role, target_ids = self.__role_target_ids(role)
+        role, target_ids = self.__shorter(role, target_ids)
         return f'{role}:{role_id}:contact:{target_ids}'
 
     def add_contact_star(self, role: str, role_id: int, target_id: int) -> (bool):
