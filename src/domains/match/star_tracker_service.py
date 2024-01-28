@@ -2,6 +2,7 @@ from typing import Tuple, Any, Set, List, Dict
 from ..cache import ICache
 from ..service_api import IServiceApi
 from .public_value_objects import MarkVO
+from ...configs.conf import STAR_TRACKER_TTL
 from ...configs.constants import COM, TEACH
 from ...configs.exceptions import *
 from ..user.value_objects.auth_vo import BaseAuthDTO
@@ -32,7 +33,7 @@ class StarTrackerService:
     def add_followed_star(self, role: str, role_id: int, target_id: int) -> (bool):
         role, target_ids = self.__role_target_ids(role)
         follow_set_key = self.__follow_key(role, role_id, target_ids)
-        result = self.cache.sadd(follow_set_key, [target_id])
+        result = self.cache.sadd(follow_set_key, [target_id], STAR_TRACKER_TTL)
         return result > 0
 
     def remove_followed_star(self, role: str, role_id: int, target_id: int) -> (bool):
@@ -57,7 +58,7 @@ class StarTrackerService:
         )
 
         # TODO: confirm data is a list
-        self.cache.sadd(follow_set_key, data)
+        self.cache.sadd(follow_set_key, data, STAR_TRACKER_TTL)
 
         return data
 
@@ -78,7 +79,7 @@ class StarTrackerService:
     def add_contact_star(self, role: str, role_id: int, target_id: int) -> (bool):
         role, target_ids = self.__role_target_ids(role)
         contact_set_key = self.__contact_key(role, role_id, target_ids)
-        result = self.cache.sadd(contact_set_key, [target_id])
+        result = self.cache.sadd(contact_set_key, [target_id], STAR_TRACKER_TTL)
         return result > 0
 
     def remove_contact_star(self, role: str, role_id: int, target_id: int) -> (bool):
@@ -103,7 +104,7 @@ class StarTrackerService:
         )
 
         # TODO: confirm data is a list
-        self.cache.sadd(contact_set_key, data)
+        self.cache.sadd(contact_set_key, data, STAR_TRACKER_TTL)
 
         return data
 

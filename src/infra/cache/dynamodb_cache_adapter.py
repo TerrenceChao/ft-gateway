@@ -79,20 +79,54 @@ class DynamoDbCacheAdapter(ICache):
             raise ServerException(msg="d2_server_error")
 
     def smembers(self, key: str) -> (Optional[Set[Any]]):
-        # TODO: implement
-        return set()
+        values = self.get(key)
+        if values is None:
+            return None
+        
+        if not isinstance(values, list):
+            raise ServerException(msg="invalid set-members type")
+        
+        return set(values)
 
     def sismember(self, key: str, value: Any) -> (bool):
-        # TODO: implement
-        return False
+        set_members = self.smembers(key)
+        if set_members is None:
+            return False
+        
+        return value in set_members
 
     def sadd(self, key: str, values: List[Any], ex: int = None) -> (int):
-        # TODO: implement
-        return 0
+        if not isinstance(values, list):
+            raise ServerException(msg="invalid input type, values should be list")
+        
+        update_count = 0
+        set_members = self.smembers(key)
+        if set_members is None:
+            self.set(key, values, ex)
+
+        else:
+            member_list = list(set_members) + values
+            self.set(key, member_list, ex)
+            
+        update_count = len(values)
+        return update_count
 
     def srem(self, key: str, value: Any) -> (int):
-        # TODO: implement
-        return 0
+        update_count = 0
+        set_members = self.smembers(key)
+        if set_members is None:
+            return 0
+
+        if value in set_members:
+            set_members.remove(value)
+            self.set(key, list(set_members))
+            update_count = 1
+        else:
+            update_count = 0
+
+        return update_count
+
+
 
 
 def get_cache():
