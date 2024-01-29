@@ -6,7 +6,7 @@ from ...service_api import IServiceApi
 from ....infra.utils.util import gen_confirm_code
 from ....infra.utils.time_util import gen_timestamp
 from ....configs.conf import *
-from ....configs.constants import PATHS, PREFETCH
+from ....configs.constants import PATHS, PREFETCH, COM, TEACH
 from ....configs.region_hosts import get_auth_region_host, get_match_region_host
 from ....configs.exceptions import *
 import logging as log
@@ -217,10 +217,10 @@ class AuthService:
     def req_match_data(self, match_host: str, role_path: str, role_id_key: str, size: int = PREFETCH):
         my_statuses, statuses = [], []
         
-        if role_path == "companies" or role_path == "company":
+        if role_path in COM:
             my_statuses = MY_STATUS_OF_COMPANY_APPLY
             statuses = STATUS_OF_COMPANY_APPLY
-        elif role_path == "teachers" or role_path == "teacher":
+        elif role_path in TEACH:
             my_statuses = MY_STATUS_OF_TEACHER_APPLY
             statuses = STATUS_OF_TEACHER_APPLY
             
@@ -247,6 +247,19 @@ class AuthService:
         # "LONG_TERM_TTL" for redirct notification
         self.__cache_logout_status(role_id_key, user_logout_status)
         return (None, "successfully logged out")
+    
+    @staticmethod
+    def is_login(cache: ICache, visitor: BaseAuthDTO = None) -> (bool):
+        if visitor is None:
+            return False
+
+        role_id_key = str(visitor.role_id)
+        user: Dict = cache.get(role_id_key)
+        if user is None:
+            return False
+
+        return user.get("online", False) and \
+            user.get("role", None) == visitor.role
 
     def __cache_check_for_auth(self, role_id_key: str):
         user = self.cache.get(role_id_key)

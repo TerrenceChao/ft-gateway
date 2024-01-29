@@ -1,6 +1,8 @@
 from typing import Any, List, Dict
 from ....service_api import IServiceApi
-from .....domains.match.company.value_objects import c_value_objects as com_vo
+from ..value_objects import c_value_objects as com_vo
+from ...star_tracker_service import StarTrackerService
+from ....cache import ICache
 from .....configs.conf import \
     MY_STATUS_OF_COMPANY_APPLY, STATUS_OF_COMPANY_APPLY
 from .....configs.exceptions import \
@@ -33,9 +35,9 @@ class CompanyProfileService:
         return data
 
 
-class CompanyAggregateService:
-    def __init__(self, req: IServiceApi):
-        self.req = req
+class CompanyAggregateService(StarTrackerService):
+    def __init__(self, req: IServiceApi, cache: ICache):
+        super().__init__(req, cache)
 
     def get_resume_follows_and_contacts(self, host: str, company_id: int, size: int):
         url = f"{host}/companies/{company_id}/resumes/follow-and-apply"
@@ -47,7 +49,10 @@ class CompanyAggregateService:
                 "statuses": STATUS_OF_COMPANY_APPLY,
             }
         )
-
+        
+        data = com_vo.CompanyFollowAndContactVO.parse_obj(data)
+        data.followed = self.contact_marks(host, 'company', company_id, data.followed)
+        data.contact = self.followed_marks(host, 'company', company_id, data.contact)
         return data
 
     def get_matchdata(self, host: str, company_id: int, size: int):
@@ -60,5 +65,8 @@ class CompanyAggregateService:
                 "statuses": STATUS_OF_COMPANY_APPLY,
             }
         )
-
+        
+        data = com_vo.CompanyMatchDataVO.parse_obj(data)
+        data.followed = self.contact_marks(host, 'company', company_id, data.followed)
+        data.contact = self.followed_marks(host, 'company', company_id, data.contact)
         return data

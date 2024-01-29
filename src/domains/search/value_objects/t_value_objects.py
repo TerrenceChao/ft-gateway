@@ -2,10 +2,11 @@ from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
 from ....configs.constants import *
 from ....configs.conf import SEARCH_RESUME_URL_PATH
+from ...match.public_value_objects import MarkVO
 from ....infra.db.nosql import match_teachers_schemas as teacher
 
 
-class SearchResumeDTO(BaseModel):
+class SearchResumeDTO(MarkVO):
     rid: Optional[int] = None
     tid: Optional[int] = None
     avator: Optional[str] = None
@@ -17,6 +18,9 @@ class SearchResumeDTO(BaseModel):
     # created_at: Optional[int] = None
     region: Optional[str] = None  # must
     url_path: Optional[str] = None  # must
+    
+    def id(self) -> (int):
+        return self.rid
     
     def init(self):
         if self.region and \

@@ -2,10 +2,11 @@ from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
 from ....configs.constants import *
 from ....configs.conf import SEARCH_JOB_URL_PATH
+from ...match.public_value_objects import MarkVO
 from ....infra.db.nosql import match_companies_schemas as company
 
 
-class SearchJobDTO(BaseModel):
+class SearchJobDTO(MarkVO):
     jid: Optional[int] = None
     cid: Optional[int] = None
     name: Optional[str] = None  # school/company/organization name
@@ -21,6 +22,9 @@ class SearchJobDTO(BaseModel):
     # created_at: Optional[int] = None
     region: Optional[str] = None  # must
     url_path: Optional[str] = None  # must
+
+    def id(self) -> (int):
+        return self.jid
     
     def init(self):
         if self.region and \

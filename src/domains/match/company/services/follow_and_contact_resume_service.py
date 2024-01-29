@@ -1,8 +1,10 @@
 from typing import Any, List, Dict, Optional
+from ....cache import ICache
 from ....service_api import IServiceApi
-from .....domains.match.company.value_objects import c_value_objects as com_vo
-from .....domains.payment.services.payment_service import PaymentService
-from .....domains.payment.configs.constants import *
+from ..value_objects import c_value_objects as com_vo
+from ...star_tracker_service import StarTrackerService
+from ....payment.services.payment_service import PaymentService
+from ....payment.configs.constants import *
 from .....configs.exceptions import *
 from .....configs.constants import Apply
 import logging as log
@@ -10,9 +12,10 @@ import logging as log
 log.basicConfig(filemode='w', level=log.INFO)
 
 
-class FollowResumeService:
-    def __init__(self, req: IServiceApi):
-        self.req = req
+class FollowResumeService(StarTrackerService):
+    def __init__(self, req: IServiceApi, cache: ICache):
+        super().__init__(req, cache)
+        self.role = 'company'
 
     def upsert_follow_resume(self, host: str, company_id: int, resume_id: int, resume_info: com_vo.BaseResumeVO):
         data = self.req.simple_put(
@@ -20,7 +23,9 @@ class FollowResumeService:
             json=resume_info.dict()
         )
 
-        return com_vo.FollowResumeVO.parse_obj(data).init() # data
+        follow_resume = com_vo.FollowResumeVO.parse_obj(data)
+        self.add_followed_star(self.role, company_id, follow_resume.rid)
+        return follow_resume.init() # data
 
     def get_followed_resume_list(self, host: str, company_id: int, size: int, next_ts: int = None):
         data = self.req.simple_get(
@@ -30,18 +35,22 @@ class FollowResumeService:
                 "next_ts": next_ts,
             })
 
-        return com_vo.FollowResumeListVO.parse_obj(data).init() # data
+        followed_resume_list = com_vo.FollowResumeListVO.parse_obj(data)
+        self.contact_marks(host, self.role, company_id, followed_resume_list.list)
+        return followed_resume_list.init() # data
 
     def delete_followed_resume(self, host: str, company_id: int, resume_id: int) -> (bool):
         data = self.req.simple_delete(
             url=f"{host}/companies/{company_id}/follow/resumes/{resume_id}")
 
+        self.remove_followed_star(self.role, company_id, resume_id)
         return data
 
 
-class ContactResumeService:
-    def __init__(self, req: IServiceApi, payment_service: PaymentService):
-        self.req = req
+class ContactResumeService(StarTrackerService):
+    def __init__(self, req: IServiceApi, cache: ICache, payment_service: PaymentService):
+        super().__init__(req, cache)
+        self.role = 'company'
         self.payment_service = payment_service
         self.__cls_name = self.__class__.__name__
         
@@ -84,7 +93,9 @@ class ContactResumeService:
                 url=f"{host}/companies/{company_id}/contact/resumes",
                 json=body.fine_dict(),
             )
-            return com_vo.ContactResumeVO.parse_obj(data).init() # data
+            contact_resume = com_vo.ContactResumeVO.parse_obj(data)
+            self.add_contact_star(self.role, company_id, contact_resume.rid)
+            return contact_resume.init() # data
 
         except Exception as e:
             log.error(f'{self.__cls_name}.apply_resume error \n \
@@ -105,10 +116,13 @@ class ContactResumeService:
                 "next_ts": next_ts
             })
 
-        return com_vo.ContactResumeListVO.parse_obj(data).init() # data
+        contact_resume_list = com_vo.ContactResumeListVO.parse_obj(data)
+        self.followed_marks(host, self.role, company_id, contact_resume_list.list)
+        return contact_resume_list.init() # data
 
     def delete_any_contacted_resume(self, host: str, company_id: int, resume_id: int) -> (bool):
         data = self.req.simple_delete(
             url=f"{host}/companies/{company_id}/contact/resumes/{resume_id}")
 
+        self.remove_contact_star(self.role, company_id, resume_id)
         return data

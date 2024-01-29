@@ -1,7 +1,6 @@
 import os
 import time
 import json
-import requests
 from typing import List, Dict, Any
 from fastapi import APIRouter, \
     Request, Depends, \
@@ -15,7 +14,8 @@ from ...domains.match.teacher.value_objects import t_value_objects as vo
 from ...domains.match.teacher.services.teacher_service import TeacherProfileService, TeacherAggregateService
 from ...domains.match.teacher.services.teacher_resume_service import TeacherResumeService
 from ...domains.match.teacher.services.follow_and_contact_job_service import FollowJobService, ContactJobService
-from ...apps.service_api_dapter import ServiceApiAdapter
+from ...configs.service_client import service_client
+from ...configs.cache import gw_cache
 from ...configs.conf import \
     MY_STATUS_OF_TEACHER_APPLY, STATUS_OF_TEACHER_APPLY, MY_STATUS_OF_TEACHER_REACTION, STATUS_OF_TEACHER_REACTION
 from ...configs.constants import Apply
@@ -42,12 +42,20 @@ def get_match_host(current_region: str = Header(...)):
 
 
 TEACHER = 'teacher'
-_teacher_profile_service = TeacherProfileService(ServiceApiAdapter(requests))
-_teacher_resume_service = TeacherResumeService(ServiceApiAdapter(requests))
-_follow_job_service = FollowJobService(ServiceApiAdapter(requests))
-_contact_job_service = ContactJobService(ServiceApiAdapter(requests))
+_teacher_profile_service = TeacherProfileService(service_client)
+_teacher_resume_service = TeacherResumeService(service_client)
+_follow_job_service = FollowJobService(
+    service_client,
+    gw_cache,
+)
+_contact_job_service = ContactJobService(
+    service_client,
+    gw_cache,
+)
 _teacher_aggregate_service = TeacherAggregateService(
-    ServiceApiAdapter(requests))
+    service_client,
+    gw_cache,
+)
 
 
 """[此 API 在一開始註冊時會用到]

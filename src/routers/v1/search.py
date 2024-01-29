@@ -4,9 +4,10 @@ from unicodedata import name
 from fastapi import APIRouter, \
     Request, Depends, \
     Header, Path, Query, Body, Form
+from ..req.search_validation import *
 from ..res.response import *
-from ...apps.service_api_dapter import \
-    ServiceApiAdapter, get_service_requests
+from ...configs.service_client import service_client
+from ...configs.cache import gw_cache
 from ...configs.region_hosts import \
     get_search_region_host, get_match_region_host
 from ...configs.constants import *
@@ -15,6 +16,9 @@ from ...domains.search.value_objects import \
 from ...domains.match.company.value_objects import c_value_objects as match_c
 from ...domains.match.teacher.value_objects import t_value_objects as match_t
 from ...domains.search.services.search_service import SearchService
+from ...domains.match.star_tracker_service import StarTrackerService
+from ...domains.user.services.auth_service import AuthService
+from ...domains.user.value_objects.auth_vo import BaseAuthDTO
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
@@ -31,13 +35,15 @@ def get_search_host(current_region: str = Header(...)):
     return get_search_region_host(region=current_region)
 
 
-def get_match_host(region: str = Path(...)):
+def get_match_host(region: str = Header(...)):
     return get_match_region_host(region=region)
 
 
 SEARCH = 'search'
-_search_service = SearchService(
-    ServiceApiAdapter(requests)
+_search_service = SearchService(service_client)
+_star_tracker_service = StarTrackerService(
+    service_client,
+    gw_cache,
 )
 
 
@@ -48,7 +54,9 @@ def get_resumes(
     sort_by: SortField = Query(SortField.UPDATED_AT),
     sort_dirction: SortDirection = Query(SortDirection.DESC),
     next: str = Query(None),
+    visitor: BaseAuthDTO = Depends(search_list_check_visitor),
     search_host=Depends(get_search_host),
+    match_host=Depends(get_match_host),
 ):
     query = search_t.SearchResumeListQueryDTO(
         size=size,
@@ -57,6 +65,12 @@ def get_resumes(
         search_after=next,
     )
     data = _search_service.get_resumes(search_host, query)
+    if AuthService.is_login(gw_cache, visitor):
+        data.items = _star_tracker_service.all_marks(
+            match_host,
+            visitor,
+            data.items,
+        )
     return res_success(data=data)
 
 
@@ -78,7 +92,9 @@ def get_jobs(
     sort_by: SortField = Query(SortField.UPDATED_AT),
     sort_dirction: SortDirection = Query(SortDirection.DESC),
     next: str = Query(None),
+    visitor: BaseAuthDTO = Depends(search_list_check_visitor),
     search_host=Depends(get_search_host),
+    match_host=Depends(get_match_host),
 ):
     query = search_c.SearchJobListQueryDTO(
         size=size,
@@ -87,6 +103,12 @@ def get_jobs(
         search_after=next,
     )
     data = _search_service.get_jobs(search_host, query)
+    if AuthService.is_login(gw_cache, visitor):
+        data.items = _star_tracker_service.all_marks(
+            match_host,
+            visitor,
+            data.items,
+        )
     return res_success(data=data)
 
 

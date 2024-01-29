@@ -30,9 +30,11 @@ class Apply(Enum):
 
 
 PATHS = {
-    "company": "companies",
-    "teacher": "teachers",
+    'company': 'companies',
+    'teacher': 'teachers',
 }
+COM = {'companies', 'company'}
+TEACH = {'teachers', 'teacher'}
 
 # the amount of prefetch items from match data
 PREFETCH = 3
@@ -40,7 +42,7 @@ PREFETCH = 3
 BRIEF_JOB_SIZE = 20
 
 # serial_key is a field of the collection in the user's cache
-SERIAL_KEY = "created_at"
+SERIAL_KEY = 'created_at'
 
 
 class SortDirection(Enum):

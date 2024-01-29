@@ -2,7 +2,7 @@ import os
 import time
 import json
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any, List, Set, Optional
 from ...domains.cache import ICache
 from ...configs.dynamodb import dynamodb
 from ...configs.conf import DYNAMODB_URL, TABLE_CACHE
@@ -77,6 +77,56 @@ class DynamoDbCacheAdapter(ICache):
                     key:%s, err:%s",
                       key, e.__str__())
             raise ServerException(msg="d2_server_error")
+
+    def smembers(self, key: str) -> (Optional[Set[Any]]):
+        values = self.get(key)
+        if values is None:
+            return None
+        
+        if not isinstance(values, list):
+            raise ServerException(msg="invalid set-members type")
+        
+        return set(values)
+
+    def sismember(self, key: str, value: Any) -> (bool):
+        set_members = self.smembers(key)
+        if set_members is None:
+            return False
+        
+        return value in set_members
+
+    def sadd(self, key: str, values: List[Any], ex: int = None) -> (int):
+        if not isinstance(values, list):
+            raise ServerException(msg="invalid input type, values should be list")
+        
+        update_count = 0
+        set_members = self.smembers(key)
+        if set_members is None:
+            self.set(key, values, ex)
+
+        else:
+            new_set_members = set_members | set(values)
+            self.set(key, list(new_set_members), ex)
+            
+        update_count = len(values)
+        return update_count
+
+    def srem(self, key: str, value: Any) -> (int):
+        update_count = 0
+        set_members = self.smembers(key)
+        if set_members is None:
+            return update_count
+
+        if value in set_members:
+            set_members.remove(value)
+            self.set(key, list(set_members))
+            update_count = 1
+        else:
+            update_count = 0
+
+        return update_count
+
+
 
 
 def get_cache():

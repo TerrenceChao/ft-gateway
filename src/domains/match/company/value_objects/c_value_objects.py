@@ -2,7 +2,7 @@ from typing import Dict, List, Optional
 from pydantic import BaseModel, EmailStr
 from .....infra.db.nosql import match_companies_schemas as company
 from .....infra.db.nosql import match_teachers_schemas as teacher
-from ...public_value_objects import JobIndexVO, BaseResumeVO
+from ...public_value_objects import JobIndexVO, BaseResumeVO, MarkVO
 from .....configs.constants import Apply
 from .....configs.conf import SEARCH_RESUME_URL_PATH
 
@@ -17,7 +17,7 @@ class _BaseResumeData(BaseModel):
         return self
 
 
-class ContactResumeVO(_BaseResumeData):
+class ContactResumeVO(_BaseResumeData, MarkVO):
     rid: int
     cid: int
     jid: int  # NOT ForeignKey
@@ -25,6 +25,9 @@ class ContactResumeVO(_BaseResumeData):
     my_status: Optional[Apply] = Apply.PENDING
     resume_info: Optional[Dict] = None
     created_at: Optional[int] = None
+
+    def id(self) -> (int):
+        return self.rid
 
 
 class ContactResumeListVO(BaseModel):
@@ -36,11 +39,14 @@ class ContactResumeListVO(BaseModel):
         return self
 
 
-class FollowResumeVO(_BaseResumeData):
+class FollowResumeVO(_BaseResumeData, MarkVO):
     rid: int
     cid: int
     resume_info: BaseResumeVO
     created_at: Optional[int] = None
+
+    def id(self) -> (int):
+        return self.rid
 
 
 class FollowResumeListVO(BaseModel):
