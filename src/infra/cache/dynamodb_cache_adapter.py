@@ -98,14 +98,16 @@ class DynamoDbCacheAdapter(ICache):
     def sadd(self, key: str, values: List[Any], ex: int = None) -> (int):
         if not isinstance(values, list):
             raise ServerException(msg="invalid input type, values should be list")
-        
+
+        set_values = set(values)
+
         update_count = 0
         set_members = self.smembers(key)
         if set_members is None:
-            self.set(key, values, ex)
+            self.set(key, list(set_values), ex)
 
         else:
-            new_set_members = set_members | set(values)
+            new_set_members = set_members | set_values
             self.set(key, list(new_set_members), ex)
             
         update_count = len(values)
