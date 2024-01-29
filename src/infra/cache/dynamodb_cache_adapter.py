@@ -105,8 +105,8 @@ class DynamoDbCacheAdapter(ICache):
             self.set(key, values, ex)
 
         else:
-            member_list = list(set_members) + values
-            self.set(key, member_list, ex)
+            new_set_members = set_members | set(values)
+            self.set(key, list(new_set_members), ex)
             
         update_count = len(values)
         return update_count
@@ -115,7 +115,7 @@ class DynamoDbCacheAdapter(ICache):
         update_count = 0
         set_members = self.smembers(key)
         if set_members is None:
-            return 0
+            return update_count
 
         if value in set_members:
             set_members.remove(value)

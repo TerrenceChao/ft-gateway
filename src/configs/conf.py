@@ -27,7 +27,7 @@ SHORT_TERM_TTL = int(os.getenv("SHORT_TERM_TTL", "300"))
 # default = 14 days (14 * 86400 secs)
 LONG_TERM_TTL = int(os.getenv("LONG_TERM_TTL", "1209600"))
 # default = 5 mins (300 secs)
-STAR_TRACKER_TTL = int(os.getenv("STAR_TTL", "300"))
+STAR_TRACKER_TTL = int(os.getenv("STAR_TRACKER_TTL", "300"))
 
 MAX_TAGS = int(os.getenv("MAX_TAGS", "7"))
 
