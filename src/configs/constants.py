@@ -20,15 +20,13 @@ REGION_MAPPING = {
 }
 
 
-VALID_ROLES = set(['company', 'teacher'])
-
-
 class Apply(Enum):
     PENDING = 'pending'
     CANCEL = 'cancel'
     CONFIRM = 'confirm'
 
 
+VALID_ROLES = {'company', 'teacher'}
 PATHS = {
     'company': 'companies',
     'teacher': 'teachers',

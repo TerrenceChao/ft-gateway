@@ -22,6 +22,8 @@ class BaseJobVO(BaseModel):
     title: str
     location: str
     salary: str
+    salary_from: Optional[float] = None
+    salary_to: Optional[float] = None
     region: str
 
 
