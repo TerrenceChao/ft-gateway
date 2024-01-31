@@ -12,7 +12,7 @@ class _BaseJobData(BaseModel):
     
     def init(self):
         if self.job_info != None:
-            job = self.job_info
+            job = BaseJobVO.parse_obj(self.job_info)
             self.url_path = f'{SEARCH_JOB_URL_PATH}/{job.region}/{job.cid}/{job.jid}'
         return self
 

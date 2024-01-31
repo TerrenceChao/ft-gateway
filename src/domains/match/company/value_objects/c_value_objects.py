@@ -12,7 +12,7 @@ class _BaseResumeData(BaseModel):
     
     def init(self):
         if self.resume_info != None:
-            resume = self.resume_info
+            resume = BaseResumeVO.parse_obj(self.resume_info)
             self.url_path = f'{SEARCH_RESUME_URL_PATH}/{resume.region}/{resume.tid}/{resume.rid}'
         return self
 
