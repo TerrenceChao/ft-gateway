@@ -86,7 +86,7 @@ class ContactResumeService(StarTrackerService):
             
             if self.__proactive(contact_resume):
                 payment_status = self.payment_service.get_payment_status(payment_host, company_id)
-                if not payment_status['status'] in PAYMENT_PERIOD:
+                if not payment_status.status in PAYMENT_PERIOD:
                     raise ClientException(msg='subscription_expired_or_not_exist')
                 
             data = self.req.simple_put(
