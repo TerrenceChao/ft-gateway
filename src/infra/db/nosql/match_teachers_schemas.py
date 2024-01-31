@@ -1,5 +1,5 @@
 import json
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 from pydantic import BaseModel, EmailStr
 from .base_schemas import BaseEntity
 from ....configs.constants import Apply
@@ -30,8 +30,8 @@ class ResumeSection(BaseEntity):
     sid: Optional[int] = None
     tid: int
     rid: int  # NOT ForeignKey
-    order: int # display order
-    category: str # Education, Experience, Project, Certificate, Skill, Language
+    order: Optional[int] = None # display order
+    category: Optional[str] = None # Education, Experience, Project, Certificate, Skill, Language
     logo: Optional[str] = None
     name: Optional[str] = None # School, Company, Certificate Name, Skill Name
     title: Optional[str] = None # Degree, Job Title
