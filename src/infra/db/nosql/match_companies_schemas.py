@@ -31,6 +31,8 @@ class Job(BaseEntity):
     title: Optional[str] = None
     location: Optional[str] = None
     salary: Optional[str] = None
+    salary_from: Optional[float] = None
+    salary_to: Optional[float] = None
     job_desc: Optional[Dict] = None
     # extra data, photos
     others: Optional[Dict] = None

@@ -12,7 +12,7 @@ class _BaseResumeData(BaseModel):
     
     def init(self):
         if self.resume_info != None:
-            resume = self.resume_info
+            resume = BaseResumeVO.parse_obj(self.resume_info)
             self.url_path = f'{SEARCH_RESUME_URL_PATH}/{resume.region}/{resume.tid}/{resume.rid}'
         return self
 
@@ -64,6 +64,8 @@ class JobVO(BaseModel):
     title: str
     location: str
     salary: str
+    salary_from: Optional[float] = None
+    salary_to: Optional[float] = None
     job_desc: Optional[Dict] = None
     # extra data, photos
     others: Optional[Dict] = None
@@ -79,6 +81,8 @@ class UpdateJobVO(BaseModel):
     title: Optional[str] = None
     location: Optional[str] = None
     salary: Optional[str] = None
+    salary_from: Optional[float] = None
+    salary_to: Optional[float] = None
     job_desc: Optional[Dict] = None
     # extra data, photos
     others: Optional[Dict] = None
