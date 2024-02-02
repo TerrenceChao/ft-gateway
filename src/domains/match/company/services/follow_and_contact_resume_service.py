@@ -2,6 +2,7 @@ from typing import Any, List, Dict, Optional
 from ....cache import ICache
 from ....service_api import IServiceApi
 from ..value_objects import c_value_objects as com_vo
+from ....notify.value_objects.email_value_objects import EmailVO
 from ...star_tracker_service import StarTrackerService
 from ....payment.services.payment_service import PaymentService
 from ....payment.configs.constants import *
@@ -53,7 +54,22 @@ class ContactResumeService(StarTrackerService):
         self.role = 'company'
         self.payment_service = payment_service
         self.__cls_name = self.__class__.__name__
-        
+
+    def contact_teacher_by_email(self, auth_host: str, body: EmailVO):
+        try:
+            res = self.req.simple_post(
+                url=f"{auth_host}/notify/email",
+                json=body.dict()
+            )
+            return res
+
+        except Exception as e:
+            log.error(f'{self.__cls_name}.contact_teacher_by_email error \n \
+                auth_host:%s, body:%s, \n error:%s',
+                auth_host, body, e.__str__())
+            raise_http_exception(e, 'server_error')
+
+
     '''
     proactive: True
         the company need to pay

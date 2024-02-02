@@ -15,12 +15,13 @@ from ...domains.match.company.services.company_service import CompanyProfileServ
 from ...domains.match.company.services.company_job_service import CompanyJobService
 from ...domains.match.company.services.follow_and_contact_resume_service import FollowResumeService, ContactResumeService
 from ...domains.payment.services.payment_service import PaymentService
+from ...domains.notify.value_objects import email_value_objects as email_vo
 from ...configs.service_client import service_client
 from ...configs.cache import gw_cache
 from ...configs.conf import \
     MY_STATUS_OF_COMPANY_APPLY, STATUS_OF_COMPANY_APPLY, MY_STATUS_OF_COMPANY_REACTION, STATUS_OF_COMPANY_REACTION
 from ...configs.constants import Apply
-from ...configs.region_hosts import get_match_region_host, get_payment_region_host
+from ...configs.region_hosts import *
 from ...configs.exceptions import ClientException, \
     NotFoundException, \
     ServerException
@@ -43,6 +44,9 @@ def get_match_host(current_region: str = Header(...)):
 
 def get_payment_host(current_region: str = Header(...)):
     return get_payment_region_host(region=current_region)
+
+def get_auth_host(register_region: str = Header(...)):
+    return get_auth_region_host(region=register_region)
 
 
 COMPANY = 'company'
@@ -254,6 +258,18 @@ def delete_followed_resume(company_id: int,
 
 
 """[contact-resume]"""
+
+
+@router.post("/{company_id}/contact/email")
+def contact_teacher_by_email(
+                 body: email_vo.EmailVO = Depends(contact_teacher_by_email_check),
+                 auth_host=Depends(get_auth_host),
+                 ):
+    data = _contact_resume_service.contact_teacher_by_email(
+        auth_host=auth_host, 
+        body=body,
+    )
+    return res_success(data=data)
 
 
 # TODO: resume_info: Dict >> resume_info 是 "ContactResume".resume_info (Dict/JSON, 是 Contact!!)

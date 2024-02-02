@@ -9,6 +9,7 @@ from ...configs.exceptions import ClientException
 from ...domains.match.public_value_objects import BaseResumeVO
 from ...domains.match.company.value_objects.c_value_objects import \
     UpdateCompanyProfileVO, JobVO, UpdateJobVO, ApplyResumeVO
+from ...domains.notify.value_objects.email_value_objects import EmailVO
 
 
 # def create_job_check_profile(
@@ -21,15 +22,16 @@ from ...domains.match.company.value_objects.c_value_objects import \
 
 
 def create_job_check_job(
-    register_region: str = Header(...), # TODO: vary important!!
+    register_region: str = Header(...),  # TODO: vary important!!
     company_id: int = Path(...),
     job: JobVO = Body(..., embed=True),
 ) -> (JobVO):
     # job.cid = company_id
     job.region = register_region
     if len(job.tags) > MAX_TAGS:
-        raise ClientException(msg=f'The number of tags must be less than {MAX_TAGS}.')
-    
+        raise ClientException(
+            msg=f'The number of tags must be less than {MAX_TAGS}.')
+
     return job
 
 
@@ -51,8 +53,9 @@ def update_job_check_job(
         # job.cid = company_id
         # job.jid = job_id
         if len(job.tags) > MAX_TAGS:
-            raise ClientException(msg=f'The number of tags must be less than {MAX_TAGS}.')
-        
+            raise ClientException(
+                msg=f'The number of tags must be less than {MAX_TAGS}.')
+
     return job
 
 
@@ -70,4 +73,11 @@ def apply_resume_check(register_region: str = Header(...),
                        ):
     body.current_region = current_region
     body.job_info.region = register_region
+    return body
+
+def contact_teacher_by_email_check(
+    company_id: int = Path(...),
+    body: EmailVO = Body(...),
+) -> (EmailVO):
+    body.sender_id = company_id
     return body
