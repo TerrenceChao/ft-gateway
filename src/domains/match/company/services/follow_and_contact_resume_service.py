@@ -2,7 +2,7 @@ from typing import Any, List, Dict, Optional
 from ....cache import ICache
 from ....service_api import IServiceApi
 from ..value_objects import c_value_objects as com_vo
-from ....notify.value_objects.email_value_objects import EmailVO
+from ....notify.value_objects.email_value_objects import *
 from ...star_tracker_service import StarTrackerService
 from ....payment.services.payment_service import PaymentService
 from ....payment.configs.constants import *
@@ -57,9 +57,13 @@ class ContactResumeService(StarTrackerService):
 
     def contact_teacher_by_email(self, auth_host: str, body: EmailVO):
         try:
+            auth_email = EmailAuthVO.parse_obj(body)
+            auth_email.sender_role = self.role
+            auth_email.recipient_role = 'teacher'
+
             res = self.req.simple_post(
                 url=f"{auth_host}/notify/email",
-                json=body.dict()
+                json=auth_email.dict()
             )
             return res
 
@@ -67,7 +71,7 @@ class ContactResumeService(StarTrackerService):
             log.error(f'{self.__cls_name}.contact_teacher_by_email error \n \
                 auth_host:%s, body:%s, \n error:%s',
                 auth_host, body, e.__str__())
-            raise_http_exception(e, 'server_error')
+            raise_http_exception(e)
 
 
     '''
