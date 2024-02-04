@@ -103,6 +103,11 @@ class ContactResumeService(StarTrackerService):
         return com_vo.ContactResumeVO.parse_obj(contact_resume)
 
     def is_proactive_require(self, host: str, company_id: int, resume_id: int) -> (bool):
+        # if not contact yet, it's proactive
+        contact_id_set = self.contact_id_set(host, self.role, company_id)
+        if not resume_id in contact_id_set:
+            return True
+
         contact_resume = \
             self.get_contact_resume(
                 host,

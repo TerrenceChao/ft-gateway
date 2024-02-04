@@ -9,7 +9,7 @@ from ...configs.exceptions import ClientException
 from ...domains.match.public_value_objects import BaseResumeVO
 from ...domains.match.company.value_objects.c_value_objects import \
     UpdateCompanyProfileVO, JobVO, UpdateJobVO, ApplyResumeVO
-from ...domains.notify.value_objects.email_value_objects import EmailVO
+from ...domains.notify.value_objects.email_value_objects import ResumeEmailVO
 
 
 # def create_job_check_profile(
@@ -77,7 +77,7 @@ def apply_resume_check(register_region: str = Header(...),
 
 def contact_teacher_by_email_check(
     company_id: int = Path(...),
-    body: EmailVO = Body(...),
-) -> (EmailVO):
+    body: ResumeEmailVO = Body(...),
+) -> (ResumeEmailVO):
     body.sender_id = company_id
     return body

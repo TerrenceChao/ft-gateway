@@ -259,10 +259,21 @@ def delete_followed_resume(company_id: int,
 
 @router.post("/{company_id}/contact/email")
 def contact_teacher_by_email(
-                 body: email_vo.EmailVO = Depends(contact_teacher_by_email_check),
+                 company_id: int = Path(...),
+                 body: email_vo.ResumeEmailVO = Depends(contact_teacher_by_email_check),
                  match_host=Depends(get_match_host),
+                 payment_host=Depends(get_payment_host),
                  auth_host=Depends(get_auth_host),
                  ):
+    if _contact_resume_service.is_proactive_require(
+            match_host,
+            company_id,
+            body.resume_id
+        ):
+        payment_status = _payment_service.get_payment_status(payment_host, company_id)
+        if not payment_status.status in PAYMENT_PERIOD:
+            raise ClientException(msg='subscription_expired_or_not_exist')
+
     teacher_profile = TeacherProfileService.get(service_client, match_host, body.recipient_id)
     data = _contact_resume_service.contact_teacher_by_email(
         auth_host=auth_host, 

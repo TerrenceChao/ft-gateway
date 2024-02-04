@@ -9,6 +9,10 @@ class EmailVO(BaseModel):
     body: str
 
 
+class ResumeEmailVO(EmailVO):
+    resume_id: int
+
+
 class EmailAuthVO(EmailVO):
     sender_role: Optional[str]
     recipient_role: Optional[str]
