@@ -55,11 +55,12 @@ class ContactResumeService(StarTrackerService):
         self.payment_service = payment_service
         self.__cls_name = self.__class__.__name__
 
-    def contact_teacher_by_email(self, auth_host: str, body: EmailVO):
+    def contact_teacher_by_email(self, auth_host: str, body: EmailVO, teacher_profile_email: str = None):
         try:
             auth_email = EmailAuthVO.parse_obj(body)
             auth_email.sender_role = self.role
             auth_email.recipient_role = 'teacher'
+            auth_email.recipient_email = teacher_profile_email
 
             res = self.req.simple_post(
                 url=f"{auth_host}/notify/email",

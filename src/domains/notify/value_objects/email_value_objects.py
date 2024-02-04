@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Optional
 
 
@@ -12,3 +12,4 @@ class EmailVO(BaseModel):
 class EmailAuthVO(EmailVO):
     sender_role: Optional[str]
     recipient_role: Optional[str]
+    recipient_email: Optional[EmailStr]

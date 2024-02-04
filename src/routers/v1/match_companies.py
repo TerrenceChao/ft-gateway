@@ -14,6 +14,7 @@ from ...domains.match.company.value_objects import c_value_objects as vo
 from ...domains.match.company.services.company_service import CompanyProfileService, CompanyAggregateService
 from ...domains.match.company.services.company_job_service import CompanyJobService
 from ...domains.match.company.services.follow_and_contact_resume_service import FollowResumeService, ContactResumeService
+from ...domains.match.teacher.services.teacher_service import TeacherProfileService
 from ...domains.payment.services.payment_service import PaymentService
 from ...domains.notify.value_objects import email_value_objects as email_vo
 from ...configs.service_client import service_client
@@ -263,11 +264,14 @@ def delete_followed_resume(company_id: int,
 @router.post("/{company_id}/contact/email")
 def contact_teacher_by_email(
                  body: email_vo.EmailVO = Depends(contact_teacher_by_email_check),
+                 match_host=Depends(get_match_host),
                  auth_host=Depends(get_auth_host),
                  ):
+    teacher_profile = TeacherProfileService.get(service_client, match_host, body.recipient_id)
     data = _contact_resume_service.contact_teacher_by_email(
         auth_host=auth_host, 
         body=body,
+        teacher_profile_email=teacher_profile.email if teacher_profile != None else None
     )
     return res_success(data=data)
 
