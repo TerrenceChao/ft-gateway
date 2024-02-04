@@ -22,6 +22,7 @@ from ...configs.cache import gw_cache
 from ...configs.conf import \
     MY_STATUS_OF_COMPANY_APPLY, STATUS_OF_COMPANY_APPLY, MY_STATUS_OF_COMPANY_REACTION, STATUS_OF_COMPANY_REACTION
 from ...configs.constants import Apply
+from ...domains.payment.configs.constants import PAYMENT_PERIOD
 from ...configs.region_hosts import *
 from ...configs.exceptions import ClientException, \
     NotFoundException, \
@@ -64,14 +65,9 @@ _follow_resume_service = FollowResumeService(
 _contact_resume_service = ContactResumeService(
     service_client,
     gw_cache,
-    _payment_service,
 )
 _company_aggregate_service = CompanyAggregateService(
     service_client,
-    gw_cache,
-)
-_payment_service = PaymentService(
-    service_client, 
     gw_cache,
 )
 
@@ -280,12 +276,21 @@ def contact_teacher_by_email(
 @router.put("/{company_id}/apply-resume",
             responses=idempotent_response(f'{COMPANY}.apply_resume', vo.ContactResumeVO))
 def apply_resume(company_id: int = Path(...),
-                 payment_host=Depends(get_payment_host),
                  body: vo.ApplyResumeVO = Depends(apply_resume_check),
                  match_host=Depends(get_match_host),
+                 payment_host=Depends(get_payment_host),
                  ):
+    if _contact_resume_service.is_proactive_require(
+            match_host,
+            company_id,
+            body.resume.rid
+        ):
+        payment_status = _payment_service.get_payment_status(payment_host, company_id)
+        if not payment_status.status in PAYMENT_PERIOD:
+            raise ClientException(msg='subscription_expired_or_not_exist')
+
     contact_resume = _contact_resume_service.apply_resume(
-        host=match_host, payment_host=payment_host, company_id=company_id, body=body)
+        host=match_host, company_id=company_id, body=body)
 
     return res_success(data=contact_resume)
 
