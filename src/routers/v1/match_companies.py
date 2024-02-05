@@ -14,13 +14,16 @@ from ...domains.match.company.value_objects import c_value_objects as vo
 from ...domains.match.company.services.company_service import CompanyProfileService, CompanyAggregateService
 from ...domains.match.company.services.company_job_service import CompanyJobService
 from ...domains.match.company.services.follow_and_contact_resume_service import FollowResumeService, ContactResumeService
+from ...domains.match.teacher.services.teacher_service import TeacherProfileService
 from ...domains.payment.services.payment_service import PaymentService
+from ...domains.notify.value_objects import email_value_objects as email_vo
 from ...configs.service_client import service_client
 from ...configs.cache import gw_cache
 from ...configs.conf import \
     MY_STATUS_OF_COMPANY_APPLY, STATUS_OF_COMPANY_APPLY, MY_STATUS_OF_COMPANY_REACTION, STATUS_OF_COMPANY_REACTION
 from ...configs.constants import Apply
-from ...configs.region_hosts import get_match_region_host, get_payment_region_host
+from ...domains.payment.configs.constants import PAYMENT_PERIOD
+from ...configs.region_hosts import *
 from ...configs.exceptions import ClientException, \
     NotFoundException, \
     ServerException
@@ -44,6 +47,9 @@ def get_match_host(current_region: str = Header(...)):
 def get_payment_host(current_region: str = Header(...)):
     return get_payment_region_host(region=current_region)
 
+def get_auth_host(register_region: str = Header(...)):
+    return get_auth_region_host(region=register_region)
+
 
 COMPANY = 'company'
 _payment_service = PaymentService(
@@ -59,14 +65,9 @@ _follow_resume_service = FollowResumeService(
 _contact_resume_service = ContactResumeService(
     service_client,
     gw_cache,
-    _payment_service,
 )
 _company_aggregate_service = CompanyAggregateService(
     service_client,
-    gw_cache,
-)
-_payment_service = PaymentService(
-    service_client, 
     gw_cache,
 )
 
@@ -256,16 +257,51 @@ def delete_followed_resume(company_id: int,
 """[contact-resume]"""
 
 
+@router.post("/{company_id}/contact/email")
+def contact_teacher_by_email(
+                 company_id: int = Path(...),
+                 body: email_vo.ResumeEmailVO = Depends(contact_teacher_by_email_check),
+                 match_host=Depends(get_match_host),
+                 payment_host=Depends(get_payment_host),
+                 auth_host=Depends(get_auth_host),
+                 ):
+    if _contact_resume_service.is_proactive_require(
+            match_host,
+            company_id,
+            body.resume_id
+        ):
+        payment_status = _payment_service.get_payment_status(payment_host, company_id)
+        if not payment_status.status in PAYMENT_PERIOD:
+            raise ClientException(msg='subscription_expired_or_not_exist')
+
+    teacher_profile = TeacherProfileService.get(service_client, match_host, body.recipient_id)
+    data = _contact_resume_service.contact_teacher_by_email(
+        auth_host=auth_host, 
+        body=body,
+        teacher_profile_email=teacher_profile.email if teacher_profile != None else None
+    )
+    return res_success(data=data)
+
+
 # TODO: resume_info: Dict >> resume_info 是 "ContactResume".resume_info (Dict/JSON, 是 Contact!!)
 @router.put("/{company_id}/apply-resume",
             responses=idempotent_response(f'{COMPANY}.apply_resume', vo.ContactResumeVO))
 def apply_resume(company_id: int = Path(...),
-                 payment_host=Depends(get_payment_host),
                  body: vo.ApplyResumeVO = Depends(apply_resume_check),
                  match_host=Depends(get_match_host),
+                 payment_host=Depends(get_payment_host),
                  ):
+    if _contact_resume_service.is_proactive_require(
+            match_host,
+            company_id,
+            body.resume.rid
+        ):
+        payment_status = _payment_service.get_payment_status(payment_host, company_id)
+        if not payment_status.status in PAYMENT_PERIOD:
+            raise ClientException(msg='subscription_expired_or_not_exist')
+
     contact_resume = _contact_resume_service.apply_resume(
-        host=match_host, payment_host=payment_host, company_id=company_id, body=body)
+        host=match_host, company_id=company_id, body=body)
 
     return res_success(data=contact_resume)
 

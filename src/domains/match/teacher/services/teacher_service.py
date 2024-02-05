@@ -1,4 +1,4 @@
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Optional
 from ....service_api import IServiceApi
 from ..value_objects import t_value_objects as teach_vo
 from ...star_tracker_service import StarTrackerService
@@ -22,11 +22,18 @@ class TeacherProfileService:
 
         return data
 
-    def get_profile(self, host: str, teacher_id: int):
-        url = f"{host}/teachers/{teacher_id}"
-        data = self.req.simple_get(url)
+    def get_profile(self, host: str, teacher_id: int) -> (Optional[teach_vo.ReturnTeacherProfileVO]):
+        return TeacherProfileService.get(self.req, host, teacher_id)
+    
+    # public method for teacher & company:ContactResumeService
+    @staticmethod
+    def get(req: IServiceApi, match_host: str, teacher_id: int) -> (Optional[teach_vo.ReturnTeacherProfileVO]):
+        url = f"{match_host}/teachers/{teacher_id}"
+        data = req.simple_get(url)
+        if data is None:
+            return None
 
-        return data
+        return teach_vo.ReturnTeacherProfileVO.parse_obj(data)
 
     def update_profile(self, host: str, teacher_id: int, profile: teach_vo.UpdateTeacherProfileVO):
         url = f"{host}/teachers/{teacher_id}"
