@@ -19,6 +19,28 @@ class AuthService:
         self.req = req
         self.cache = cache
 
+    '''
+    grant refreshed token & new access token
+    TODO: copy table: 'account_indexs'(jp) to other regions(ge, us, ...etc);
+    'account_indexs' schema: role_id(partition key), aid, srt_ts, ext_ts, others...
+    '''
+    def grant_refresh_token(self, host: str, body: AuthUpdateTokenDTO, current_region: str) -> (Optional[GrantTokenVO]):
+        # 會到這裡表示用戶的 token 已經過期，只能透過 role_id 和 refresh_token 來驗證用戶;
+        # 同時傳送 gateway 端的 expired_ts 給 auth-service 取得新的 refresh token
+        # FIXME: 2024/02/05 implement refresh-token API as following
+        # refresh_token_res = self.req.simple_post(f'{host}/security/refresh-token', json=body.dict())
+        refresh_token_res = {"refresh_token": "new refresh token"}
+
+        # 假設 gateway & auth-service 的時間差異不大(誤差幾分鐘)
+        current_user = {
+            'role': body.role,
+            'role_id': body.role_id,
+            'region': current_region,
+        }
+        current_user = self.apply_token(current_user, body.expired_ts)
+        refresh_token_res['token'] = current_user['token']
+        return {'auth': refresh_token_res}
+
     """
     get_public_key
     """
@@ -92,7 +114,8 @@ class AuthService:
     confirm_signup
     """
 
-    def confirm_signup(self, host: str, body: SignupConfirmVO):
+    def confirm_signup(self, host: str, body: AuthSignupVO):
+        # body = body.gen_ext()
         email = body.email
         confirm_code = body.confirm_code
         user = self.cache.get(email)
@@ -106,11 +129,12 @@ class AuthService:
                                             # "meta": "{\"role\":\"teacher\",\"pass\":\"secret\"}"
                                             "meta": user["meta"],
                                             "pubkey": body.pubkey,
+                                            "expired_ts": body.expired_ts,
                                         })
 
         role_id_key = str(auth_res["role_id"])
         self.cache_auth_res(role_id_key, auth_res)
-        auth_res = self.apply_token(auth_res)
+        auth_res = self.apply_token(auth_res, body.expired_ts)
         return {"auth": auth_res}
 
     def __verify_confirmcode(self, confirm_code: str, user: Any):
@@ -123,9 +147,13 @@ class AuthService:
         if confirm_code != str(user["confirm_code"]):
             raise ClientException(msg="wrong confirm_code")
 
-    def apply_token(self, res: Dict):
+    def apply_token(self, res: Dict, expired_timestamp: float = None):
         # gen jwt token
-        token = gen_token(res, ["region", "role_id", "role"])
+        token = gen_token(
+            res,
+            ["region", "role_id", "role"],
+            expired_timestamp,
+        )
         res.update({"token": token})
         return res
 
@@ -133,7 +161,8 @@ class AuthService:
     login
     """
 
-    def login(self, auth_host: str, match_host: str, body: LoginVO):
+    def login(self, auth_host: str, match_host: str, body: AuthLoginVO):
+        # body = body.gen_ext()
         # request login & auth data
         (auth_res, region) = self.__req_login_or_register_region(auth_host, match_host, body)
         if auth_res is None:
@@ -148,7 +177,7 @@ class AuthService:
             "socketid": "it's socketid",
         })
         self.cache_auth_res(role_id_key, auth_res)
-        auth_res = self.apply_token(auth_res)
+        auth_res = self.apply_token(auth_res, body.expired_ts)
 
         # request match data
         role_path = PATHS[auth_res["role"]]
@@ -164,7 +193,7 @@ class AuthService:
             "match": match_res,
         }
         
-    def __req_login_or_register_region(self, auth_host: str, match_host: str, body: LoginVO):
+    def __req_login_or_register_region(self, auth_host: str, match_host: str, body: AuthLoginVO):
         register_region = None
         auth_res = None
         try:
@@ -197,7 +226,7 @@ class AuthService:
             raise_http_exception(e, 'unknow_error')
         
 
-    def __req_login(self, auth_host: str, body: LoginVO):
+    def __req_login(self, auth_host: str, body: AuthLoginVO):
         return self.req.simple_post(
             f"{auth_host}/login", json=body.dict())
         

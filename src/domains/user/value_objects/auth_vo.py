@@ -1,6 +1,8 @@
 import json
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel, EmailStr, validator
+from ....configs.conf import TOKEN_EXPIRE_TIME
 from ....configs.constants import VALID_ROLES
 from ....configs.exceptions import *
 from ...match.company.value_objects.c_value_objects import CompanyMatchDataVO
@@ -29,6 +31,38 @@ def meta_validator(meta: str, pubkey: str = None):
 
     except ClientException as e:
         raise ClientException(msg=e.msg)
+
+
+def gen_expired_timestamp() -> (float):
+    return datetime.now().timestamp() + TOKEN_EXPIRE_TIME
+
+
+class ExpirationVO(BaseModel):
+    expired_ts: Optional[float] = None
+
+    def gen_ext(self):
+        self.expired_ts = gen_expired_timestamp()
+        return self
+
+
+class UpdateTokenDTO(BaseModel):
+    role: str
+    role_id: int
+    grant_type: str = 'refresh_token'
+    refresh_token: str
+
+
+class AuthUpdateTokenDTO(UpdateTokenDTO, ExpirationVO):
+    pass
+
+
+class GrantTokenVO(BaseModel):
+    token: str
+    refresh_token: str
+
+
+class GrantTokenResponseVO(BaseModel):
+    auth: GrantTokenVO
 
 
 class SignupVO(BaseModel):
@@ -67,6 +101,10 @@ class SignupConfirmVO(BaseModel):
         }
 
 
+class AuthSignupVO(SignupConfirmVO, ExpirationVO):
+    pass
+
+
 class LoginVO(BaseModel):
     current_region: str = None  # in headers
     email: EmailStr
@@ -85,6 +123,11 @@ class LoginVO(BaseModel):
             "description": "ignore 'current_region' in the body, it will be set in headers; ignore 'pubkey' in the body",
         }
 
+
+class AuthLoginVO(LoginVO, ExpirationVO):
+    pass
+
+
 class ResetPasswordVO(BaseModel):
     register_email: EmailStr
     password1: str
@@ -100,6 +143,7 @@ class BaseAuthDTO(BaseModel):
 class AuthVO(BaseAuthDTO):
     email: EmailStr
     token: str
+    refresh_token: Optional[str] = None
     region: str
     current_region: Optional[str] = None
     socketid: Optional[str] = None
@@ -116,7 +160,7 @@ class SignupResponseVO(BaseModel):
 class LoginResponseVO(SignupResponseVO):
     match: Union[CompanyMatchDataVO, TeacherMatchDataVO]
 
-class SSOLoginVO(BaseModel):
+class SSOLoginVO(ExpirationVO):
     code: str
     state: str
     sso_type: Optional[str]

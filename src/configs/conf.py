@@ -18,7 +18,8 @@ REDIS_PASS = os.getenv("REDIS_PASSWORD", None)
 
 JWT_SECRET = os.getenv("JWT_SECRET", None)
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
-TOKEN_EXPIRE_TIME = int(os.getenv("TOKEN_EXPIRE_TIME", 60 * 60 * 24 * 7))
+TOKEN_EXPIRE_TIME = float(os.getenv("TOKEN_EXPIRE_TIME", 60 * 60 * 24 * 7))
+REFRESH_TOKEN_TIME_WINDOW = float(os.getenv("REFRESH_TOKEN_TIME_WINDOW", 60 * 60 * 2))
 
 # default = 20 secs
 REQUEST_INTERVAL_TTL = int(os.getenv("REQUEST_INTERVAL_TTL", "20"))

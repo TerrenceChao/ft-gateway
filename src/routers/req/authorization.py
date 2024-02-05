@@ -6,15 +6,18 @@ import jwt as jwt_util
 from fastapi import APIRouter, FastAPI, Header, Path, Query, Body, Request, Response, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.routing import APIRoute
+from ...domains.user.value_objects.auth_vo import \
+    gen_expired_timestamp, UpdateTokenDTO
 from ...infra.db.nosql import match_companies_schemas as com_schema, \
     match_teachers_schemas as teacher_schema
-from ...configs.conf import JWT_SECRET, JWT_ALGORITHM, TOKEN_EXPIRE_TIME
+from ...configs.conf import JWT_SECRET, JWT_ALGORITHM, TOKEN_EXPIRE_TIME, REFRESH_TOKEN_TIME_WINDOW
 from ...configs.exceptions import *
 import logging as log
 
 log.basicConfig(level=log.INFO)
 
 auth_scheme = HTTPBearer()
+
 
 # token required in Header
 def token_required(credentials: HTTPAuthorizationCredentials = Depends(auth_scheme)):
@@ -39,7 +42,8 @@ async def parse_token_from_request(request: Request):
 def __get_secret(role_id):
     return f"secret{str(role_id)[::-1]}" # if role_id != None else JWT_SECRET
 
-def gen_token(data: dict, fields: List):
+
+def gen_token(data: dict, fields: List, expired_timestamp: float = None) -> (str):
     public_info = {}
     if not "role_id" in data:
         log.error(f"gen_token fail: ['role_id' is required in data], data:{data}, fields:{fields}")
@@ -49,12 +53,54 @@ def gen_token(data: dict, fields: List):
     for field in fields:
         val = str(data[field])
         public_info[field] = val
-        
-    exp = datetime.now().timestamp() + TOKEN_EXPIRE_TIME
+
+    if expired_timestamp is None:
+        exp = gen_expired_timestamp()
+    else:
+        exp = expired_timestamp
+
     public_info.update({ "exp": exp })
     return jwt_util.encode(payload=public_info, key=secret, algorithm=JWT_ALGORITHM)
 
 
+def valid_time_window() -> (float):
+    return gen_expired_timestamp() + REFRESH_TOKEN_TIME_WINDOW
+
+
+def grant_new_token_check(
+    body: UpdateTokenDTO = Body(...),
+    current_region: str = Header(...),
+    credentials: HTTPAuthorizationCredentials = Depends(auth_scheme),
+):
+    try:
+        token = credentials.credentials
+        secret = __get_secret(body.role_id)
+        # Throw ExpiredSignatureError if token is expired. Don't raise Exception, let auth-service handle it.
+        data = jwt_util.decode(token, secret, [JWT_ALGORITHM])
+        # FIXME: 2024/02/05 disable 'return body'
+        return body
+
+        # FIXME: 2024/02/05 enable the following code
+        # # token is expired TOO LONG, more then exceptable time window
+        # if data['exp'] > valid_time_window():
+        #     raise UnauthorizedException(msg="token is expired, need to login again")
+
+        # # toekn passed, it means the data is correct and not expired, need throw client exception
+        # raise ClientException(msg="token is not expired yet, no need to refresh it")
+
+    except jwt_util.ExpiredSignatureError:
+        log.warn(f"As expectation, token has expired, \
+            body:{body}, current_region:{current_region}, token:{token}")
+        # Throw ExpiredSignatureError if token is expired. Don't raise Exception, let auth-service handle it.
+        # TODO: CANNOT check the role & role_id, send request to auth-service then check role_id & refresh_token
+        return body
+
+    except ClientException as e:
+        raise ClientException(msg=e.msg)
+
+    except Exception as e:
+        log.error(f"invalid token, body:{body}, current_region:{current_region}, token:{token}, e:{e}")
+        raise UnauthorizedException(msg=e.msg if isinstance(e, UnauthorizedException) else f"invalid user")
 
 
 # url_path = "//api/v1/match/teachers/6994696629320454/resumes/0"

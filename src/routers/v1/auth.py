@@ -7,7 +7,10 @@ from fastapi import APIRouter, \
 from typing import Union
 from pydantic import EmailStr
 from ...domains.user.value_objects.auth_vo import *
-from ..req.authorization import verify_token_by_logout, verify_token_by_update_password
+from ..req.authorization import \
+  verify_token_by_logout, \
+  verify_token_by_update_password, \
+  grant_new_token_check
 from ..req.auth_validation import *
 from ..res.response import *
 from ...domains.user.services.auth_service import AuthService
@@ -58,6 +61,25 @@ def get_public_key(auth_host=Depends(get_auth_host)):
     return res_success(data=pubkey_vo)
 
 
+# TODO: copy table: 'account_indexs'(jp) to other regions(ge, us, ...etc);
+# 'account_indexs' schema: role_id(partition key), aid, srt_ts, ext_ts, others...
+@router.post("/refresh",
+             responses=post_response("grant_refresh_token", GrantTokenResponseVO),
+             status_code=201)
+def grant_refresh_token(
+    current_region: str = Header(...),
+    body: UpdateTokenDTO = Depends(grant_new_token_check),
+    auth_host=Depends(get_auth_host),
+):
+    body = AuthUpdateTokenDTO.parse_obj(body).gen_ext()
+    data = _auth_service.grant_refresh_token(
+        auth_host,
+        body,
+        current_region,
+    )
+    return res_success(data=data)
+
+
 # "meta": "{\"role\":\"teacher\",\"pass\":\"secret\"}"
 @router.post("/signup", status_code=201)
 def signup(body: SignupVO = Body(...),
@@ -73,6 +95,7 @@ def signup(body: SignupVO = Body(...),
 def confirm_signup(body: SignupConfirmVO = Body(...),
                    auth_host=Depends(get_auth_host_for_signup),
                    ):
+    body = AuthSignupVO.parse_obj(body).gen_ext()
     data = _auth_service.confirm_signup(auth_host, body)
     return res_success(data=data)
 
@@ -156,6 +179,7 @@ def login(body: LoginVO = Depends(login_check_body),
           auth_host=Depends(get_auth_host),
           match_host=Depends(get_match_host),
           ):
+    body = AuthLoginVO.parse_obj(body).gen_ext()
     data = _auth_service.login(auth_host, match_host, body)
     return res_success(data=data)
 

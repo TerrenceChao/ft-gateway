@@ -59,7 +59,7 @@ def google_login(code: str = Query(...),
         code=code,
         state=state,
         sso_type='google',
-    )
+    ).gen_ext()
     data = google_auth_service.login(sso_service_vo)
     return res_success(data=data)
 
@@ -78,7 +78,7 @@ def facebook_login(code: str = Query(...),
         code=code,
         state=state,
         sso_type='fb',
-    )
+    ).gen_ext()
     data = fb_auth_service.login(sso_login_vo)
     return res_success(data=data)
 

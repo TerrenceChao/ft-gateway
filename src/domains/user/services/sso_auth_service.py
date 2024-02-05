@@ -42,7 +42,7 @@ class ISSOAuthService(AuthService):
             "socketid": "it's socketid",
         })
         self.cache_auth_res(role_id_key, auth_res)
-        auth_res = self.apply_token(auth_res)
+        auth_res = self.apply_token(auth_res, sso_login_vo.expired_ts)
 
         # request match data
         role_path = PATHS[auth_res["role"]]
