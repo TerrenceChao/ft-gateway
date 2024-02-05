@@ -68,8 +68,8 @@ class ContactResumeService(StarTrackerService):
 
         except Exception as e:
             log.error(f'{self.__cls_name}.contact_teacher_by_email error \n \
-                auth_host:%s, body:%s, \n error:%s',
-                auth_host, body, e.__str__())
+                auth_host:%s, body:%s, teacher_profile_email:%s, \n error:%s',
+                auth_host, body, teacher_profile_email, e.__str__())
             raise_http_exception(e)
 
 
