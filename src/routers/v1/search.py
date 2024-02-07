@@ -54,6 +54,7 @@ def get_resumes(
     sort_by: SortField = Query(SortField.UPDATED_AT),
     sort_dirction: SortDirection = Query(SortDirection.DESC),
     next: str = Query(None),
+    patterns: List[str] = Query([]),
     visitor: BaseAuthDTO = Depends(search_list_check_visitor),
     search_host=Depends(get_search_host),
     match_host=Depends(get_match_host),
@@ -63,6 +64,7 @@ def get_resumes(
         sort_by=sort_by,
         sort_dirction=sort_dirction,
         search_after=next,
+        patterns=patterns,
     )
     data = _search_service.get_resumes(search_host, query)
     if AuthService.is_login(gw_cache, visitor):
@@ -92,6 +94,7 @@ def get_jobs(
     sort_by: SortField = Query(SortField.UPDATED_AT),
     sort_dirction: SortDirection = Query(SortDirection.DESC),
     next: str = Query(None),
+    patterns: List[str] = Query([]),
     visitor: BaseAuthDTO = Depends(search_list_check_visitor),
     search_host=Depends(get_search_host),
     match_host=Depends(get_match_host),
@@ -101,6 +104,7 @@ def get_jobs(
         sort_by=sort_by,
         sort_dirction=sort_dirction,
         search_after=next,
+        patterns=patterns,
     )
     data = _search_service.get_jobs(search_host, query)
     if AuthService.is_login(gw_cache, visitor):
