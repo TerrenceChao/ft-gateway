@@ -12,7 +12,8 @@ from ...configs.region_hosts import \
     get_search_region_host, get_match_region_host
 from ...configs.constants import *
 from ...domains.search.value_objects import \
-    c_value_objects as search_c, t_value_objects as search_t
+    c_value_objects as search_c, t_value_objects as search_t, \
+    public_value_objects as search_public
 from ...domains.match.company.value_objects import c_value_objects as match_c
 from ...domains.match.teacher.value_objects import t_value_objects as match_t
 from ...domains.search.services.search_service import SearchService
@@ -125,3 +126,23 @@ def get_job_by_id(
 ):
     (data, msg) = _search_service.get_job_by_id(match_host, cid, jid)
     return res_success(data=data, msg=msg)
+
+
+@router.get('/jobs-info/continents',
+            responses=idempotent_response(f'{SEARCH}.get_continents', search_public.ContinentListVO))
+def get_continents(search_host=Depends(get_search_host)):
+    data = _search_service.get_continents(search_host)
+    return res_success(data=data)
+
+
+@router.get('/jobs-info/continents/{continent_code}/countries',
+            responses=idempotent_response(f'{SEARCH}.get_countries', search_public.CountryListVO))
+def get_countries(
+    continent_code: str,
+    search_host=Depends(get_search_host),
+):
+    data = _search_service.get_countries(
+        search_host,
+        continent_code,
+    )
+    return res_success(data=data)

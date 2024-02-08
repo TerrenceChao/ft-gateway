@@ -1,10 +1,12 @@
 from typing import Any, List, Dict
 from ...service_api import IServiceApi
 from ....configs.exceptions import *
-from ....domains.match.company.value_objects import c_value_objects as match_c
-from ....domains.match.teacher.value_objects import t_value_objects as match_t
-from ....domains.search.value_objects import \
-    c_value_objects as search_c, t_value_objects as search_t
+from ...match.company.value_objects import c_value_objects as match_c
+from ...match.teacher.value_objects import t_value_objects as match_t
+from ..value_objects import \
+    c_value_objects as search_c, \
+    t_value_objects as search_t, \
+    public_value_objects as search_public
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
@@ -90,3 +92,13 @@ class SearchService:
 
     def __job_closed(self, data: match_c.CompanyProfileAndJobVO) -> (bool):
         return not data.job or not data.job.enable
+
+    def get_continents(self, search_host: str) -> (search_public.ContinentListVO):
+        url = f'{search_host}/jobs-info/continents'
+        data = self.req.simple_get(url)
+        return data
+
+    def get_countries(self, search_host: str, continent_code: str) -> (search_public.CountryListVO):
+        url = f'{search_host}/jobs-info/continents/{continent_code}/countries'
+        data = self.req.simple_get(url)
+        return data
