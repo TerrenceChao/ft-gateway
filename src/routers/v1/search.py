@@ -96,6 +96,8 @@ def get_jobs(
     sort_dirction: SortDirection = Query(SortDirection.DESC),
     next: str = Query(None),
     patterns: List[str] = Query([]),
+    continent_code: str = Query(None),
+    country_code: str = Query(None),
     visitor: BaseAuthDTO = Depends(search_list_check_visitor),
     search_host=Depends(get_search_host),
     match_host=Depends(get_match_host),
@@ -106,6 +108,8 @@ def get_jobs(
         sort_dirction=sort_dirction,
         search_after=next,
         patterns=patterns,
+        continent_code=continent_code,
+        country_code=country_code,
     )
     data = _search_service.get_jobs(search_host, query)
     if AuthService.is_login(gw_cache, visitor):
