@@ -98,7 +98,12 @@ class SearchService:
         data = self.req.simple_get(url)
         return data
 
-    def get_countries(self, search_host: str, continent_code: str) -> (search_public.CountryListVO):
+    def get_all_continents_and_countries(self, search_host: str) -> (List[search_public.CountryListVO]):
+        url = f'{search_host}/jobs-info/continents/all/countries'
+        data = self.req.simple_get(url)
+        return data
+
+    def get_countries(self, search_host: str, continent_code: str) -> (List[search_public.CountryListVO]):
         url = f'{search_host}/jobs-info/continents/{continent_code}/countries'
         data = self.req.simple_get(url)
         return data

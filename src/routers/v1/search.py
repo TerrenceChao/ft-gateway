@@ -135,8 +135,17 @@ def get_continents(search_host=Depends(get_search_host)):
     return res_success(data=data)
 
 
+# TODO: this route rule(get_all_continents_and_countries) is same as 'get_countries', 
+# so it has to be put before 'get_countries'
+@router.get('/jobs-info/continents/all/countries',
+            responses=idempotent_response(f'{SEARCH}.get_all_continents_and_countries', List[search_public.CountryListVO]))
+def get_all_continents_and_countries(search_host=Depends(get_search_host)):
+    data = _search_service.get_all_continents_and_countries(search_host)
+    return res_success(data=data)
+
+
 @router.get('/jobs-info/continents/{continent_code}/countries',
-            responses=idempotent_response(f'{SEARCH}.get_countries', search_public.CountryListVO))
+            responses=idempotent_response(f'{SEARCH}.get_countries', List[search_public.CountryListVO]))
 def get_countries(
     continent_code: str,
     search_host=Depends(get_search_host),
