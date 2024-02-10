@@ -62,6 +62,8 @@ class JobVO(BaseModel):
     # jid: Optional[int] = None
     # cid: int
     title: str
+    continent_code: str
+    country_code: str
     location: str
     salary: str
     salary_from: Optional[float] = None
@@ -79,6 +81,8 @@ class UpdateJobVO(BaseModel):
     # jid: Optional[int] = None
     # cid: int
     title: Optional[str] = None
+    continent_code: Optional[str] = None
+    country_code: Optional[str] = None
     location: Optional[str] = None
     salary: Optional[str] = None
     salary_from: Optional[float] = None

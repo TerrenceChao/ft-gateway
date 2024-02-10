@@ -1,18 +1,29 @@
 from typing import Any, List, Dict
 from ...service_api import IServiceApi
+from ...cache import ICache
 from ....configs.exceptions import *
-from ....domains.match.company.value_objects import c_value_objects as match_c
-from ....domains.match.teacher.value_objects import t_value_objects as match_t
-from ....domains.search.value_objects import \
-    c_value_objects as search_c, t_value_objects as search_t
+from ....configs.conf import SHORT_TERM_TTL
+from ...match.company.value_objects import c_value_objects as match_c
+from ...match.teacher.value_objects import t_value_objects as match_t
+from ..value_objects import \
+    c_value_objects as search_c, \
+    t_value_objects as search_t, \
+    public_value_objects as search_public
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
 
 
+CONTINENTS = 'continents'
+CONTINENT_ALL = 'continent-all'
+CONTINENT_ = 'continent-'
+RESUME_TAGS = 'resume-tags'
+
+
 class SearchService:
-    def __init__(self, req: IServiceApi):
+    def __init__(self, req: IServiceApi, cache: ICache):
         self.req = req
+        self.cache = cache
         self.__cls_name = self.__class__.__name__
 
     def get_resumes(self, search_host: str, query: search_t.SearchResumeListQueryDTO):
@@ -53,6 +64,17 @@ class SearchService:
     def __resume_closed(self, data: match_t.TeacherProfileAndResumeVO) -> (bool):
         return not data.resume or not data.resume.enable
 
+
+    def get_resume_tags(self, search_host: str) -> (search_public.ResumeTagsVO):
+        data = self.cache.get(RESUME_TAGS)
+        if data is None:
+            url = f'{search_host}/resumes-info/tags'
+            data = self.req.simple_get(url)
+            self.cache.set(RESUME_TAGS, data, SHORT_TERM_TTL)
+
+        return data
+
+
     def get_jobs(self, search_host: str, query: search_c.SearchJobListQueryDTO):
         url = f"{search_host}/jobs"
         data = self.req.simple_get(
@@ -90,3 +112,30 @@ class SearchService:
 
     def __job_closed(self, data: match_c.CompanyProfileAndJobVO) -> (bool):
         return not data.job or not data.job.enable
+
+    def get_continents(self, search_host: str) -> (search_public.ContinentListVO):
+        data = self.cache.get(CONTINENTS)
+        if data is None:
+            url = f'{search_host}/jobs-info/continents'
+            data = self.req.simple_get(url)
+            self.cache.set(CONTINENTS, data, SHORT_TERM_TTL)
+
+        return data
+
+    def get_all_continents_and_countries(self, search_host: str) -> (List[search_public.CountryListVO]):
+        data = self.cache.get(CONTINENT_ALL)
+        if data is None:
+            url = f'{search_host}/jobs-info/continents/all/countries'
+            data = self.req.simple_get(url)
+            self.cache.set(CONTINENT_ALL, data, SHORT_TERM_TTL)
+
+        return data
+
+    def get_countries(self, search_host: str, continent_code: str) -> (List[search_public.CountryListVO]):
+        data = self.cache.get(f'{CONTINENT_}{continent_code}')
+        if data is None:
+            url = f'{search_host}/jobs-info/continents/{continent_code}/countries'
+            data = self.req.simple_get(url)
+            self.cache.set(f'{CONTINENT_}{continent_code}', data, SHORT_TERM_TTL)
+
+        return data

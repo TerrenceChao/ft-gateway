@@ -29,6 +29,8 @@ class Job(BaseEntity):
     jid: Optional[int] = None
     cid: int
     title: Optional[str] = None
+    continent_code: Optional[str] = None
+    country_code: Optional[str] = None
     location: Optional[str] = None
     salary: Optional[str] = None
     salary_from: Optional[float] = None

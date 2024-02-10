@@ -52,7 +52,7 @@ class StarTrackerService:
     def remove_followed_star(self, role: str, role_id: int, target_id: int) -> (bool):
         role, target_ids = self.__role_target_ids(role)
         follow_set_key = self.__follow_key(role, role_id, target_ids)
-        result = self.cache.srem(follow_set_key, target_id)
+        result = self.cache.srem(follow_set_key, target_id, STAR_TRACKER_TTL)
         return result > 0
 
     def followed_id_set(self, match_host: str, role: str, role_id: int) -> (Set[int]):
@@ -98,7 +98,7 @@ class StarTrackerService:
     def remove_contact_star(self, role: str, role_id: int, target_id: int) -> (bool):
         role, target_ids = self.__role_target_ids(role)
         contact_set_key = self.__contact_key(role, role_id, target_ids)
-        result = self.cache.srem(contact_set_key, target_id)
+        result = self.cache.srem(contact_set_key, target_id, STAR_TRACKER_TTL)
         return result > 0
 
     def contact_id_set(self, match_host: str, role: str, role_id: int) -> (Set[int]):

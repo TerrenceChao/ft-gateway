@@ -29,5 +29,5 @@ class ICache(ABC):
         pass
     
     @abstractmethod
-    async def srem(self, key: str, value: Any) -> (int):
+    async def srem(self, key: str, value: Any, ex: int = None) -> (int):
         pass

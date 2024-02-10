@@ -113,7 +113,7 @@ class DynamoDbCacheAdapter(ICache):
         update_count = len(values)
         return update_count
 
-    def srem(self, key: str, value: Any) -> (int):
+    def srem(self, key: str, value: Any, ex: int = None) -> (int):
         update_count = 0
         set_members = self.smembers(key)
         if set_members is None:
@@ -121,7 +121,7 @@ class DynamoDbCacheAdapter(ICache):
 
         if value in set_members:
             set_members.remove(value)
-            self.set(key, list(set_members))
+            self.set(key, list(set_members), ex)
             update_count = 1
         else:
             update_count = 0

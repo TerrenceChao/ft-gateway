@@ -76,7 +76,7 @@ class RedisCacheAdapter(ICache):
         # TODO: implement
         return 0
 
-    def srem(self, key: str, value: Any) -> (int):
+    def srem(self, key: str, value: Any, ex: int = None) -> (int):
         # TODO: implement
         return 0
 
