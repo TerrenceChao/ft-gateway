@@ -166,10 +166,24 @@ class TeacherMatchDataVO(BaseModel):
     followed: Optional[List[FollowJobVO]] = []
     contact: Optional[List[ContactJobVO]] = []
 
+    def init(self):
+        if self.followed != None:
+            [item.init() for item in self.followed]
+        if self.contact != None:
+            [item.init() for item in self.contact]
+        return self
+
 
 class TeacherFollowAndContactVO(BaseModel):
     followed: Optional[List[FollowJobVO]] = []
     contact: Optional[List[ContactJobVO]] = []
+
+    def init(self):
+        if self.followed != None:
+            [item.init() for item in self.followed]
+        if self.contact != None:
+            [item.init() for item in self.contact]
+        return self
 
 
 class ApplyJobVO(BaseModel):

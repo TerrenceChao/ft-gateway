@@ -151,10 +151,24 @@ class CompanyMatchDataVO(BaseModel):
     followed: Optional[List[FollowResumeVO]] = []
     contact: Optional[List[ContactResumeVO]] = []
 
+    def init(self):
+        if self.followed != None:
+            [item.init() for item in self.followed]
+        if self.contact != None:
+            [item.init() for item in self.contact]
+        return self
+
 
 class CompanyFollowAndContactVO(BaseModel):
     followed: Optional[List[FollowResumeVO]] = []
     contact: Optional[List[ContactResumeVO]] = []
+
+    def init(self):
+        if self.followed != None:
+            [item.init() for item in self.followed]
+        if self.contact != None:
+            [item.init() for item in self.contact]
+        return self
 
 
 class ApplyResumeVO(BaseModel):
