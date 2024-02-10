@@ -19,3 +19,7 @@ class CountryVO(BaseModel):
 class CountryListVO(BaseModel):
     countries: List[CountryVO]
     continent: ContinentVO
+
+
+class ResumeTagsVO(BaseModel):
+    tags: List[str]

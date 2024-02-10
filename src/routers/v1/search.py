@@ -91,6 +91,15 @@ def get_resume_by_id(
     return res_success(data=data, msg=msg)
 
 
+@router.get('/resumes-info/tags',
+            responses=idempotent_response(f'{SEARCH}.get_resume_tags', search_public.ResumeTagsVO))
+def get_resume_tags(
+    search_host=Depends(get_search_host),
+):
+    data = _search_service.get_resume_tags(search_host)
+    return res_success(data=data)
+
+
 @router.get("/jobs",
             responses=idempotent_response(f'{SEARCH}.get_jobs', search_c.SearchJobListVO))
 def get_jobs(

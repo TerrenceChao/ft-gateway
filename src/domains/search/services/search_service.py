@@ -17,6 +17,7 @@ log.basicConfig(filemode='w', level=log.INFO)
 CONTINENTS = 'continents'
 CONTINENT_ALL = 'continent-all'
 CONTINENT_ = 'continent-'
+RESUME_TAGS = 'resume-tags'
 
 
 class SearchService:
@@ -62,6 +63,17 @@ class SearchService:
 
     def __resume_closed(self, data: match_t.TeacherProfileAndResumeVO) -> (bool):
         return not data.resume or not data.resume.enable
+
+
+    def get_resume_tags(self, search_host: str) -> (search_public.ResumeTagsVO):
+        data = self.cache.get(RESUME_TAGS)
+        if data is None:
+            url = f'{search_host}/resumes-info/tags'
+            data = self.req.simple_get(url)
+            self.cache.set(RESUME_TAGS, data, SHORT_TERM_TTL)
+
+        return data
+
 
     def get_jobs(self, search_host: str, query: search_c.SearchJobListQueryDTO):
         url = f"{search_host}/jobs"
