@@ -50,7 +50,7 @@ class CompanyAggregateService(StarTrackerService):
             }
         )
         
-        data = com_vo.CompanyFollowAndContactVO.parse_obj(data)
+        data = com_vo.CompanyFollowAndContactVO.parse_obj(data).init()
         data.followed = self.contact_marks(host, 'company', company_id, data.followed)
         data.contact = self.followed_marks(host, 'company', company_id, data.contact)
         return data
@@ -66,7 +66,7 @@ class CompanyAggregateService(StarTrackerService):
             }
         )
         
-        data = com_vo.CompanyMatchDataVO.parse_obj(data)
+        data = com_vo.CompanyMatchDataVO.parse_obj(data).init()
         data.followed = self.contact_marks(host, 'company', company_id, data.followed)
         data.contact = self.followed_marks(host, 'company', company_id, data.contact)
         return data

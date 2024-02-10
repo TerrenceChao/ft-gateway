@@ -57,7 +57,7 @@ class TeacherAggregateService(StarTrackerService):
             }
         )
 
-        data = teach_vo.TeacherFollowAndContactVO.parse_obj(data)
+        data = teach_vo.TeacherFollowAndContactVO.parse_obj(data).init()
         data.followed = self.contact_marks(host, 'teacher', teacher_id, data.followed)
         data.contact = self.followed_marks(host, 'teacher', teacher_id, data.contact)
         return data
@@ -73,7 +73,7 @@ class TeacherAggregateService(StarTrackerService):
             }
         )
 
-        data = teach_vo.TeacherMatchDataVO.parse_obj(data)
+        data = teach_vo.TeacherMatchDataVO.parse_obj(data).init()
         data.followed = self.contact_marks(host, 'teacher', teacher_id, data.followed)
         data.contact = self.followed_marks(host, 'teacher', teacher_id, data.contact)
         return data
