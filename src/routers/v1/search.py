@@ -59,6 +59,7 @@ def get_resumes(
     sort_dirction: SortDirection = Query(SortDirection.DESC),
     next: str = Query(None),
     patterns: List[str] = Query([]),
+    tags: List[str] = Query([]),
     visitor: BaseAuthDTO = Depends(search_list_check_visitor),
     search_host=Depends(get_search_host),
     match_host=Depends(get_match_host),
@@ -69,6 +70,7 @@ def get_resumes(
         sort_dirction=sort_dirction,
         search_after=next,
         patterns=patterns,
+        tags=tags,
     )
     data = _search_service.get_resumes(search_host, query)
     if AuthService.is_login(gw_cache, visitor):
