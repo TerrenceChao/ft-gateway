@@ -1,12 +1,10 @@
-import requests
 from fastapi import APIRouter, Depends, Header, Query
 from fastapi.responses import RedirectResponse
 from ..res.response import res_success
-from ...apps.service_api_dapter import ServiceApiAdapter
 from ...configs.region_hosts import get_auth_region_v2_host, get_match_region_host
 from src.domains.user.services.sso_auth_service import FBAuthService, GoogleAuthService
-from src.configs.dynamodb import dynamodb
-from src.infra.cache.dynamodb_cache_adapter import DynamoDbCacheAdapter
+from src.configs.service_client import service_client
+from src.configs.cache import gw_cache
 from src.domains.user.value_objects.auth_vo import SSOLoginVO
 import logging as log
 
@@ -41,8 +39,14 @@ def get_auth_host(current_region: str = Header(...)):
 def get_match_host(current_region: str = Header(...)):
     return get_match_region_host(region=current_region)
 
-fb_auth_service = FBAuthService(ServiceApiAdapter(requests), DynamoDbCacheAdapter(dynamodb))
-google_auth_service = GoogleAuthService(ServiceApiAdapter(requests), DynamoDbCacheAdapter(dynamodb))
+fb_auth_service = FBAuthService(
+    service_client,
+    gw_cache,
+)
+google_auth_service = GoogleAuthService(
+    service_client,
+    gw_cache,
+)
 
 @router.get('/google/dialog')
 def google_dialog(auth_host = Depends(get_auth_host_for_signup),

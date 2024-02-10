@@ -1,9 +1,7 @@
-import requests
-from typing import List, Dict, Any
+from typing import List
 from unicodedata import name
 from fastapi import APIRouter, \
-    Request, Depends, \
-    Header, Path, Query, Body, Form
+    Depends, Header, Query
 from ..req.search_validation import *
 from ..res.response import *
 from ...configs.service_client import service_client
