@@ -1,6 +1,8 @@
 from typing import Any, List, Dict
 from ...service_api import IServiceApi
+from ...cache import ICache
 from ....configs.exceptions import *
+from ....configs.conf import SHORT_TERM_TTL
 from ...match.company.value_objects import c_value_objects as match_c
 from ...match.teacher.value_objects import t_value_objects as match_t
 from ..value_objects import \
@@ -12,9 +14,15 @@ import logging as log
 log.basicConfig(filemode='w', level=log.INFO)
 
 
+CONTINENTS = 'continents'
+CONTINENT_ALL = 'continent-all'
+CONTINENT_ = 'continent-'
+
+
 class SearchService:
-    def __init__(self, req: IServiceApi):
+    def __init__(self, req: IServiceApi, cache: ICache):
         self.req = req
+        self.cache = cache
         self.__cls_name = self.__class__.__name__
 
     def get_resumes(self, search_host: str, query: search_t.SearchResumeListQueryDTO):
@@ -94,16 +102,28 @@ class SearchService:
         return not data.job or not data.job.enable
 
     def get_continents(self, search_host: str) -> (search_public.ContinentListVO):
-        url = f'{search_host}/jobs-info/continents'
-        data = self.req.simple_get(url)
+        data = self.cache.get(CONTINENTS)
+        if data is None:
+            url = f'{search_host}/jobs-info/continents'
+            data = self.req.simple_get(url)
+            self.cache.set(CONTINENTS, data, SHORT_TERM_TTL)
+
         return data
 
     def get_all_continents_and_countries(self, search_host: str) -> (List[search_public.CountryListVO]):
-        url = f'{search_host}/jobs-info/continents/all/countries'
-        data = self.req.simple_get(url)
+        data = self.cache.get(CONTINENT_ALL)
+        if data is None:
+            url = f'{search_host}/jobs-info/continents/all/countries'
+            data = self.req.simple_get(url)
+            self.cache.set(CONTINENT_ALL, data, SHORT_TERM_TTL)
+
         return data
 
     def get_countries(self, search_host: str, continent_code: str) -> (List[search_public.CountryListVO]):
-        url = f'{search_host}/jobs-info/continents/{continent_code}/countries'
-        data = self.req.simple_get(url)
+        data = self.cache.get(f'{CONTINENT_}{continent_code}')
+        if data is None:
+            url = f'{search_host}/jobs-info/continents/{continent_code}/countries'
+            data = self.req.simple_get(url)
+            self.cache.set(f'{CONTINENT_}{continent_code}', data, SHORT_TERM_TTL)
+
         return data

@@ -41,7 +41,10 @@ def get_match_host(region: str = Header(...)):
 
 
 SEARCH = 'search'
-_search_service = SearchService(service_client)
+_search_service = SearchService(
+    service_client,
+    gw_cache,
+)
 _star_tracker_service = StarTrackerService(
     service_client,
     gw_cache,
