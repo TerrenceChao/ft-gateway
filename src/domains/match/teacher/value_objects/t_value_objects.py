@@ -9,7 +9,7 @@ from .....configs.conf import SEARCH_JOB_URL_PATH
 
 class _BaseJobData(BaseModel):
     url_path: Optional[str] = None
-    
+
     def init(self):
         if self.job_info != None:
             job = BaseJobVO.parse_obj(self.job_info)
@@ -33,7 +33,7 @@ class ContactJobVO(_BaseJobData, MarkVO):
 class ContactJobListVO(BaseModel):
     list: List[ContactJobVO] = []
     next_ts: Optional[int] = None
-    
+
     def init(self):
         [item.init() for item in self.list]
         return self
@@ -52,7 +52,7 @@ class FollowJobVO(_BaseJobData, MarkVO):
 class FollowJobListVO(BaseModel):
     list: List[FollowJobVO] = []
     next_ts: Optional[int] = None
-    
+
     def init(self):
         [item.init() for item in self.list]
         return self
@@ -60,33 +60,33 @@ class FollowJobListVO(BaseModel):
 
 class ResumeSectionVO(BaseModel):
     sid: Optional[int] = 0
-    tid: Optional[int] = None # validation check
-    rid: Optional[int] = None # validation check
-    order: Optional[int] = None # validation check | display order
-    category: Optional[str] = None # Education, Experience, Project, Certificate, Skill, Language
+    tid: Optional[int] = None  # validation check
+    rid: Optional[int] = None  # validation check
+    order: Optional[int] = None  # validation check | display order
+    category: Optional[str] = None  # Education, Experience, Project, Certificate, Skill, Language
     logo: Optional[str] = None
-    name: Optional[str] = None # School, Company, Certificate Name, Skill Name
-    title: Optional[str] = None # Degree, Job Title
-    location: Optional[str] = None # School Location, Company Location
+    name: Optional[str] = None  # School, Company, Certificate Name, Skill Name
+    title: Optional[str] = None  # Degree, Job Title
+    location: Optional[str] = None  # School Location, Company Location
     start_year: Optional[int] = None
     start_month: Optional[int] = None
     end_year: Optional[int] = None
     end_month: Optional[int] = None
-    context: Optional[Dict] = None # Study Subject, Company Industry, Description, image/file urls, others
+    context: Optional[Dict] = None  # Study Subject, Company Industry, Description, image/file urls, others
     updated_at: Optional[int] = None
-    
+
     def upsert_msg(self):
         if self.sid == 0 or self.sid is None:
             return 'resume section is created'
         else:
             return 'resume section is udpated'
-    
+
 
 class ReturnResumeSectionVO(ResumeSectionVO):
     sid: int
     tid: int
     rid: int  # NOT ForeignKey
-    order: int # display order
+    order: int  # display order
     category: str
     context: Dict
 
@@ -190,10 +190,11 @@ class TeacherProfileAndResumeVO(BaseModel):
     profile: ReturnTeacherProfileVO
     # for search API, need created/updated/last_updated time
     resume: Optional[teacher.Resume] = None
-    
+
     '''
     hide sensitive data
     '''
+
     def public_info(self):
         self.profile.email = None
         self.profile.is_verified = None

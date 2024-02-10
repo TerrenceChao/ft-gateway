@@ -1,19 +1,14 @@
-import requests
 from fastapi import APIRouter, \
-    Request, Depends, \
-    Cookie, Header, Path, Query, Body, Form, \
-    File, UploadFile, status, \
-    HTTPException
-from typing import Union
+    Depends, \
+    Cookie, Header, Query, Body
 from pydantic import EmailStr
 from ...domains.user.value_objects.auth_vo import *
 from ..req.authorization import verify_token_by_logout, verify_token_by_update_password
 from ..req.auth_validation import *
 from ..res.response import *
 from ...domains.user.services.auth_service import AuthService
-from ...infra.cache.dynamodb_cache_adapter import DynamoDbCacheAdapter
-from ...apps.service_api_dapter import ServiceApiAdapter
-from ...configs.dynamodb import dynamodb
+from ...configs.service_client import service_client
+from ...configs.cache import gw_cache
 from ...configs.region_hosts import get_auth_region_host, get_match_region_host
 import logging as log
 
@@ -21,7 +16,9 @@ log.basicConfig(filemode='w', level=log.INFO)
 
 # using dynamodb as cache
 _auth_service = AuthService(
-    ServiceApiAdapter(requests), DynamoDbCacheAdapter(dynamodb))
+    service_client, 
+    gw_cache,
+)
 
 """
     1. get public key

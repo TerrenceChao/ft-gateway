@@ -1,4 +1,3 @@
-import requests
 from fastapi import APIRouter, \
     Depends, \
     Cookie, Header, Path, Query, Body, Form, \
@@ -8,12 +7,12 @@ from starlette.responses import Response, StreamingResponse
 from ..req.authorization import AuthRoute, token_required
 from ..res.response import res_success
 from ...domains.cache import ICache
-from ...infra.cache.dynamodb_cache_adapter import DynamoDbCacheAdapter, get_cache
+from ...infra.cache.dynamodb_cache_adapter import get_cache
 from ...domains.media.services.media_service import MediaService
-from ...apps.service_api_dapter import ServiceApiAdapter
 from ...configs.constants import PATHS
+from ...configs.service_client import service_client
 from ...configs.region_hosts import get_media_region_host
-from ...configs.exceptions import ServerException, ClientException, ForbiddenException
+from ...configs.exceptions import ClientException
 from ...infra.utils.util import get_serial_num
 import logging as log
 
@@ -33,7 +32,7 @@ def get_media_host(current_region: str = Header(...)):
     return get_media_region_host(region=current_region)
 
 
-_media_service = MediaService(ServiceApiAdapter(requests))
+_media_service = MediaService(service_client)
 
 
 @router.get("/{role}/{role_id}/upload-params")

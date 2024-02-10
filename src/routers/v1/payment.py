@@ -1,5 +1,4 @@
-import requests
-from typing import List, Dict, Any
+from typing import List
 from fastapi import APIRouter, BackgroundTasks, \
     Request, Depends, Header, Path, Query, Body, Form
 from ..req.authorization import AuthRoute, \
@@ -10,20 +9,21 @@ from ..res.response import *
 from ...domains.payment.models import dtos, value_objects as vo
 from ...domains.payment.models.stripe import stripe_dtos, stripe_vos
 from ...domains.payment.services.payment_service import PaymentService, PaymentPlanService
-from ...apps.service_api_dapter import ServiceApiAdapter
-from ...infra.cache.dynamodb_cache_adapter import DynamoDbCacheAdapter
 from ...configs.conf import *
-from ...configs.dynamodb import dynamodb
+from ...configs.service_client import service_client
+from ...configs.cache import gw_cache
 from ...configs.region_hosts import get_payment_region_host
 import logging as log
 
 log.basicConfig(filemode='w', level=log.INFO)
 
 _payment_service = PaymentService(
-    ServiceApiAdapter(requests), DynamoDbCacheAdapter(dynamodb)
+    service_client, 
+    gw_cache,
 )
 _payment_plan_service = PaymentPlanService(
-    ServiceApiAdapter(requests), DynamoDbCacheAdapter(dynamodb)
+    service_client,
+    gw_cache,
 )
 
 router = APIRouter(

@@ -33,7 +33,7 @@ class SearchService:
             params=query.fine_dict(),
         )
 
-        return search_t.SearchResumeListVO.parse_obj(data).init() # data
+        return search_t.SearchResumeListVO.parse_obj(data).init()  # data
 
     '''
     TODO:
@@ -41,6 +41,7 @@ class SearchService:
       - increse the count in cache
     - read [the resume] from match service
     '''
+
     def get_resume_by_id(self, match_host: str, teacher_id: int, resume_id: int):
         url = None
         data = None
@@ -64,7 +65,6 @@ class SearchService:
     def __resume_closed(self, data: match_t.TeacherProfileAndResumeVO) -> (bool):
         return not data.resume or not data.resume.enable
 
-
     def get_resume_tags(self, search_host: str) -> (search_public.ResumeTagsVO):
         data = self.cache.get(RESUME_TAGS)
         if data is None:
@@ -74,7 +74,6 @@ class SearchService:
 
         return data
 
-
     def get_jobs(self, search_host: str, query: search_c.SearchJobListQueryDTO):
         url = f"{search_host}/jobs"
         data = self.req.simple_get(
@@ -82,7 +81,7 @@ class SearchService:
             params=query.fine_dict(),
         )
 
-        return search_c.SearchJobListVO.parse_obj(data).init() # data
+        return search_c.SearchJobListVO.parse_obj(data).init()  # data
 
     '''
     TODO:
@@ -90,6 +89,7 @@ class SearchService:
       - increse the count in cache
     - read [the job] from match service
     '''
+
     def get_job_by_id(self, match_host: str, company_id: int, job_id: int):
         url = None
         data = None
@@ -136,6 +136,10 @@ class SearchService:
         if data is None:
             url = f'{search_host}/jobs-info/continents/{continent_code}/countries'
             data = self.req.simple_get(url)
-            self.cache.set(f'{CONTINENT_}{continent_code}', data, SHORT_TERM_TTL)
+            self.cache.set(
+                f'{CONTINENT_}{continent_code}',
+                data,
+                SHORT_TERM_TTL
+            )
 
         return data
