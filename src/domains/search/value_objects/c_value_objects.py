@@ -29,20 +29,20 @@ class SearchJobDTO(MarkVO):
 
     def id(self) -> (int):
         return self.jid
-    
+
     def init(self):
         if self.region and \
             self.cid and \
             self.jid:
             self.url_path = f'{SEARCH_JOB_URL_PATH}/{self.region}/{self.cid}/{self.jid}'
-        
+
         return self
 
 
 class SearchJobListVO(BaseModel):
     items: Optional[List[SearchJobDTO]] = []
     next: Optional[str] = None
-    
+
     def init(self):
         [item.init() for item in self.items]
         return self
@@ -56,10 +56,9 @@ class SearchJobListQueryDTO(BaseModel):
     patterns: Optional[List[str]] = []
     continent_code: Optional[str] = None
     country_code: Optional[str] = None
-    
+
     def fine_dict(self):
         dictionary = self.dict()
         dictionary['sort_by'] = self.sort_by.value
         dictionary['sort_dirction'] = self.sort_dirction.value
         return dictionary
-

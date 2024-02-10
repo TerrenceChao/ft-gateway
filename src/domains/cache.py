@@ -15,11 +15,11 @@ class ICache(ABC):
     @abstractmethod
     async def delete(self, key: str):
         pass
-    
+
     @abstractmethod
     async def smembers(self, key: str) -> (Optional[Set[Any]]):
         pass
-    
+
     @abstractmethod
     async def sismember(self, key: str, value: Any) -> (bool):
         pass
@@ -27,7 +27,7 @@ class ICache(ABC):
     @abstractmethod
     async def sadd(self, key: str, values: List[Any], ex: int = None) -> (int):
         pass
-    
+
     @abstractmethod
     async def srem(self, key: str, value: Any, ex: int = None) -> (int):
         pass

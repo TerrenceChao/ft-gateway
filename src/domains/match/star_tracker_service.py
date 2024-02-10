@@ -23,7 +23,7 @@ class StarTrackerService:
             return ('teachers', 'job-ids')
         else:
             raise ClientException(msg='role is not correct')
-        
+
     def __shorter(self, role: str, target_ids: str) -> (Tuple[str, str]):
         if role in COM:
             role = 'com'

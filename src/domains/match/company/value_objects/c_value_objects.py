@@ -9,7 +9,7 @@ from .....configs.conf import SEARCH_RESUME_URL_PATH
 
 class _BaseResumeData(BaseModel):
     url_path: Optional[str] = None
-    
+
     def init(self):
         if self.resume_info != None:
             resume = BaseResumeVO.parse_obj(self.resume_info)
@@ -33,7 +33,7 @@ class ContactResumeVO(_BaseResumeData, MarkVO):
 class ContactResumeListVO(BaseModel):
     list: List[ContactResumeVO] = []
     next_ts: Optional[int] = None
-    
+
     def init(self):
         [item.init() for item in self.list]
         return self
@@ -52,7 +52,7 @@ class FollowResumeVO(_BaseResumeData, MarkVO):
 class FollowResumeListVO(BaseModel):
     list: List[FollowResumeVO] = []
     next_ts: Optional[int] = None
-    
+
     def init(self):
         [item.init() for item in self.list]
         return self
@@ -179,5 +179,6 @@ class CompanyProfileAndJobVO(BaseModel):
     '''
     hide sensitive data
     '''
+
     def public_info(self):
         return self

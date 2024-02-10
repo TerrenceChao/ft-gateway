@@ -18,23 +18,23 @@ class SearchResumeDTO(MarkVO):
     # created_at: Optional[int] = None
     region: Optional[str] = None  # must
     url_path: Optional[str] = None  # must
-    
+
     def id(self) -> (int):
         return self.rid
-    
+
     def init(self):
         if self.region and \
             self.tid and \
             self.rid:
             self.url_path = f'{SEARCH_RESUME_URL_PATH}/{self.region}/{self.tid}/{self.rid}'
-            
+
         return self
 
 
 class SearchResumeListVO(BaseModel):
     items: Optional[List[SearchResumeDTO]] = []
     next: Optional[str] = None
-    
+
     def init(self):
         [item.init() for item in self.items]
         return self
@@ -53,4 +53,3 @@ class SearchResumeListQueryDTO(BaseModel):
         dictionary['sort_by'] = self.sort_by.value
         dictionary['sort_dirction'] = self.sort_dirction.value
         return dictionary
-
