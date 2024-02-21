@@ -291,14 +291,15 @@ def apply_resume(company_id: int = Path(...),
                  match_host=Depends(get_match_host),
                  payment_host=Depends(get_payment_host),
                  ):
-    if _contact_resume_service.is_proactive_require(
-            match_host,
-            company_id,
-            body.resume.rid
-        ):
-        payment_status = _payment_service.get_payment_status(payment_host, company_id)
-        if not payment_status.status in PAYMENT_PERIOD:
-            raise ClientException(msg='subscription_expired_or_not_exist')
+    # TODO: 如果 Stripe 訂閱機制完成，請恢復被註解掉的以下流程
+    # if _contact_resume_service.is_proactive_require(
+    #         match_host,
+    #         company_id,
+    #         body.resume.rid
+    #     ):
+    #     payment_status = _payment_service.get_payment_status(payment_host, company_id)
+    #     if not payment_status.status in PAYMENT_PERIOD:
+    #         raise ClientException(msg='subscription_expired_or_not_exist')
 
     contact_resume = _contact_resume_service.apply_resume(
         host=match_host, company_id=company_id, body=body)
