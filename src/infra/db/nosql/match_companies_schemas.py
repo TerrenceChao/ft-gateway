@@ -47,7 +47,6 @@ class Job(BaseEntity):
 class CompanyProfile(BaseEntity):
     cid: int
     name: Optional[str] = None
-    intro: Optional[str] = None
     logo: Optional[str] = None
     # size, founded, revenue, ... etc (json)
     overview: Optional[Dict] = None

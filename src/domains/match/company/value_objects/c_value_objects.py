@@ -115,7 +115,6 @@ class EnableJobVO(BaseModel):
 class CompanyProfileVO(BaseModel):
     # cid: int
     name: str
-    intro: str
     logo: Optional[str] = None
     # size, founded, revenue, ... etc (json)
     overview: Optional[Dict] = None
@@ -127,7 +126,6 @@ class CompanyProfileVO(BaseModel):
 class UpdateCompanyProfileVO(BaseModel):
     # cid: int
     name: Optional[str] = None
-    intro: Optional[str] = None
     logo: Optional[str] = None
     # size, founded, revenue, ... etc (json)
     overview: Optional[Dict] = None
