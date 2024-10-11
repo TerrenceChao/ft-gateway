@@ -90,7 +90,7 @@ def create_profile(company_id: int,
                    ):
     data = _company_profile_service.create_profile(
         host=match_host, company_id=company_id, profile=profile)
-    return res_success(data=data)
+    return post_success(data=data)
 
 
 @router.get("/{company_id}", 
@@ -128,7 +128,7 @@ def create_job(company_id: int,
                ):
     data = _company_job_service.create_job(
         host=match_host, register_region=register_region, company_id=company_id, job=job, profile=profile)
-    return res_success(data=data)
+    return post_success(data=data)
 
 
 # TODO: 當 route pattern 一樣時，明確的 route 要先執行("/{company_id}/jobs/brief")，
@@ -280,7 +280,7 @@ def contact_teacher_by_email(
         body=body,
         teacher_profile_email=teacher_profile.email if teacher_profile != None else None
     )
-    return res_success(data=data)
+    return post_success(data=data)
 
 
 # TODO: resume_info: Dict >> resume_info 是 "ContactResume".resume_info (Dict/JSON, 是 Contact!!)
