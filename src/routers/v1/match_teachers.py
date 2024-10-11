@@ -76,7 +76,7 @@ def create_profile(teacher_id: int,
                    ):
     data = _teacher_profile_service.create_profile(
         host=match_host, teacher_id=teacher_id, profile=profile)
-    return res_success(data=data)
+    return post_success(data=data)
 
 
 @router.get("/{teacher_id}", 
@@ -115,7 +115,7 @@ def create_resume(teacher_id: int,
                   ):
     data = _teacher_resume_service.create_resume(
         host=match_host, register_region=register_region, teacher_id=teacher_id, resume=resume, profile=profile)
-    return res_success(data=data)
+    return post_success(data=data)
 
 
 # TODO: 當 route pattern 一樣時，明確的 route 要先執行("/{teacher_id}/resumes/brief")，

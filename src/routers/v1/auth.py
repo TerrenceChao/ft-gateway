@@ -61,7 +61,7 @@ def signup(body: SignupVO = Body(...),
            auth_host=Depends(get_auth_host_for_signup),
            ):
     data = _auth_service.signup(auth_host, body)
-    return res_success(data=data, msg="email_sent")
+    return post_success(data=data, msg="email_sent")
 
 
 @router.post("/signup/confirm", 
@@ -71,7 +71,7 @@ def confirm_signup(body: SignupConfirmVO = Body(...),
                    auth_host=Depends(get_auth_host_for_signup),
                    ):
     data = _auth_service.confirm_signup(auth_host, body)
-    return res_success(data=data)
+    return post_success(data=data)
 
 
 """login
@@ -154,7 +154,7 @@ def login(body: LoginVO = Depends(login_check_body),
           match_host=Depends(get_match_host),
           ):
     data = _auth_service.login(auth_host, match_host, body)
-    return res_success(data=data)
+    return post_success(data=data)
 
 
 @router.post("/logout", status_code=201)
@@ -162,7 +162,7 @@ def logout(role_id: int = Body(..., embed=True),
            verify=Depends(verify_token_by_logout)
            ):
     data, msg = _auth_service.logout(role_id)
-    return res_success(data=data, msg=msg)
+    return post_success(data=data, msg=msg)
 
 
 @router.put('/password/{role_id}/update')

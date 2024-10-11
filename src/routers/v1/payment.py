@@ -82,7 +82,7 @@ async def subscribe(
     verify=Depends(verify_token_by_payment_operation),
 ):
     _payment_service.subscribe(bg_tasks, payment_host, body)
-    return res_success(msg='processing', code='20200')
+    return post_success(msg='processing', code='20200')
 
 
 @router.post('/unsubscribe', status_code=202)
@@ -93,7 +93,7 @@ async def unsubscribe(
     verify=Depends(verify_token_by_payment_operation),
 ):
     _payment_service.unsubscribe(bg_tasks, payment_host, body)
-    return res_success(msg='canceling', code='20200')
+    return post_success(msg='canceling', code='20200')
 
 '''
 TODO: deprecated
