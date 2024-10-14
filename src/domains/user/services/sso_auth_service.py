@@ -18,10 +18,10 @@ class ISSOAuthService(AuthService):
     def __init__(self, req: IServiceApi, cache: ICache):
         super().__init__(req, cache)
 
-    def dialog(self, auth_host: str, role: str):
-        return self.req_get_dialog(auth_host, role)
+    async def dialog(self, auth_host: str, role: str):
+        return await self.req_get_dialog(auth_host, role)
 
-    def login(self, sso_login_vo: SSOLoginVO):
+    async def login(self, sso_login_vo: SSOLoginVO):
         state_d = json.loads(sso_login_vo.state)
         if not (current_region := state_d.get('region', '')):
             raise ServerException(msg="no region") 
@@ -29,23 +29,23 @@ class ISSOAuthService(AuthService):
         auth_host = get_auth_region_v2_host(current_region)
         match_host = get_match_region_host(current_region)
 
-        (auth_res, region) = self.__req_login_or_register_region(auth_host, match_host, sso_login_vo)
+        (auth_res, region) = await self.__req_login_or_register_region(auth_host, match_host, sso_login_vo)
         if auth_res is None:
             auth_host = get_auth_region_v2_host(region)
             match_host = get_match_region_host(region)
-            auth_res = self.req_get_login(auth_host, match_host, sso_login_vo)
+            auth_res = await self.req_get_login(auth_host, match_host, sso_login_vo)
 
         # cache auth data
         role_id_key = str(auth_res["role_id"])
         auth_res.update({
             "current_region": current_region,
         })
-        self.cache_auth_res(role_id_key, auth_res)
+        await self.cache_auth_res(role_id_key, auth_res)
         auth_res = self.apply_token(auth_res)
 
         # request match data
         role_path = PATHS[auth_res["role"]]
-        match_res = self.req_match_data(
+        match_res = await self.req_match_data(
             match_host,
             role_path,
             role_id_key,
@@ -57,18 +57,18 @@ class ISSOAuthService(AuthService):
         }
 
 
-    def req_get_dialog(self, auth_host: str, role: str):
+    async def req_get_dialog(self, auth_host: str, role: str):
         pass
 
-    def req_get_login(self, auth_host: str, sso_login_vo: SSOLoginVO):
+    async def req_get_login(self, auth_host: str, sso_login_vo: SSOLoginVO):
         pass
 
         
-    def __req_login_or_register_region(self, auth_host: str, match_host: str, sso_login_vo: SSOLoginVO):
+    async def __req_login_or_register_region(self, auth_host: str, match_host: str, sso_login_vo: SSOLoginVO):
         register_region = None
         auth_res = None
         try:
-            auth_res = self.req_get_login(auth_host, sso_login_vo)
+            auth_res = await self.req_get_login(auth_host, sso_login_vo)
             return (auth_res, None)
             
         except ForbiddenException as exp_payload:
@@ -100,13 +100,13 @@ class FBAuthService(ISSOAuthService):
     def __init__(self, req: IServiceApi, cache: ICache):
         super().__init__(req, cache)
 
-    def req_get_dialog(self, auth_host: str, role: str):
-        resp = self.req.simple_get(
+    async def req_get_dialog(self, auth_host: str, role: str):
+        resp = await self.req.simple_get(
             f"{auth_host}/fb/dialog", params={'role': role})
         return resp['redirect_url']
     
-    def req_get_login(self, auth_host: str, sso_login_vo: SSOLoginVO):
-        return self.req.simple_get(
+    async def req_get_login(self, auth_host: str, sso_login_vo: SSOLoginVO):
+        return await self.req.simple_get(
             f"{auth_host}/fb/login", params=sso_login_vo.fine_dict()
         )
 
@@ -114,12 +114,12 @@ class GoogleAuthService(ISSOAuthService):
     def __init__(self, req: IServiceApi, cache: ICache):
         super().__init__(req, cache)
 
-    def req_get_dialog(self, auth_host: str, role: str):
-        resp = self.req.simple_get(
+    async def req_get_dialog(self, auth_host: str, role: str):
+        resp = await self.req.simple_get(
             f"{auth_host}/google/dialog", params={'role': role})
         return resp['redirect_url']
     
-    def req_get_login(self, auth_host: str, sso_login_vo: SSOLoginVO):
-        return self.req.simple_get(
+    async def req_get_login(self, auth_host: str, sso_login_vo: SSOLoginVO):
+        return await self.req.simple_get(
             f"{auth_host}/google/login", params=sso_login_vo.fine_dict()
         )

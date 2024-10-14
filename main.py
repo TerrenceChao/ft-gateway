@@ -19,6 +19,8 @@ from src.routers.v1 import auth, \
 
 from src.routers.v2 import auth as authv2
 from src.routers.res.response import res_err
+from src.configs.service_client import service_client
+from src.configs.cache import gw_cache
 from src.configs import exceptions
 from src.configs.region_hosts import RegionException
 
@@ -92,6 +94,13 @@ async def info(term: str):
     if term != "yolo":
         raise BusinessEception(term=term)
     return {"mention": "You only live once"}
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    # close connection pool
+    await service_client.close()
+    await gw_cache.close()
 
 
 # Mangum Handler, this is so important

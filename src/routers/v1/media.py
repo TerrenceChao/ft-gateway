@@ -14,21 +14,23 @@ from ...configs.service_client import service_client
 from ...configs.region_hosts import get_media_region_host
 from ...configs.exceptions import ClientException
 from ...infra.utils.util import get_serial_num
-import logging as log
+import logging
 
-log.basicConfig(filemode='w', level=log.INFO)
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
 
 router = APIRouter(
     prefix="/media",
     tags=["Media"],
-    dependencies=[Depends(token_required)],
-    route_class=AuthRoute,
+    # dependencies=[Depends(token_required)],
+    # route_class=AuthRoute,
     responses={404: {"description": "Not found"}},
 )
 
 
-def get_media_host(current_region: str = Header(...)):
+async def get_media_host(current_region: str = Header(...)):
     return get_media_region_host(region=current_region)
 
 
@@ -36,19 +38,19 @@ _media_service = MediaService(service_client)
 
 
 @router.get("/{role}/{role_id}/upload-params")
-def upload_params(role: str,
-                  role_id: str,
-                  filename: str = Query(...),
-                  # mime_type: str = Query(...),
-                  media_host: str = Depends(get_media_host),
-                  cache: ICache = Depends(get_cache),
-                  ):
+async def upload_params(role: str,
+                        role_id: str,
+                        filename: str = Query(...),
+                        # mime_type: str = Query(...),
+                        media_host: str = Depends(get_media_host),
+                        cache: ICache = Depends(get_cache),
+                        ):
     if not role in PATHS.keys():
         raise ClientException(
             msg="The 'role' should be 'teacher' or 'company'")
 
-    serial_num = get_serial_num(cache=cache, role_id=role_id)
-    result = _media_service.get_upload_params(
+    serial_num = await get_serial_num(cache=cache, role_id=role_id)
+    result = await _media_service.get_upload_params(
         host=media_host,
         params={
             "serial_num": serial_num,
@@ -62,19 +64,19 @@ def upload_params(role: str,
 
 
 @router.get("/{role}/{role_id}/upload-params/icon")
-def icon_upload_params(role: str,
-                  role_id: str,
-                  filename: str = Query(...),
-                  # mime_type: str = Query(...),
-                  media_host: str = Depends(get_media_host),
-                  cache: ICache = Depends(get_cache),
-                  ):
+async def icon_upload_params(role: str,
+                             role_id: str,
+                             filename: str = Query(...),
+                             # mime_type: str = Query(...),
+                             media_host: str = Depends(get_media_host),
+                             cache: ICache = Depends(get_cache),
+                             ):
     if not role in PATHS.keys():
         raise ClientException(
             msg="The 'role' should be 'teacher' or 'company'")
 
-    serial_num = get_serial_num(cache=cache, role_id=role_id)
-    result = _media_service.get_overwritable_upload_params(
+    serial_num = await get_serial_num(cache=cache, role_id=role_id)
+    result = await _media_service.get_overwritable_upload_params(
         host=media_host,
         params={
             "serial_num": serial_num,
@@ -89,18 +91,18 @@ def icon_upload_params(role: str,
 
 
 @router.delete("/{role}/{role_id}")
-def remove(role: str,
-           role_id: str,
-           object_key: str = Query(...),
-           media_host: str = Depends(get_media_host),
-           cache: ICache = Depends(get_cache),
-           ):
+async def remove(role: str,
+                  role_id: str,
+                  object_key: str = Query(...),
+                  media_host: str = Depends(get_media_host),
+                  cache: ICache = Depends(get_cache),
+                  ):
     if not role in PATHS.keys():
         raise ClientException(
             msg="The 'role' should be 'teacher' or 'company'")
 
-    serial_num = get_serial_num(cache=cache, role_id=role_id)
-    result = _media_service.delete_file(
+    serial_num = await get_serial_num(cache=cache, role_id=role_id)
+    result = await _media_service.delete_file(
         host=media_host,
         params={
             "serial_num": serial_num,

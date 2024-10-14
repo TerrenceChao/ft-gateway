@@ -18,9 +18,11 @@ from ...domains.search.services.search_service import SearchService
 from ...domains.match.star_tracker_service import StarTrackerService
 from ...domains.user.services.auth_service import AuthService
 from ...domains.user.value_objects.auth_vo import BaseAuthDTO
-import logging as log
+import logging
 
-log.basicConfig(filemode='w', level=log.INFO)
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
 
 router = APIRouter(
@@ -30,11 +32,11 @@ router = APIRouter(
 )
 
 
-def get_search_host(current_region: str = Header(...)):
+async def get_search_host(current_region: str = Header(...)):
     return get_search_region_host(region=current_region)
 
 
-def get_match_host(region: str = Header(...)):
+async def get_match_host(region: str = Header(...)):
     return get_match_region_host(region=region)
 
 
@@ -51,7 +53,7 @@ _star_tracker_service = StarTrackerService(
 
 @router.get("/resumes",
             responses=idempotent_response(f'{SEARCH}.get_resumes', search_t.SearchResumeListVO))
-def get_resumes(
+async def get_resumes(
     size: int = Query(10, gt=0, le=100),
     sort_by: SortField = Query(SortField.UPDATED_AT),
     sort_dirction: SortDirection = Query(SortDirection.DESC),
@@ -70,9 +72,9 @@ def get_resumes(
         patterns=patterns,
         tags=tags,
     )
-    data = _search_service.get_resumes(search_host, query)
+    data = await _search_service.get_resumes(search_host, query)
     if AuthService.is_login(gw_cache, visitor):
-        data.items = _star_tracker_service.all_marks(
+        data.items = await _star_tracker_service.all_marks(
             match_host,
             visitor,
             data.items,
@@ -82,27 +84,27 @@ def get_resumes(
 
 @router.get("/resumes/{region}/{tid}/{rid}",
             responses=idempotent_response(f'{SEARCH}.get_resume_by_id', match_t.TeacherProfileAndResumeVO))
-def get_resume_by_id(
+async def get_resume_by_id(
     tid: int,
     rid: int,
     match_host=Depends(get_match_host),
 ):
-    (data, msg) = _search_service.get_resume_by_id(match_host, tid, rid)
+    (data, msg) = await _search_service.get_resume_by_id(match_host, tid, rid)
     return res_success(data=data, msg=msg)
 
 
 @router.get('/resumes-info/tags',
             responses=idempotent_response(f'{SEARCH}.get_resume_tags', search_public.ResumeTagsVO))
-def get_resume_tags(
+async def get_resume_tags(
     search_host=Depends(get_search_host),
 ):
-    data = _search_service.get_resume_tags(search_host)
+    data = await _search_service.get_resume_tags(search_host)
     return res_success(data=data)
 
 
 @router.get("/jobs",
             responses=idempotent_response(f'{SEARCH}.get_jobs', search_c.SearchJobListVO))
-def get_jobs(
+async def get_jobs(
     size: int = Query(10, gt=0, le=100),
     sort_by: SortField = Query(SortField.UPDATED_AT),
     sort_dirction: SortDirection = Query(SortDirection.DESC),
@@ -123,9 +125,9 @@ def get_jobs(
         continent_code=continent_code,
         country_code=country_code,
     )
-    data = _search_service.get_jobs(search_host, query)
+    data = await _search_service.get_jobs(search_host, query)
     if AuthService.is_login(gw_cache, visitor):
-        data.items = _star_tracker_service.all_marks(
+        data.items = await _star_tracker_service.all_marks(
             match_host,
             visitor,
             data.items,
@@ -135,19 +137,19 @@ def get_jobs(
 
 @router.get("/jobs/{region}/{cid}/{jid}",
             responses=idempotent_response(f'{SEARCH}.get_job_by_id', match_c.CompanyProfileAndJobVO))
-def get_job_by_id(
+async def get_job_by_id(
     cid: int,
     jid: int,
     match_host=Depends(get_match_host),
 ):
-    (data, msg) = _search_service.get_job_by_id(match_host, cid, jid)
+    (data, msg) = await _search_service.get_job_by_id(match_host, cid, jid)
     return res_success(data=data, msg=msg)
 
 
 @router.get('/jobs-info/continents',
             responses=idempotent_response(f'{SEARCH}.get_continents', search_public.ContinentListVO))
-def get_continents(search_host=Depends(get_search_host)):
-    data = _search_service.get_continents(search_host)
+async def get_continents(search_host=Depends(get_search_host)):
+    data = await _search_service.get_continents(search_host)
     return res_success(data=data)
 
 
@@ -155,18 +157,18 @@ def get_continents(search_host=Depends(get_search_host)):
 # so it has to be put before 'get_countries'
 @router.get('/jobs-info/continents/all/countries',
             responses=idempotent_response(f'{SEARCH}.get_all_continents_and_countries', List[search_public.CountryListVO]))
-def get_all_continents_and_countries(search_host=Depends(get_search_host)):
-    data = _search_service.get_all_continents_and_countries(search_host)
+async def get_all_continents_and_countries(search_host=Depends(get_search_host)):
+    data = await _search_service.get_all_continents_and_countries(search_host)
     return res_success(data=data)
 
 
 @router.get('/jobs-info/continents/{continent_code}/countries',
             responses=idempotent_response(f'{SEARCH}.get_countries', List[search_public.CountryListVO]))
-def get_countries(
+async def get_countries(
     continent_code: str,
     search_host=Depends(get_search_host),
 ):
-    data = _search_service.get_countries(
+    data = await _search_service.get_countries(
         search_host,
         continent_code,
     )

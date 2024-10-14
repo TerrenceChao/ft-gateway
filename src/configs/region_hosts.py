@@ -1,8 +1,10 @@
 import os
 from fastapi import HTTPException, status
-import logging as log
+import logging
 
-log.basicConfig(filemode='w', level=log.INFO)
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
 
 auth_region_hosts = {

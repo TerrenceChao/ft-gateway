@@ -1,31 +1,35 @@
-import requests as RequestsHTTPLibrary
+import httpx
 from fastapi import status
-from requests.models import Response
-from typing import Dict, Union, Any, Optional
+from httpx import Response
+from typing import Dict, Union, Any, Optional, Tuple
 from ..domains.service_api import IServiceApi
 from ..configs.exceptions import \
     ClientException, UnauthorizedException, ForbiddenException, NotFoundException, NotAcceptableException,\
     ServerException
-import logging as log
+import logging
 
-log.basicConfig(filemode='w', level=log.INFO)
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
 
 SUCCESS_CODE = "0"
 
 
 class ServiceApiAdapter(IServiceApi):
-    def __init__(self, requests: RequestsHTTPLibrary):
-        self.requests = requests
+    def __init__(self):
+        self.requests = httpx.AsyncClient()
+
 
     """
     return result
     """
-    def simple_get(self, url: str, params: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]]):
+    async def simple_get(self, url: str, params: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]]):
         result = None
         response = None
         try:
-            response = self.requests.get(url, params=params, headers=headers)
+            response = await self.requests.get(url, params=params, headers=headers)
+
         except Exception as e:
             log.error(f"simple_get request error, url:%s, params:%s, headers:%s, resp:%s, err:%s",
                     url, params, headers, response, e.__str__())
@@ -48,13 +52,13 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result, msg, err
     """
-    def get(self, url: str, params: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]], Optional[str], Optional[str]):
+    async def get(self, url: str, params: Dict = None, headers: Dict = None) -> Tuple[Optional[Dict[str, str]], Optional[str], Optional[str]]:
         err: str = None
         msg: str = None
         result = None
         response = None
         try:
-            response = self.requests.get(url, params=params, headers=headers)
+            response = await self.requests.get(url, params=params, headers=headers)
             result = response.json()
             log.info(f"url:{url}, resp-data:{result}")
             if self.__err(result):
@@ -73,14 +77,14 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result, msg, status_code, err
     """
-    def get_with_statuscode(self, url: str, params: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]], Optional[str], Optional[int], Optional[str]):
+    async def get_with_statuscode(self, url: str, params: Dict = None, headers: Dict = None) -> Tuple[Optional[Dict[str, str]], Optional[str], Optional[int], Optional[str]]:
         err: str = None
         status_code: int = 500
         msg: str = None
         result = None
         response = None
         try:
-            response = self.requests.get(url, params=params, headers=headers)
+            response = await self.requests.get(url, params=params, headers=headers)
             result = response.json()
             status_code = response.status_code
             log.info(f"url:{url}, resp-data:{result}")
@@ -97,11 +101,12 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result
     """
-    def simple_post(self, url: str, json: Dict, headers: Dict = None) -> (Optional[Dict[str, str]]):
+    async def simple_post(self, url: str, json: Dict, headers: Dict = None) -> (Optional[Dict[str, str]]):
         result = None
         response = None
         try:
-            response = self.requests.post(url, json=json, headers=headers)
+            response = await self.requests.post(url, json=json, headers=headers)
+
         except Exception as e:
             log.error(f"simple_post request error, url:%s, json:%s, headers:%s, resp:%s, err:%s",
                     url, json, headers, response, e.__str__())
@@ -121,11 +126,12 @@ class ServiceApiAdapter(IServiceApi):
 
         return result
 
-    def post_data(self, url: str, byte_data: bytes, headers: Dict = None) -> (Optional[Dict[str, str]]):
+    async def post_data(self, url: str, byte_data: bytes, headers: Dict = None) -> (Optional[Dict[str, str]]):
         result = None
         response = None
         try:
-            response = self.requests.post(url, data=byte_data, headers=headers)
+            response = await self.requests.post(url, data=byte_data, headers=headers)
+
         except Exception as e:
             log.error(f"simple_post request error, url:%s, data:%s, headers:%s, resp:%s, err:%s",
                     url, byte_data.decode(), headers, response, e.__str__())
@@ -148,13 +154,13 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result, msg, err
     """
-    def post(self, url: str, json: Dict, headers: Dict = None) -> (Optional[Dict[str, str]], Optional[str], Optional[str]):
+    async def post(self, url: str, json: Dict, headers: Dict = None) -> Tuple[Optional[Dict[str, str]], Optional[str], Optional[str]]:
         err: str = None
         msg: str = None
         result = None
         response = None
         try:
-            response = self.requests.post(url, json=json, headers=headers)
+            response = await self.requests.post(url, json=json, headers=headers)
             result = response.json()
             log.info(f"url:{url}, resp-data:{result}")
             if self.__err(result):
@@ -173,14 +179,14 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result, msg, status_code, err
     """
-    def post_with_statuscode(self, url: str, json: Dict, headers: Dict = None) -> (Optional[Dict[str, str]], Optional[str], Optional[int], Optional[str]):
+    async def post_with_statuscode(self, url: str, json: Dict, headers: Dict = None) -> Tuple[Optional[Dict[str, str]], Optional[str], Optional[int], Optional[str]]:
         err: str = None
         status_code: int = 500
         msg: str = None
         result = None
         response = None
         try:
-            response = self.requests.post(url, json=json, headers=headers)
+            response = await self.requests.post(url, json=json, headers=headers)
             result = response.json()
             status_code = response.status_code
             log.info(f"url:{url}, resp-data:{result}")
@@ -197,11 +203,12 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result
     """
-    def simple_put(self, url: str, json: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]]):
+    async def simple_put(self, url: str, json: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]]):
         result = None
         response = None
         try:
-            response = self.requests.put(url, json=json, headers=headers)
+            response = await self.requests.put(url, json=json, headers=headers)
+
         except Exception as e:
             log.error(f"simple_put request error, url:%s, json:%s, headers:%s, resp:%s, err:%s",
                     url, json, headers, response, e.__str__())
@@ -224,13 +231,13 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result, msg, err
     """
-    def put(self, url: str, json: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]], Optional[str], Optional[str]):
+    async def put(self, url: str, json: Dict = None, headers: Dict = None) -> Tuple[Optional[Dict[str, str]], Optional[str], Optional[str]]:
         err: str = None
         msg: str = None
         result = None
         response = None
         try:
-            response = self.requests.put(url, json=json, headers=headers)
+            response = await self.requests.put(url, json=json, headers=headers)
             result = response.json()
             log.info(f"url:{url}, resp-data:{result}")
             if self.__err(result):
@@ -249,14 +256,14 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result, msg, status_code, err
     """
-    def put_with_statuscode(self, url: str, json: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]], Optional[str], Optional[int], Optional[str]):
+    async def put_with_statuscode(self, url: str, json: Dict = None, headers: Dict = None) -> Tuple[Optional[Dict[str, str]], Optional[str], Optional[int], Optional[str]]:
         err: str = None
         status_code: int = 500
         msg: str = None
         result = None
         response = None
         try:
-            response = self.requests.put(url, json=json, headers=headers)
+            response = await self.requests.put(url, json=json, headers=headers)
             result = response.json()
             status_code = response.status_code
             log.info(f"url:{url}, resp-data:{result}")
@@ -273,11 +280,12 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result
     """
-    def simple_delete(self, url: str, params: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]]):
+    async def simple_delete(self, url: str, params: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]]):
         result = None
         response = None
         try:
-            response = self.requests.delete(url, params=params, headers=headers)
+            response = await self.requests.delete(url, params=params, headers=headers)
+
         except Exception as e:
             log.error(f"simple_delete request error, url:%s, params:%s, headers:%s, resp:%s, err:%s",
                     url, params, headers, response, e.__str__())
@@ -300,13 +308,13 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result, msg, err
     """
-    def delete(self, url: str, params: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]], Optional[str], Optional[str]):
+    async def delete(self, url: str, params: Dict = None, headers: Dict = None) -> Tuple[Optional[Dict[str, str]], Optional[str], Optional[str]]:
         err: str = None
         msg: str = None
         result = None
         response = None
         try:
-            response = self.requests.delete(
+            response = await self.requests.delete(
                 url, params=params, headers=headers)
             result = response.json()
             log.info(f"url:{url}, resp-data:{result}")
@@ -326,14 +334,14 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result, msg, status_code, err
     """
-    def delete_with_statuscode(self, url: str, params: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]], Optional[str], Optional[int], Optional[str]):
+    async def delete_with_statuscode(self, url: str, params: Dict = None, headers: Dict = None) -> Tuple[Optional[Dict[str, str]], Optional[str], Optional[int], Optional[str]]:
         err: str = None
         status_code: int = 500
         msg: str = None
         result = None
         response = None
         try:
-            response = self.requests.delete(
+            response = await self.requests.delete(
                 url, params=params, headers=headers)
             result = response.json()
             status_code = response.status_code
@@ -348,17 +356,24 @@ class ServiceApiAdapter(IServiceApi):
 
         return result, msg, status_code, err
     
+    # close all http connections in pool
+    async def close(self):
+        await self.requests.aclose()
+    
     def __status_code_validation(self, response: Response, method: str, url: str, body: Dict = None, params: Dict = None, headers: Dict = None):
         status_code = response.status_code
         if status_code < 400:
             return
         
-        response_json = response.json()
-        msg = response_json["msg"] if "msg" in response_json else response.reason
-        data = response_json["data"] if "data" in response_json else None
+
+        # 处理错误响应
+        response_json = response.json()  # 尝试解析 JSON 响应
+        msg = response_json.get("msg", "unknow_error")  # 获取错误消息
+        data = response_json.get("data", None)  # 获取数据
+
         log.error(f"service request fail, [%s]: %s, body:%s, params:%s, headers:%s, status_code:%s, msg:%s, \n response:%s", 
-                  method, url, body, params, headers, status_code, msg, response)
-        
+                method, url, body, params, headers, status_code, msg, response)
+
         if status_code == status.HTTP_400_BAD_REQUEST:
             raise ClientException(msg=msg, data=data)
         
@@ -394,9 +409,7 @@ class ServiceApiAdapter(IServiceApi):
 
 def get_service_requests():
     try:
-        requests_lib = RequestsHTTPLibrary
-        service_requests = ServiceApiAdapter(requests_lib)
-        yield service_requests
+        yield ServiceApiAdapter()
     except Exception as e:
         log.error(e.__str__())
         raise
