@@ -150,6 +150,9 @@ def raise_http_exception(e: Exception, msg: str = None):
     if isinstance(e, DuplicateUserException):
         raise DuplicateUserException(msg=msg or e.msg, data=e.data)
     
+    if isinstance(e, TooManyRequestsException):
+        raise TooManyRequestsException(msg=msg or e.msg, data=e.data)
+    
     if isinstance(e, ServerException):
         raise ServerException(msg=msg or e.msg, data=e.data)
     

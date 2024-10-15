@@ -40,13 +40,13 @@ class AuthService:
     def signup(self, host: str, body: SignupVO):
         email = body.email
         meta = body.meta
-        self.__cache_check_for_duplicates(email)
+        self.__cache_check_for_frequency(email)
 
         confirm_code = gen_confirm_code()
-        auth_res = self.__req_send_confirmcode_by_email(
+        auth_res, msg, status_code, err = self.__req_send_confirmcode_by_email(
             host, email, confirm_code)
 
-        if auth_res == "email_sent":
+        if not err:
             self.__cache_confirmcode(email, confirm_code, meta)
 
             # FIXME: remove the res here('confirm_code') during production
@@ -54,31 +54,29 @@ class AuthService:
                 "for_testing_only": confirm_code
             }
 
-        else:
-            self.cache.set(email, {"avoid_freq_email_req_and_hit_db": 1}, SHORT_TERM_TTL)
-            raise DuplicateUserException(msg="email_registered")
+        log.error(f"AuthService.signup:[request exception], \
+            host:%s, email:%s, confirm_code:%s, auth_res:%s, msg:%s, status_code:%s, err:%s",
+            host, email, confirm_code, auth_res, msg, status_code, err)
+        raise_http_exception(e=err, msg=msg)
+        
 
-    def __cache_check_for_duplicates(self, email: str):
+    def __cache_check_for_frequency(self, email: str):
         data = self.cache.get(email)
         if data:
-            log.error(f"AuthService.__cache_check_for_duplicates:[business error],\
+            log.error(f"AuthService.__cache_check_for_frequency:[too many request error],\
                 email:%s, cache data:%s", email, data)
-            raise DuplicateUserException(msg="registered or registering")
+            raise TooManyRequestsException(msg="frequently request")
+
+        self.cache.set(email, {"avoid_freq_email_req_and_hit_db": 1}, SHORT_TERM_TTL)
 
     def __req_send_confirmcode_by_email(self, host: str, email: str, confirm_code: str):
-        auth_res, msg, err = self.req.post(f"{host}/sendcode/email", json={
+        auth_res, msg, status_code, err = self.req.post_with_statuscode(f"{host}/sendcode/email", json={
             "email": email,
             "confirm_code": confirm_code,
             "sendby": "no_exist",  # email 不存在時寄送
         })
-        
-        if msg or err:
-            log.error(f"AuthService.__req_send_confirmcode_by_email:[request exception], \
-                host:%s, email:%s, confirm_code:%s, auth_res:%s, msg:%s, err:%s",
-                host, email, confirm_code, auth_res, msg, err)
-            self.cache.set(email, {"avoid_freq_email_req_and_hit_db": 1}, SHORT_TERM_TTL)
 
-        return auth_res
+        return auth_res, msg, status_code, err
 
     def __cache_confirmcode(self, email: str, confirm_code: str, meta: str):
         email_playload = {
