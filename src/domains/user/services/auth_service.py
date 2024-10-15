@@ -40,24 +40,27 @@ class AuthService:
     def signup(self, host: str, body: SignupVO):
         email = body.email
         meta = body.meta
-        self.__cache_check_for_frequency(email)
+        confirm_code = None
+        auth_res = None
 
-        confirm_code = gen_confirm_code()
-        auth_res, msg, status_code, err = self.__req_send_confirmcode_by_email(
-            host, email, confirm_code)
+        try:
+            self.__cache_check_for_frequency(email)
+            confirm_code = gen_confirm_code()
+            auth_res = self.__req_send_confirmcode_by_email(
+                host, email, confirm_code)
 
-        if not err:
             self.__cache_confirmcode(email, confirm_code, meta)
 
             # FIXME: remove the res here('confirm_code') during production
             return {
                 "for_testing_only": confirm_code
             }
-
-        log.error(f"AuthService.signup:[request exception], \
-            host:%s, email:%s, confirm_code:%s, auth_res:%s, msg:%s, status_code:%s, err:%s",
-            host, email, confirm_code, auth_res, msg, status_code, err)
-        raise_http_exception(e=err, msg=msg)
+        
+        except Exception as e:
+            log.error(f"AuthService.signup:[request exception], \
+                host:%s, email:%s, confirm_code:%s, auth_res:%s, err:%s",
+                host, email, confirm_code, auth_res, e)
+            raise_http_exception(e=e, msg=e.msg if e.msg else 'unknow_error')
         
 
     def __cache_check_for_frequency(self, email: str):
@@ -70,13 +73,13 @@ class AuthService:
         self.cache.set(email, {"avoid_freq_email_req_and_hit_db": 1}, SHORT_TERM_TTL)
 
     def __req_send_confirmcode_by_email(self, host: str, email: str, confirm_code: str):
-        auth_res, msg, status_code, err = self.req.post_with_statuscode(f"{host}/sendcode/email", json={
+        auth_res = self.req.simple_post(f"{host}/sendcode/email", json={
             "email": email,
             "confirm_code": confirm_code,
             "sendby": "no_exist",  # email 不存在時寄送
         })
 
-        return auth_res, msg, status_code, err
+        return auth_res
 
     def __cache_confirmcode(self, email: str, confirm_code: str, meta: str):
         email_playload = {
@@ -143,7 +146,6 @@ class AuthService:
         role_id_key = str(auth_res["role_id"])
         auth_res.update({
             "current_region": body.current_region,
-            "socketid": "it's socketid",
         })
         self.cache_auth_res(role_id_key, auth_res)
         auth_res = self.apply_token(auth_res)

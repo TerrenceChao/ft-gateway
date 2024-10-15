@@ -65,7 +65,6 @@ describe("API endpoints /api/v1/*", () => {
         expect(auth).to.have.property("token").that.is.a("string");
         expect(auth).to.have.property("region", REGION);
         expect(auth).to.have.property("current_region", REGION);
-        expect(auth).to.have.property("socketid").that.is.a("string");
         expect(auth).to.have.property("online", true);
         expect(auth).to.have.property("created_at").that.is.a("number");
         token = "Bearer " + auth.token;

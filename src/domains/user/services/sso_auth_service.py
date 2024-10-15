@@ -39,7 +39,6 @@ class ISSOAuthService(AuthService):
         role_id_key = str(auth_res["role_id"])
         auth_res.update({
             "current_region": current_region,
-            "socketid": "it's socketid",
         })
         self.cache_auth_res(role_id_key, auth_res)
         auth_res = self.apply_token(auth_res)
