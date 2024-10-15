@@ -26,29 +26,29 @@ package:
 provider:
   name: aws
   runtime: python3.8
-  region: ${opt:region, "ap-northeast-1"}
-  stage: ${opt:stage, "dev"}
+  region: ${env:THE_REGION} # ${opt:region, "ap-northeast-1"}
+  stage: ${env:STAGE} # ${opt:stage, "dev"}
   timeout: 30
   iamRoleStatements:
     - Effect: Allow
       Action:
         - lambda:*
       Resource:
-        - arn:aws:lambda:ap-northeast-1:549734764220:layer:*
-        - arn:aws:lambda:ap-northeast-1:549734764220:function:*
+        - arn:aws:lambda:${env:THE_REGION}:${env:ACCOUNT_ID}:layer:*
+        - arn:aws:lambda:${env:THE_REGION}:${env:ACCOUNT_ID}:function:*
 
     # - Effect: Allow
     #   Action:
     #     - elasticache:*
     #   Resource:
-    #     - arn:aws:elasticache:ap-northeast-1:549734764220:subnetgroup:ft
-    #     - arn:aws:elasticache:ap-northeast-1:549734764220:replicationgroup:ft-redis
+    #     - arn:aws:elasticache:${env:THE_REGION}:${env:ACCOUNT_ID}:subnetgroup:XXXX
+    #     - arn:aws:elasticache:${env:THE_REGION}:${env:ACCOUNT_ID}:replicationgroup:XXXX-REPLICA
   
     - Effect: Allow
       Action:
         - dynamodb:*
       Resource:
-        - arn:aws:dynamodb:ap-northeast-1:549734764220:table/cache
+        - arn:aws:dynamodb:${env:THE_REGION}:${env:ACCOUNT_ID}:table/${env:TABLE_CACHE}
 
     - Effect: Allow
       Action:
@@ -59,8 +59,8 @@ provider:
         - "s3:List*"
         - "s3:AbortMultipartUpload"
       Resource:
-        - "arn:aws:s3:::foreign-teacher"
-        - "arn:aws:s3:::foreign-teacher/*"
+        - "arn:aws:s3:::${env:S3_BUCKET}"
+        - "arn:aws:s3:::${env:S3_BUCKET}/*"
 
 custom:
   pythonRequirements:
@@ -188,4 +188,3 @@ plugins:
 #     NewOutput:
 #       Description: "Description for the output"
 #       Value: "Some output value"
-
