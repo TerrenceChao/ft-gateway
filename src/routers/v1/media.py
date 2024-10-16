@@ -7,10 +7,9 @@ from starlette.responses import Response, StreamingResponse
 from ..req.authorization import AuthRoute, token_required
 from ..res.response import res_success
 from ...domains.cache import ICache
-from ...infra.cache.dynamodb_cache_adapter import get_cache
 from ...domains.media.services.media_service import MediaService
+from ...apps.resources.adapters import service_client, gw_cache
 from ...configs.constants import PATHS
-from ...configs.service_client import service_client
 from ...configs.region_hosts import get_media_region_host
 from ...configs.exceptions import ClientException
 from ...infra.utils.util import get_serial_num
@@ -24,8 +23,8 @@ log = logging.getLogger(__name__)
 router = APIRouter(
     prefix="/media",
     tags=["Media"],
-    # dependencies=[Depends(token_required)],
-    # route_class=AuthRoute,
+    dependencies=[Depends(token_required)],
+    route_class=AuthRoute,
     responses={404: {"description": "Not found"}},
 )
 
@@ -43,13 +42,12 @@ async def upload_params(role: str,
                         filename: str = Query(...),
                         # mime_type: str = Query(...),
                         media_host: str = Depends(get_media_host),
-                        cache: ICache = Depends(get_cache),
                         ):
     if not role in PATHS.keys():
         raise ClientException(
             msg="The 'role' should be 'teacher' or 'company'")
 
-    serial_num = await get_serial_num(cache=cache, role_id=role_id)
+    serial_num = await get_serial_num(cache=gw_cache, role_id=role_id)
     result = await _media_service.get_upload_params(
         host=media_host,
         params={
@@ -69,13 +67,12 @@ async def icon_upload_params(role: str,
                              filename: str = Query(...),
                              # mime_type: str = Query(...),
                              media_host: str = Depends(get_media_host),
-                             cache: ICache = Depends(get_cache),
                              ):
     if not role in PATHS.keys():
         raise ClientException(
             msg="The 'role' should be 'teacher' or 'company'")
 
-    serial_num = await get_serial_num(cache=cache, role_id=role_id)
+    serial_num = await get_serial_num(cache=gw_cache, role_id=role_id)
     result = await _media_service.get_overwritable_upload_params(
         host=media_host,
         params={
@@ -95,13 +92,12 @@ async def remove(role: str,
                   role_id: str,
                   object_key: str = Query(...),
                   media_host: str = Depends(get_media_host),
-                  cache: ICache = Depends(get_cache),
                   ):
     if not role in PATHS.keys():
         raise ClientException(
             msg="The 'role' should be 'teacher' or 'company'")
 
-    serial_num = await get_serial_num(cache=cache, role_id=role_id)
+    serial_num = await get_serial_num(cache=gw_cache, role_id=role_id)
     result = await _media_service.delete_file(
         host=media_host,
         params={

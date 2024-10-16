@@ -7,8 +7,7 @@ from ..req.authorization import verify_token_by_logout, verify_token_by_update_p
 from ..req.auth_validation import *
 from ..res.response import *
 from ...domains.user.services.auth_service import AuthService
-from ...configs.service_client import service_client
-from ...configs.cache import gw_cache
+from ...apps.resources.adapters import service_client, gw_cache
 from ...configs.region_hosts import get_auth_region_host, get_match_region_host
 import logging
 

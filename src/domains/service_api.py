@@ -55,7 +55,3 @@ class IServiceApi(ABC):
     @abstractmethod
     async def delete_with_statuscode(self, url: str, params: Dict = None, headers: Dict = None) -> Tuple[Optional[Dict[str, str]], Optional[str], Optional[int], Optional[str]]:
         pass
-
-    @abstractmethod
-    async def close(self):
-        pass

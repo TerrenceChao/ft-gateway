@@ -3,8 +3,7 @@ from fastapi.responses import RedirectResponse
 from ..res.response import res_success
 from ...configs.region_hosts import get_auth_region_v2_host, get_match_region_host
 from src.domains.user.services.sso_auth_service import FBAuthService, GoogleAuthService
-from src.configs.service_client import service_client
-from src.configs.cache import gw_cache
+from ...apps.resources.adapters import service_client, gw_cache
 from src.domains.user.value_objects.auth_vo import SSOLoginVO
 import logging as log
 

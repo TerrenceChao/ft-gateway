@@ -17,8 +17,7 @@ from ...domains.match.company.services.follow_and_contact_resume_service import 
 from ...domains.match.teacher.services.teacher_service import TeacherProfileService
 from ...domains.payment.services.payment_service import PaymentService
 from ...domains.notify.value_objects import email_value_objects as email_vo
-from ...configs.service_client import service_client
-from ...configs.cache import gw_cache
+from ...apps.resources.adapters import service_client, gw_cache
 from ...configs.conf import \
     MY_STATUS_OF_COMPANY_APPLY, STATUS_OF_COMPANY_APPLY, MY_STATUS_OF_COMPANY_REACTION, STATUS_OF_COMPANY_REACTION
 from ...configs.constants import Apply

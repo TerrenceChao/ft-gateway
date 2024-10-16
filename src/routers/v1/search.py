@@ -4,8 +4,7 @@ from fastapi import APIRouter, \
     Depends, Header, Query
 from ..req.search_validation import *
 from ..res.response import *
-from ...configs.service_client import service_client
-from ...configs.cache import gw_cache
+from ...apps.resources.adapters import service_client, gw_cache
 from ...configs.region_hosts import \
     get_search_region_host, get_match_region_host
 from ...configs.constants import *

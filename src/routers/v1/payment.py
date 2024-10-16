@@ -9,9 +9,8 @@ from ..res.response import *
 from ...domains.payment.models import dtos, value_objects as vo
 from ...domains.payment.models.stripe import stripe_dtos, stripe_vos
 from ...domains.payment.services.payment_service import PaymentService, PaymentPlanService
+from ...apps.resources.adapters import service_client, gw_cache
 from ...configs.conf import *
-from ...configs.service_client import service_client
-from ...configs.cache import gw_cache
 from ...configs.region_hosts import get_payment_region_host
 import logging
 

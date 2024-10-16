@@ -1,11 +1,8 @@
-import httpx
 from fastapi import status
-from httpx import Response
-from typing import Dict, Union, Any, Optional, Tuple
-from ..domains.service_api import IServiceApi
-from ..configs.exceptions import \
-    ClientException, UnauthorizedException, ForbiddenException, NotFoundException, NotAcceptableException,\
-    ServerException
+from typing import Dict, Optional, Tuple
+from ...domains.service_api import IServiceApi
+from ...configs.exceptions import *
+from ...apps.resources.handlers.http_resource import HttpResourceHandler
 import logging
 
 
@@ -17,8 +14,8 @@ SUCCESS_CODE = "0"
 
 
 class ServiceApiAdapter(IServiceApi):
-    def __init__(self):
-        self.requests = httpx.AsyncClient()
+    def __init__(self, connect: HttpResourceHandler):
+        self.connect = connect
 
 
     """
@@ -28,7 +25,8 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            response = await self.requests.get(url, params=params, headers=headers)
+            client = await self.connect.access(url)
+            response = await client.get(url, params=params, headers=headers)
 
         except Exception as e:
             log.error(f"simple_get request error, url:%s, params:%s, headers:%s, resp:%s, err:%s",
@@ -58,7 +56,8 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            response = await self.requests.get(url, params=params, headers=headers)
+            client = await self.connect.access(url)
+            response = await client.get(url, params=params, headers=headers)
             result = response.json()
             log.info(f"url:{url}, resp-data:{result}")
             if self.__err(result):
@@ -84,7 +83,8 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            response = await self.requests.get(url, params=params, headers=headers)
+            client = await self.connect.access(url)
+            response = await client.get(url, params=params, headers=headers)
             result = response.json()
             status_code = response.status_code
             log.info(f"url:{url}, resp-data:{result}")
@@ -105,7 +105,8 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            response = await self.requests.post(url, json=json, headers=headers)
+            client = await self.connect.access(url)
+            response = await client.post(url, json=json, headers=headers)
 
         except Exception as e:
             log.error(f"simple_post request error, url:%s, json:%s, headers:%s, resp:%s, err:%s",
@@ -130,7 +131,8 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            response = await self.requests.post(url, data=byte_data, headers=headers)
+            client = await self.connect.access(url)
+            response = await client.post(url, data=byte_data, headers=headers)
 
         except Exception as e:
             log.error(f"simple_post request error, url:%s, data:%s, headers:%s, resp:%s, err:%s",
@@ -160,7 +162,8 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            response = await self.requests.post(url, json=json, headers=headers)
+            client = await self.connect.access(url)
+            response = await client.post(url, json=json, headers=headers)
             result = response.json()
             log.info(f"url:{url}, resp-data:{result}")
             if self.__err(result):
@@ -186,7 +189,8 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            response = await self.requests.post(url, json=json, headers=headers)
+            client = await self.connect.access(url)
+            response = await client.post(url, json=json, headers=headers)
             result = response.json()
             status_code = response.status_code
             log.info(f"url:{url}, resp-data:{result}")
@@ -207,7 +211,8 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            response = await self.requests.put(url, json=json, headers=headers)
+            client = await self.connect.access(url)
+            response = await client.put(url, json=json, headers=headers)
 
         except Exception as e:
             log.error(f"simple_put request error, url:%s, json:%s, headers:%s, resp:%s, err:%s",
@@ -237,7 +242,8 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            response = await self.requests.put(url, json=json, headers=headers)
+            client = await self.connect.access(url)
+            response = await client.put(url, json=json, headers=headers)
             result = response.json()
             log.info(f"url:{url}, resp-data:{result}")
             if self.__err(result):
@@ -263,7 +269,8 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            response = await self.requests.put(url, json=json, headers=headers)
+            client = await self.connect.access(url)
+            response = await client.put(url, json=json, headers=headers)
             result = response.json()
             status_code = response.status_code
             log.info(f"url:{url}, resp-data:{result}")
@@ -284,7 +291,8 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            response = await self.requests.delete(url, params=params, headers=headers)
+            client = await self.connect.access(url)
+            response = await client.delete(url, params=params, headers=headers)
 
         except Exception as e:
             log.error(f"simple_delete request error, url:%s, params:%s, headers:%s, resp:%s, err:%s",
@@ -314,7 +322,8 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            response = await self.requests.delete(
+            client = await self.connect.access(url)
+            response = await client.delete(
                 url, params=params, headers=headers)
             result = response.json()
             log.info(f"url:{url}, resp-data:{result}")
@@ -341,7 +350,8 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            response = await self.requests.delete(
+            client = await self.connect.access(url)
+            response = await client.delete(
                 url, params=params, headers=headers)
             result = response.json()
             status_code = response.status_code
@@ -355,12 +365,9 @@ class ServiceApiAdapter(IServiceApi):
                 f"delete_with_statuscode request error, url:{url}, headers:{headers}, resp:{response}, err:{err}")
 
         return result, msg, status_code, err
+
     
-    # close all http connections in pool
-    async def close(self):
-        await self.requests.aclose()
-    
-    def __status_code_validation(self, response: Response, method: str, url: str, body: Dict = None, params: Dict = None, headers: Dict = None):
+    def __status_code_validation(self, response: HttpResourceHandler.Response, method: str, url: str, body: Dict = None, params: Dict = None, headers: Dict = None):
         status_code = response.status_code
         if status_code < 400:
             return

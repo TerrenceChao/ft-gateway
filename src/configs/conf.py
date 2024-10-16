@@ -20,6 +20,9 @@ JWT_SECRET = os.getenv("JWT_SECRET", None)
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 TOKEN_EXPIRE_TIME = int(os.getenv("TOKEN_EXPIRE_TIME", 60 * 60 * 24 * 7))
 
+# probe cycle secs
+PROBE_CYCLE_SECS = int(os.getenv("PROBE_CYCLE_SECS", "3"))
+
 # default = 20 secs
 REQUEST_INTERVAL_TTL = int(os.getenv("REQUEST_INTERVAL_TTL", "20"))
 # default = 5 mins (300 secs)

@@ -14,8 +14,7 @@ from ...domains.match.teacher.value_objects import t_value_objects as vo
 from ...domains.match.teacher.services.teacher_service import TeacherProfileService, TeacherAggregateService
 from ...domains.match.teacher.services.teacher_resume_service import TeacherResumeService
 from ...domains.match.teacher.services.follow_and_contact_job_service import FollowJobService, ContactJobService
-from ...configs.service_client import service_client
-from ...configs.cache import gw_cache
+from ...apps.resources.adapters import service_client, gw_cache
 from ...configs.conf import \
     MY_STATUS_OF_TEACHER_APPLY, STATUS_OF_TEACHER_APPLY, MY_STATUS_OF_TEACHER_REACTION, STATUS_OF_TEACHER_REACTION
 from ...configs.constants import Apply

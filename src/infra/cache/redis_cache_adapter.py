@@ -5,7 +5,6 @@ import re
 from typing import Any, Dict, List, Set, Optional
 from redis import Redis
 from ...domains.cache import ICache
-from ...configs.redis import redis
 from ...configs.exceptions import ServerException
 import logging
 
@@ -80,17 +79,3 @@ class RedisCacheAdapter(ICache):
     async def srem(self, key: str, value: Any, ex: int = None) -> (int):
         # TODO: implement
         return 0
-    
-    async def close(self):
-        pass
-
-
-async def get_cache():
-    try:
-        cache = RedisCacheAdapter(redis)
-        yield cache
-    except Exception as e:
-        log.error(e.__str__())
-        raise
-    finally:
-        pass

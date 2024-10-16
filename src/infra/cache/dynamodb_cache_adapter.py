@@ -1,8 +1,8 @@
 import json
 from datetime import datetime, timedelta
-from typing import Any, List, Set, Optional, Callable
+from typing import Any, List, Set, Optional
 from ...domains.cache import ICache
-from ...configs.dynamodb import *
+from ...apps.resources.handlers.cache_resource import DynamodbCacheResourceHandler
 from ...configs.conf import DYNAMODB_URL, TABLE_CACHE
 from ...configs.exceptions import ServerException
 import logging
@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 
 class DynamoDbCacheAdapter(ICache):
-    def __init__(self, async_db_resource: Callable):
+    def __init__(self, async_db_resource: DynamodbCacheResourceHandler):
         self.aio_db = async_db_resource
 
 
@@ -25,7 +25,7 @@ class DynamoDbCacheAdapter(ICache):
         res = None
         result = None
         try:
-            db = await self.aio_db()
+            db = await self.aio_db.access()
             table = await db.Table(TABLE_CACHE)
             res = await table.get_item(Key={"cache_key": key})
             if "Item" in res and "value" in res["Item"]:
@@ -49,7 +49,7 @@ class DynamoDbCacheAdapter(ICache):
             if val_type == dict or val_type == list:
                 val = json.dumps(val)
 
-            db = await self.aio_db()
+            db = await self.aio_db.access()
             table = await db.Table(TABLE_CACHE)
             item = {
                 "cache_key": key,
@@ -72,7 +72,7 @@ class DynamoDbCacheAdapter(ICache):
 
     async def delete(self, key: str):
         try:
-            db = await self.aio_db()
+            db = await self.aio_db.access()
             table = await db.Table(TABLE_CACHE)
             await table.delete_item(Key={'cache_key': key})
 
@@ -131,18 +131,3 @@ class DynamoDbCacheAdapter(ICache):
             update_count = 0
 
         return update_count
-
-    async def close(self):
-        await release_db_resource()
-
-
-
-async def get_cache():
-    try:
-        cache = DynamoDbCacheAdapter(async_db_resource)
-        yield cache
-    except Exception as e:
-        log.error(e.__str__())
-        raise
-    finally:
-        pass

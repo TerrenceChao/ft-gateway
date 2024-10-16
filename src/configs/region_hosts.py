@@ -18,7 +18,7 @@ auth_region_v2_hosts = {
     # "default": os.getenv("REGION_HOST_AUTH", "http://localhost:8082/auth/api/v2/auth-nosql"),
     "jp": os.getenv("JP_REGION_HOST_AUTH", "http://localhost:8082/auth/api/v2/auth-nosql"),
     "ge": os.getenv("GE_REGION_HOST_AUTH", "http://localhost:8082/auth/api/v2/auth-nosql"),
-    "us": os.getenv("US_REGION_HOST_AUTH", "http://localhost:8082/auth/api/v2/auth-nosql"),
+    "us": os.getenv("US_REGION_HOST_AUTH", ""),
 }
 
 match_region_hosts = {
