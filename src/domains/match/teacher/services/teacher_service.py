@@ -7,37 +7,39 @@ from .....configs.conf import \
     MY_STATUS_OF_TEACHER_APPLY, STATUS_OF_TEACHER_APPLY
 from .....configs.exceptions import \
     ClientException, ServerException
-import logging as log
+import logging
 
-log.basicConfig(filemode='w', level=log.INFO)
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
 
 class TeacherProfileService:
     def __init__(self, req: IServiceApi):
         self.req = req
 
-    def create_profile(self, host: str, teacher_id: int, profile: teach_vo.TeacherProfileVO):
+    async def create_profile(self, host: str, teacher_id: int, profile: teach_vo.TeacherProfileVO):
         url = f"{host}/teachers/{teacher_id}"
-        data = self.req.simple_post(url=url, json=profile.dict())
+        data = await self.req.simple_post(url=url, json=profile.dict())
 
         return data
 
-    def get_profile(self, host: str, teacher_id: int) -> (Optional[teach_vo.ReturnTeacherProfileVO]):
-        return TeacherProfileService.get(self.req, host, teacher_id)
+    async def get_profile(self, host: str, teacher_id: int) -> (Optional[teach_vo.ReturnTeacherProfileVO]):
+        return await TeacherProfileService.get(self.req, host, teacher_id)
     
     # public method for teacher & company:ContactResumeService
     @staticmethod
-    def get(req: IServiceApi, match_host: str, teacher_id: int) -> (Optional[teach_vo.ReturnTeacherProfileVO]):
+    async def get(req: IServiceApi, match_host: str, teacher_id: int) -> (Optional[teach_vo.ReturnTeacherProfileVO]):
         url = f"{match_host}/teachers/{teacher_id}"
-        data = req.simple_get(url)
+        data = await req.simple_get(url)
         if data is None:
             return None
 
         return teach_vo.ReturnTeacherProfileVO.parse_obj(data)
 
-    def update_profile(self, host: str, teacher_id: int, profile: teach_vo.UpdateTeacherProfileVO):
+    async def update_profile(self, host: str, teacher_id: int, profile: teach_vo.UpdateTeacherProfileVO):
         url = f"{host}/teachers/{teacher_id}"
-        data = self.req.simple_put(url=url, json=profile.dict())
+        data = await self.req.simple_put(url=url, json=profile.dict())
 
         return data
 
@@ -46,9 +48,9 @@ class TeacherAggregateService(StarTrackerService):
     def __init__(self, req: IServiceApi, cache: ICache):
         super().__init__(req, cache)
 
-    def get_job_follows_and_contacts(self, host: str, teacher_id: int, size: int):
+    async def get_job_follows_and_contacts(self, host: str, teacher_id: int, size: int):
         url = f"{host}/teachers/{teacher_id}/jobs/follow-and-apply"
-        data = self.req.simple_get(
+        data = await self.req.simple_get(
             url=url, 
             params={
                 "size": size,
@@ -58,13 +60,13 @@ class TeacherAggregateService(StarTrackerService):
         )
 
         data = teach_vo.TeacherFollowAndContactVO.parse_obj(data).init()
-        data.followed = self.contact_marks(host, 'teacher', teacher_id, data.followed)
-        data.contact = self.followed_marks(host, 'teacher', teacher_id, data.contact)
+        data.followed = await self.contact_marks(host, 'teacher', teacher_id, data.followed)
+        data.contact = await self.followed_marks(host, 'teacher', teacher_id, data.contact)
         return data
 
-    def get_matchdata(self, host: str, teacher_id: int, size: int):
+    async def get_matchdata(self, host: str, teacher_id: int, size: int):
         url = f"{host}/teachers/{teacher_id}/matchdata"
-        data = self.req.simple_get(
+        data = await self.req.simple_get(
             url=url, 
             params={
                 "size": size,
@@ -74,6 +76,6 @@ class TeacherAggregateService(StarTrackerService):
         )
 
         data = teach_vo.TeacherMatchDataVO.parse_obj(data).init()
-        data.followed = self.contact_marks(host, 'teacher', teacher_id, data.followed)
-        data.contact = self.followed_marks(host, 'teacher', teacher_id, data.contact)
+        data.followed = await self.contact_marks(host, 'teacher', teacher_id, data.followed)
+        data.contact = await self.followed_marks(host, 'teacher', teacher_id, data.contact)
         return data

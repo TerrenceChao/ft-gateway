@@ -9,13 +9,14 @@ from ..res.response import *
 from ...domains.payment.models import dtos, value_objects as vo
 from ...domains.payment.models.stripe import stripe_dtos, stripe_vos
 from ...domains.payment.services.payment_service import PaymentService, PaymentPlanService
+from ...apps.resources.adapters import service_client, gw_cache
 from ...configs.conf import *
-from ...configs.service_client import service_client
-from ...configs.cache import gw_cache
 from ...configs.region_hosts import get_payment_region_host
-import logging as log
+import logging
 
-log.basicConfig(filemode='w', level=log.INFO)
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
 _payment_service = PaymentService(
     service_client, 
@@ -33,44 +34,44 @@ router = APIRouter(
 )
 
 
-def get_payment_host(current_region: str = Header(...)):
+async def get_payment_host(current_region: str = Header(...)):
     return get_payment_region_host(current_region)
 
 
 @router.get('/plans', responses=idempotent_response('plans', List[stripe_vos.StripePlanVO]))
-def list_plans(payment_host=Depends(get_payment_host)):
-    data = _payment_plan_service.list_plans(payment_host)
+async def list_plans(payment_host=Depends(get_payment_host)):
+    data = await _payment_plan_service.list_plans(payment_host)
     return res_success(data=data)
 
 
 @router.put('/strong-customer-authentication')
-def strong_customer_authentication(
+async def strong_customer_authentication(
     body: dtos.UserDTO = Body(...),
     payment_host=Depends(get_payment_host),
     verify=Depends(verify_token_by_payment_operation),
 ):
-    data = _payment_service.strong_customer_authentication(
+    data = await _payment_service.strong_customer_authentication(
         payment_host, body)
     return res_success(data=data)
 
 
 @router.put('/payment-method', responses=idempotent_response(f'payment_method', vo.PaymentStatusVO))
-def payment_method(
+async def payment_method(
     body: stripe_dtos.StripeUserPaymentRequestDTO = Body(...),
     payment_host=Depends(get_payment_host),
     verify=Depends(verify_token_by_payment_operation),
 ):
-    data = _payment_service.payment_method(payment_host, body)
+    data = await _payment_service.payment_method(payment_host, body)
     return res_success(data=data)
 
 
 @router.get('/subscribe', responses=idempotent_response('subscribe_status', vo.PaymentStatusVO))
-def subscribe_status(
+async def subscribe_status(
     role_id: int = Query(...),
     payment_host=Depends(get_payment_host),
     verify=Depends(verify_token_by_subscribe_status),
 ):
-    data = _payment_service.get_payment_status(payment_host, role_id)
+    data = await _payment_service.get_payment_status(payment_host, role_id)
     return res_success(data=data)
 
 
@@ -81,7 +82,7 @@ async def subscribe(
     payment_host=Depends(get_payment_host),
     verify=Depends(verify_token_by_payment_operation),
 ):
-    _payment_service.subscribe(bg_tasks, payment_host, body)
+    await _payment_service.subscribe(bg_tasks, payment_host, body)
     return post_success(msg='processing', code='20200')
 
 
@@ -92,7 +93,7 @@ async def unsubscribe(
     payment_host=Depends(get_payment_host),
     verify=Depends(verify_token_by_payment_operation),
 ):
-    _payment_service.unsubscribe(bg_tasks, payment_host, body)
+    await _payment_service.unsubscribe(bg_tasks, payment_host, body)
     return post_success(msg='canceling', code='20200')
 
 '''

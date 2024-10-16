@@ -2,30 +2,32 @@ from typing import Any, Dict, Union
 from fastapi import status
 from ...service_api import IServiceApi
 from ....configs.exceptions import ServerException, ForbiddenException
-import logging as log
+import logging
 
-log.basicConfig(filemode='w', level=log.INFO)
+
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
 
 class MediaService:
     def __init__(self, req: IServiceApi):
         self.req = req
 
-    def get_upload_params(self, host: str, params: Dict):
+    async def get_upload_params(self, host: str, params: Dict):
         url = f"{host}/users/upload-params"
-        result = self.req.simple_get(url=url, params=params)
+        result = await self.req.simple_get(url=url, params=params)
         
         return result
     
-    def get_overwritable_upload_params(self, host: str, params: Dict):
+    async def get_overwritable_upload_params(self, host: str, params: Dict):
         url = f"{host}/users/upload-params/overwritable"
-        result = self.req.simple_get(url=url, params=params)
+        result = await self.req.simple_get(url=url, params=params)
 
         return result
 
-    def delete_file(self, host: str, params: Dict):
+    async def delete_file(self, host: str, params: Dict):
         url = f"{host}/users"
-        result = self.req.simple_delete(
+        result = await self.req.simple_delete(
             url=url, params=params)
 
         return result
