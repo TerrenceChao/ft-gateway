@@ -102,6 +102,7 @@ class AuthVO(BaseAuthDTO):
     token: str
     region: str
     current_region: Optional[str] = None
+    socketid: Optional[str] = None
     online: Optional[bool] = False
     created_at: int
 

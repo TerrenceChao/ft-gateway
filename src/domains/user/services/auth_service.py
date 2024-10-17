@@ -42,13 +42,13 @@ class AuthService:
     async def signup(self, host: str, body: SignupVO):
         email = body.email
         meta = body.meta
-        confirm_code = None
+        await confirm_code = None
         auth_res = None
 
         try:
-            await self.__cache_check_for_frequency(email)
+            self.__cache_check_for_frequency(email)
             confirm_code = gen_confirm_code()
-            auth_res = await self.__req_send_confirmcode_by_email(
+            auth_res = self.__req_send_confirmcode_by_email(
                 host, email, confirm_code)
 
             await self.__cache_confirmcode(email, confirm_code, meta)
@@ -63,16 +63,16 @@ class AuthService:
                 host:%s, email:%s, confirm_code:%s, auth_res:%s, err:%s",
                 host, email, confirm_code, auth_res, e)
             raise_http_exception(e=e, msg=e.msg if e.msg else 'unknow_error')
+        
 
-
-    async def __cache_check_for_frequency(self, email: str):
-        data = await self.cache.get(email)
+    def __cache_check_for_frequency(self, email: str):
+        data = self.cache.get(email)
         if data:
             log.error(f"AuthService.__cache_check_for_frequency:[too many request error],\
                 email:%s, cache data:%s", email, data)
             raise TooManyRequestsException(msg="frequently request")
 
-        await self.cache.set(email, {"avoid_freq_email_req_and_hit_db": 1}, SHORT_TERM_TTL)
+        self.cache.set(email, {"avoid_freq_email_req_and_hit_db": 1}, SHORT_TERM_TTL)
 
     async def __req_send_confirmcode_by_email(self, host: str, email: str, confirm_code: str):
         auth_res = await self.req.simple_post(f"{host}/sendcode/email", json={

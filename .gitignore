@@ -9,5 +9,6 @@
 **/**playground.py
 **/**.sh
 !deploy.sh
+
 **.env*
 !.env.example
