@@ -48,9 +48,7 @@ class DynamodbCacheResourceHandler(ResourceHandler):
                     self.dynamodb = db
 
 
-    async def access(self, **kwargs):
-        self._update_access_time()
-
+    async def accessing(self, **kwargs):
         async with self.lock:
             if self.dynamodb is None:
                 await self.initial()
