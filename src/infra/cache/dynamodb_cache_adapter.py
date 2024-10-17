@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from typing import Any, List, Set, Optional
 from ...domains.cache import ICache
 from ...apps.resources.handlers.cache_resource import DynamodbCacheResourceHandler
-from ...configs.conf import DYNAMODB_URL, TABLE_CACHE
+from ...configs.conf import TABLE_CACHE
 from ...configs.exceptions import ServerException
 import logging
 
