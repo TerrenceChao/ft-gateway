@@ -44,9 +44,7 @@ class HttpResourceHandler(ResourceHandler):
             self.domain_clients[domain] = httpx.AsyncClient(timeout=timeout, limits=limits)
 
 
-    async def access(self, url=None):
-        self._update_access_time()
-
+    async def accessing(self, url: str):
         if url is None:
             raise Exception('url is a must')
 

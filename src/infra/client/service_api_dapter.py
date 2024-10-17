@@ -25,7 +25,7 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            client = await self.connect.access(url)
+            client = await self.connect.access(url=url) # self.connect.access(**kwargs) 
             response = await client.get(url, params=params, headers=headers)
 
         except Exception as e:
@@ -56,7 +56,7 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            client = await self.connect.access(url)
+            client = await self.connect.access(url=url) # self.connect.access(**kwargs)
             response = await client.get(url, params=params, headers=headers)
             result = response.json()
             log.info(f"url:{url}, resp-data:{result}")
@@ -83,7 +83,7 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            client = await self.connect.access(url)
+            client = await self.connect.access(url=url) # self.connect.access(**kwargs)
             response = await client.get(url, params=params, headers=headers)
             result = response.json()
             status_code = response.status_code
@@ -105,7 +105,7 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            client = await self.connect.access(url)
+            client = await self.connect.access(url=url) # self.connect.access(**kwargs)
             response = await client.post(url, json=json, headers=headers)
 
         except Exception as e:
@@ -131,7 +131,7 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            client = await self.connect.access(url)
+            client = await self.connect.access(url=url) # self.connect.access(**kwargs)
             response = await client.post(url, data=byte_data, headers=headers)
 
         except Exception as e:
@@ -162,7 +162,7 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            client = await self.connect.access(url)
+            client = await self.connect.access(url=url) # self.connect.access(**kwargs)
             response = await client.post(url, json=json, headers=headers)
             result = response.json()
             log.info(f"url:{url}, resp-data:{result}")
@@ -189,7 +189,7 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            client = await self.connect.access(url)
+            client = await self.connect.access(url=url) # self.connect.access(**kwargs)
             response = await client.post(url, json=json, headers=headers)
             result = response.json()
             status_code = response.status_code
@@ -211,7 +211,7 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            client = await self.connect.access(url)
+            client = await self.connect.access(url=url) # self.connect.access(**kwargs)
             response = await client.put(url, json=json, headers=headers)
 
         except Exception as e:
@@ -242,7 +242,7 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            client = await self.connect.access(url)
+            client = await self.connect.access(url=url) # self.connect.access(**kwargs)
             response = await client.put(url, json=json, headers=headers)
             result = response.json()
             log.info(f"url:{url}, resp-data:{result}")
@@ -269,7 +269,7 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            client = await self.connect.access(url)
+            client = await self.connect.access(url=url) # self.connect.access(**kwargs)
             response = await client.put(url, json=json, headers=headers)
             result = response.json()
             status_code = response.status_code
@@ -291,7 +291,7 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            client = await self.connect.access(url)
+            client = await self.connect.access(url=url) # self.connect.access(**kwargs)
             response = await client.delete(url, params=params, headers=headers)
 
         except Exception as e:
@@ -322,7 +322,7 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            client = await self.connect.access(url)
+            client = await self.connect.access(url=url) # self.connect.access(**kwargs)
             response = await client.delete(
                 url, params=params, headers=headers)
             result = response.json()
@@ -350,7 +350,7 @@ class ServiceApiAdapter(IServiceApi):
         result = None
         response = None
         try:
-            client = await self.connect.access(url)
+            client = await self.connect.access(url=url) # self.connect.access(**kwargs)
             response = await client.delete(
                 url, params=params, headers=headers)
             result = response.json()

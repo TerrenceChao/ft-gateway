@@ -12,14 +12,19 @@ class ResourceHandler(ABC):
     async def initial(self):
         pass
 
-    @abstractmethod
+
+    # for calling outside
     async def access(self, **kwargs):
-        pass
+        # DO pre process
+        self._update_access_time()
+        result = await self.accessing(**kwargs)
+        # DO post process...
+        return result
 
     # # child class implements this function
-    # @abstractmethod
-    # async def _access(self, **kwargs):
-    #     pass
+    @abstractmethod
+    async def accessing(self, **kwargs):
+        pass
 
     # 定期激活，維持連線和連線池
     # Regular activation to maintain connections and connection pools
