@@ -4,24 +4,33 @@ from pydantic import BaseSettings
 from typing import Set
 from .constants import Apply
 
+
+# connection
+# http
+HTTP_TIMEOUT = float(os.getenv("TIMEOUT", 10.0))
+HTTP_MAX_CONNECTS = int(os.getenv("MAX_CONNECTS", 20))
+HTTP_MAX_KEEPALIVE_CONNECTS = int(os.getenv("MAX_KEEPALIVE_CONNECTS", 10))
+HTTP_KEEPALIVE_EXPIRY = float(os.getenv("KEEPALIVE_EXPIRY", 30.0))
+
 # cache
 # dynamodb
-LOCAL_DB = "http://localhost:8000"
-DYNAMODB_URL = os.getenv("DYNAMODB_URL", LOCAL_DB)
 TABLE_CACHE = os.getenv("TABLE_CACHE", "cache")
+DDB_CONNECT_TIMEOUT=int(os.getenv("DDB_CONNECT_TIMEOUT", 10))
+DDB_READ_TIMEOUT=int(os.getenv("DDB_READ_TIMEOUT", 30))
+DDB_MAX_ATTEMPTS=int(os.getenv("DDB_MAX_ATTEMPTS", 5))
 # redis
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
 REDIS_USER = os.getenv("REDIS_USERNAME", None)
 REDIS_PASS = os.getenv("REDIS_PASSWORD", None)
 
+# probe cycle secs
+PROBE_CYCLE_SECS = int(os.getenv("PROBE_CYCLE_SECS", "3"))
+
 
 JWT_SECRET = os.getenv("JWT_SECRET", None)
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 TOKEN_EXPIRE_TIME = int(os.getenv("TOKEN_EXPIRE_TIME", 60 * 60 * 24 * 7))
-
-# probe cycle secs
-PROBE_CYCLE_SECS = int(os.getenv("PROBE_CYCLE_SECS", "3"))
 
 # default = 20 secs
 REQUEST_INTERVAL_TTL = int(os.getenv("REQUEST_INTERVAL_TTL", "20"))
