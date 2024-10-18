@@ -1,4 +1,4 @@
-from typing import Any, List, Dict
+from typing import Any, Dict
 from ....routers.req.authorization import gen_token
 from ..value_objects.auth_vo import *
 from ...cache import ICache
@@ -7,7 +7,6 @@ from ....infra.utils.util import gen_confirm_code
 from ....infra.utils.time_util import gen_timestamp
 from ....configs.conf import *
 from ....configs.constants import PATHS, PREFETCH, COM, TEACH
-from ....configs.region_hosts import get_auth_region_host, get_match_region_host
 from ....configs.exceptions import *
 import logging
 
@@ -42,13 +41,13 @@ class AuthService:
     async def signup(self, host: str, body: SignupVO):
         email = body.email
         meta = body.meta
-        await confirm_code = None
+        confirm_code = None
         auth_res = None
 
         try:
-            self.__cache_check_for_frequency(email)
+            await self.__cache_check_for_frequency(email)
             confirm_code = gen_confirm_code()
-            auth_res = self.__req_send_confirmcode_by_email(
+            auth_res = await self.__req_send_confirmcode_by_email(
                 host, email, confirm_code)
 
             await self.__cache_confirmcode(email, confirm_code, meta)
@@ -65,14 +64,14 @@ class AuthService:
             raise_http_exception(e=e, msg=e.msg if e.msg else 'unknow_error')
         
 
-    def __cache_check_for_frequency(self, email: str):
-        data = self.cache.get(email)
+    async def __cache_check_for_frequency(self, email: str):
+        data = await self.cache.get(email)
         if data:
             log.error(f"AuthService.__cache_check_for_frequency:[too many request error],\
                 email:%s, cache data:%s", email, data)
             raise TooManyRequestsException(msg="frequently request")
 
-        self.cache.set(email, {"avoid_freq_email_req_and_hit_db": 1}, SHORT_TERM_TTL)
+        await self.cache.set(email, {"avoid_freq_email_req_and_hit_db": 1}, SHORT_TERM_TTL)
 
     async def __req_send_confirmcode_by_email(self, host: str, email: str, confirm_code: str):
         auth_res = await self.req.simple_post(f"{host}/sendcode/email", json={
@@ -137,12 +136,7 @@ class AuthService:
     """
 
     async def login(self, auth_host: str, match_host: str, body: LoginVO):
-        # request login & auth data
-        (auth_res, region) = await self.__req_login_or_register_region(auth_host, match_host, body)
-        if auth_res is None:
-            auth_host = get_auth_region_host(region)
-            match_host = get_match_region_host(region)
-            auth_res = await self.__req_login(auth_host, body)
+        auth_res = await self.__req_login(auth_host, body)
 
         # cache auth data
         role_id_key = str(auth_res["role_id"])
@@ -166,37 +160,37 @@ class AuthService:
             "match": match_res,
         }
         
-    async def __req_login_or_register_region(self, auth_host: str, match_host: str, body: LoginVO):
-        register_region = None
-        auth_res = None
-        try:
-            auth_res = await self.__req_login(auth_host, body)
-            return (auth_res, None)
+    # async def __req_login_or_register_region(self, auth_host: str, match_host: str, body: LoginVO):
+    #     register_region = None
+    #     auth_res = None
+    #     try:
+    #         auth_res = await self.__req_login(auth_host, body)
+    #         return (auth_res, None)
             
-        except ForbiddenException as exp_payload:
-            # found in S3, and region != "current_region"(在 meta, 解密後才會知道)(找錯地方)
-            # S3 有記錄但該地區的 auth-service 沒記錄，auth 從 S3 找 region 後回傳
-            log.error(f"AuthService.login fail: [WRONG REGION: there is the user record in S3, \
-                but no record in the DB of current region, it's ready to request the user record from register region], \
-                auth_host:%s, match_host:%s, body:%s, register_region:%s, auth_res:%s, exp_payload:%s", 
-                auth_host, match_host, body, register_region, auth_res, exp_payload.msg)
+    #     except ForbiddenException as exp_payload:
+    #         # found in S3, and region != "current_region"(在 meta, 解密後才會知道)(找錯地方)
+    #         # S3 有記錄但該地區的 auth-service 沒記錄，auth 從 S3 找 region 後回傳
+    #         log.error(f"AuthService.login fail: [WRONG REGION: there is the user record in S3, \
+    #             but no record in the DB of current region, it's ready to request the user record from register region], \
+    #             auth_host:%s, match_host:%s, body:%s, register_region:%s, auth_res:%s, exp_payload:%s", 
+    #             auth_host, match_host, body, register_region, auth_res, exp_payload.msg)
                 
-            try:
-                email_info = exp_payload.data
-                register_region = email_info["region"]  # 換其他 region 再請求一次
-                return (None, register_region)
+    #         try:
+    #             email_info = exp_payload.data
+    #             register_region = email_info["region"]  # 換其他 region 再請求一次
+    #             return (None, register_region)
                 
-            except Exception as format_err:
-                log.error(f"AuthService.login fail: [exp_payload format_err], \
-                    auth_host:%s, match_host:%s, body:%s, auth_res:%s, exp_payload:%s, format_err:%s", 
-                    auth_host, match_host, body, auth_res, exp_payload, format_err.__str__())
-                raise ServerException(msg="format_err")
+    #         except Exception as format_err:
+    #             log.error(f"AuthService.login fail: [exp_payload format_err], \
+    #                 auth_host:%s, match_host:%s, body:%s, auth_res:%s, exp_payload:%s, format_err:%s", 
+    #                 auth_host, match_host, body, auth_res, exp_payload, format_err.__str__())
+    #             raise ServerException(msg="format_err")
             
-        except Exception as e:
-            log.error(f"AuthService.login fail: [unknow_error], \
-                auth_host:%s, match_host:%s, body:%s, register_region:%s, auth_res:%s, err:%s", 
-                auth_host, match_host, body, register_region, auth_res, e.__str__())
-            raise_http_exception(e, e.msg if e.msg else 'unknow_error')
+    #     except Exception as e:
+    #         log.error(f"AuthService.login fail: [unknow_error], \
+    #             auth_host:%s, match_host:%s, body:%s, register_region:%s, auth_res:%s, err:%s", 
+    #             auth_host, match_host, body, register_region, auth_res, e.__str__())
+    #         raise_http_exception(e, e.msg if e.msg else 'unknow_error')
         
 
     async def __req_login(self, auth_host: str, body: LoginVO):
