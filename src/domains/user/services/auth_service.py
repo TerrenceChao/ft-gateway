@@ -51,11 +51,7 @@ class AuthService:
                 host, email, confirm_code)
 
             await self.__cache_confirmcode(email, confirm_code, meta)
-
-            # FIXME: remove the res here('confirm_code') during production
-            return {
-                "for_testing_only": confirm_code
-            }
+            return "ok" if STAGE != TESTING else {"code": confirm_code}
         
         except Exception as e:
             log.error(f"AuthService.signup:[request exception], \
@@ -293,7 +289,10 @@ class AuthService:
         data = await self.__req_send_reset_password_comfirm_email(auth_host, email)
         await self.__cache_token_by_reset_password(data['token'], email)
         #TEST: log
-        return f'''send_email_success {data['token']}'''
+        if STAGE != TESTING:
+            return f'''send_email_success'''
+        else:
+            return f'''send_email_success {data['token']}'''
 
     async def reset_passwrod(self, auth_host: str, verify_token: str, body: ResetPasswordVO):
         checked_email = await self.cache.get(verify_token)

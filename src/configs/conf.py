@@ -4,6 +4,9 @@ from pydantic import BaseSettings
 from typing import Set
 from .constants import Apply
 
+# stage
+TESTING = os.getenv("TESTING", "dev")
+STAGE = os.getenv("STAGE", "dev")
 
 # connection
 # http
