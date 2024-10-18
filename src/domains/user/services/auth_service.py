@@ -61,13 +61,14 @@ class AuthService:
         
 
     async def __cache_check_for_frequency(self, email: str):
-        data = await self.cache.get(email)
+        cache_key = f'freq:{email}'
+        data = await self.cache.get(cache_key)
         if data:
             log.error(f"AuthService.__cache_check_for_frequency:[too many request error],\
                 email:%s, cache data:%s", email, data)
             raise TooManyRequestsException(msg="frequently request")
 
-        await self.cache.set(email, {"avoid_freq_email_req_and_hit_db": 1}, SHORT_TERM_TTL)
+        await self.cache.set(cache_key, {"avoid_freq_email_req_and_hit_db": 1}, SHORT_TERM_TTL)
 
     async def __req_send_confirmcode_by_email(self, host: str, email: str, confirm_code: str):
         auth_res = await self.req.simple_post(f"{host}/sendcode/email", json={
