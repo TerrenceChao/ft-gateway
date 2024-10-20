@@ -17,7 +17,8 @@ HTTP_KEEPALIVE_EXPIRY = float(os.getenv("KEEPALIVE_EXPIRY", 30.0))
 
 # cache
 # dynamodb
-TABLE_CACHE = os.getenv("TABLE_CACHE", "cache")
+DDB_PREFIX = os.getenv('DDB_PREFIX', '')
+TABLE_CACHE = DDB_PREFIX + os.getenv("TABLE_CACHE", "cache")
 DDB_CONNECT_TIMEOUT=int(os.getenv("DDB_CONNECT_TIMEOUT", 10))
 DDB_READ_TIMEOUT=int(os.getenv("DDB_READ_TIMEOUT", 30))
 DDB_MAX_ATTEMPTS=int(os.getenv("DDB_MAX_ATTEMPTS", 5))
