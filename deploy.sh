@@ -44,3 +44,8 @@ echo "The replacement of backup file: $BACKUP_FILE is done"
 sls print --config $BACKUP_FILE --region $REGION --stage $BACKUP_ENV  # show & check backup yml
 sls deploy --config $BACKUP_FILE --region $REGION --stage $BACKUP_ENV  # apply region & env
 rm "$BACKUP_FILE"
+
+# config env variables
+if [ "$BACKUP_ENV" == "dev" ]; then
+    sh dev-env-deploy.sh
+fi
