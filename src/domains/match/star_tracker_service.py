@@ -132,6 +132,8 @@ class StarTrackerService:
         return target_list
 
     async def all_marks(self, match_host: str, visitor: BaseAuthDTO, target_list: List[MarkVO]):
+        if visitor is None:
+            return target_list
         role = visitor.role
         role_id = visitor.role_id
         followed_id_set = await self.followed_id_set(match_host, role, role_id)

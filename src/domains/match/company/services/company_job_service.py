@@ -20,8 +20,8 @@ class CompanyJobService:
         data = await self.req.simple_post(
             url=f"{host}/companies/{company_id}/jobs",
             json={
-                "profile": None if profile == None else profile.dict(),
-                "job": job.dict(),
+                "profile": None if profile == None else profile.model_dump(),
+                "job": job.model_dump(),
             })
 
         return data
@@ -51,8 +51,8 @@ class CompanyJobService:
         data = await self.req.simple_put(
             url=f"{host}/companies/{company_id}/jobs/{job_id}",
             json={
-                "profile": None if profile == None else profile.dict(),
-                "job": job.dict(),
+                "profile": None if profile == None else profile.model_dump(),
+                "job": job.model_dump(),
             })
 
         return data

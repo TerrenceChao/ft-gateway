@@ -22,10 +22,10 @@ class FollowResumeService(StarTrackerService):
     async def upsert_follow_resume(self, host: str, company_id: int, resume_id: int, resume_info: com_vo.BaseResumeVO):
         data = await self.req.simple_put(
             url=f"{host}/companies/{company_id}/follow/resumes/{resume_id}",
-            json=resume_info.dict()
+            json=resume_info.model_dump()
         )
 
-        follow_resume = com_vo.FollowResumeVO.parse_obj(data)
+        follow_resume = com_vo.FollowResumeVO.model_validate(data)
         await self.add_followed_star(self.role, company_id, follow_resume.rid)
         return follow_resume.init() # data
 
@@ -37,7 +37,7 @@ class FollowResumeService(StarTrackerService):
                 "next_ts": next_ts,
             })
 
-        followed_resume_list = com_vo.FollowResumeListVO.parse_obj(data)
+        followed_resume_list = com_vo.FollowResumeListVO.model_validate(data)
         await self.contact_marks(host, self.role, company_id, followed_resume_list.list)
         return followed_resume_list.init() # data
 
@@ -57,14 +57,14 @@ class ContactResumeService(StarTrackerService):
 
     async def contact_teacher_by_email(self, auth_host: str, body: EmailVO, teacher_profile_email: str = None):
         try:
-            auth_email = EmailAuthVO.parse_obj(body)
+            auth_email = EmailAuthVO.model_validate(body)
             auth_email.sender_role = self.role
             auth_email.recipient_role = 'teacher'
             auth_email.recipient_email = teacher_profile_email
 
             res = await self.req.simple_post(
                 url=f"{auth_host}/notify/email",
-                json=auth_email.dict()
+                json=auth_email.model_dump()
             )
             return res
 
@@ -102,7 +102,7 @@ class ContactResumeService(StarTrackerService):
         if contact_resume is None:
             return None
         
-        return com_vo.ContactResumeVO.parse_obj(contact_resume)
+        return com_vo.ContactResumeVO.model_validate(contact_resume)
 
     async def is_proactive_require(self, host: str, company_id: int, resume_id: int) -> (bool):
         # if not contact yet, it's proactive
@@ -125,7 +125,7 @@ class ContactResumeService(StarTrackerService):
             json=body.fine_dict(),
         )
 
-        contact_resume = com_vo.ContactResumeVO.parse_obj(data)
+        contact_resume = com_vo.ContactResumeVO.model_validate(data)
         await self.add_contact_star(self.role, company_id, contact_resume.rid)
         return contact_resume.init() # data
 
@@ -139,7 +139,7 @@ class ContactResumeService(StarTrackerService):
                 "next_ts": next_ts
             })
 
-        contact_resume_list = com_vo.ContactResumeListVO.parse_obj(data)
+        contact_resume_list = com_vo.ContactResumeListVO.model_validate(data)
         await self.followed_marks(host, self.role, company_id, contact_resume_list.list)
         return contact_resume_list.init() # data
 

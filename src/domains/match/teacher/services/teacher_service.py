@@ -20,26 +20,26 @@ class TeacherProfileService:
 
     async def create_profile(self, host: str, teacher_id: int, profile: teach_vo.TeacherProfileVO):
         url = f"{host}/teachers/{teacher_id}"
-        data = await self.req.simple_post(url=url, json=profile.dict())
+        data = await self.req.simple_post(url=url, json=profile.model_dump())
 
         return data
 
-    async def get_profile(self, host: str, teacher_id: int) -> (Optional[teach_vo.ReturnTeacherProfileVO]):
+    async def get_profile(self, host: str, teacher_id: int):
         return await TeacherProfileService.get(self.req, host, teacher_id)
     
     # public method for teacher & company:ContactResumeService
     @staticmethod
-    async def get(req: IServiceApi, match_host: str, teacher_id: int) -> (Optional[teach_vo.ReturnTeacherProfileVO]):
+    async def get(req: IServiceApi, match_host: str, teacher_id: int):
         url = f"{match_host}/teachers/{teacher_id}"
         data = await req.simple_get(url)
         if data is None:
             return None
 
-        return teach_vo.ReturnTeacherProfileVO.parse_obj(data)
+        return data
 
     async def update_profile(self, host: str, teacher_id: int, profile: teach_vo.UpdateTeacherProfileVO):
         url = f"{host}/teachers/{teacher_id}"
-        data = await self.req.simple_put(url=url, json=profile.dict())
+        data = await self.req.simple_put(url=url, json=profile.model_dump())
 
         return data
 
@@ -59,7 +59,7 @@ class TeacherAggregateService(StarTrackerService):
             }
         )
 
-        data = teach_vo.TeacherFollowAndContactVO.parse_obj(data).init()
+        data = teach_vo.TeacherFollowAndContactVO.model_validate(data).init()
         data.followed = await self.contact_marks(host, 'teacher', teacher_id, data.followed)
         data.contact = await self.followed_marks(host, 'teacher', teacher_id, data.contact)
         return data
@@ -75,7 +75,7 @@ class TeacherAggregateService(StarTrackerService):
             }
         )
 
-        data = teach_vo.TeacherMatchDataVO.parse_obj(data).init()
+        data = teach_vo.TeacherMatchDataVO.model_validate(data).init()
         data.followed = await self.contact_marks(host, 'teacher', teacher_id, data.followed)
         data.contact = await self.followed_marks(host, 'teacher', teacher_id, data.contact)
         return data

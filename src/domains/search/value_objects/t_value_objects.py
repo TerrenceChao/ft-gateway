@@ -19,8 +19,8 @@ class SearchResumeDTO(MarkVO):
     region: Optional[str] = None  # must
     url_path: Optional[str] = None  # must
 
-    def id(self) -> (int):
-        return self.rid
+    def id(self) -> int:
+        return self.rid or 0
 
     def init(self):
         if self.region and \
@@ -49,7 +49,7 @@ class SearchResumeListQueryDTO(BaseModel):
     tags: Optional[List[str]] = []
 
     def fine_dict(self):
-        dictionary = self.dict()
+        dictionary = self.model_dump()
         dictionary['sort_by'] = self.sort_by.value
         dictionary['sort_dirction'] = self.sort_dirction.value
         return dictionary

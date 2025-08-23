@@ -51,7 +51,7 @@ class PaymentService:
         return json
 
     async def strong_customer_authentication(self, host: str, user_data: dtos.UserDTO) -> (Dict):
-        user_dict = user_data.dict()
+        user_dict = user_data.model_dump()
         await self.__bind_registration_email(user_dict, user_data.role_id)
         url = f'{host}/{STRIPE}/strong-customer-authentication'
         return await self.req.simple_put(url=url, json=user_dict)
@@ -69,14 +69,14 @@ class PaymentService:
 
     async def payment_method(self, host: str, user_data: stripe_dtos.StripeUserPaymentRequestDTO) -> (vos.PaymentStatusVO):
         role_id = user_data.role_id
-        json_data = await self.__bind_registration_email(user_data.dict(), role_id)
+        json_data = await self.__bind_registration_email(user_data.model_dump(), role_id)
 
         # create customer
         url = f'{host}/{STRIPE}/payment-method'
         payment_status = await self.req.simple_put(url=url, json=json_data)
         await self.__cache_payment_status(payment_status, role_id)
 
-        return vos.PaymentStatusVO.parse_obj(payment_status)
+        return vos.PaymentStatusVO.model_validate(payment_status)
 
     async def __get_latest_cached_payment_status(self, host: str, role_id: int) -> (Dict):
         url = f'{host}/{STRIPE}/subscribe'
@@ -113,7 +113,7 @@ class PaymentService:
             payment_status = \
                 await self.__get_latest_cached_payment_status(host, role_id)
 
-        return vos.PaymentStatusVO.parse_obj(payment_status)
+        return vos.PaymentStatusVO.model_validate(payment_status)
 
     async def __bg_processing(self, bg_tasks: BackgroundTasks, url: str, json: Dict, role_id: int) -> (None):
         bg_tasks.add_task(self.req.simple_post, url=url, json=json)
@@ -136,7 +136,7 @@ class PaymentService:
 
     async def subscribe(self, bg_tasks: BackgroundTasks, host: str, subscription: stripe_dtos.StripeSubscribeRequestDTO) -> (None):
         role_id = subscription.role_id
-        json_data = await self.__bind_registration_email(subscription.dict(), role_id)
+        json_data = await self.__bind_registration_email(subscription.model_dump(), role_id)
         payment_status = await self.__refresh_payment_status(host, role_id, True)
 
         subscribe_status = SubscribeStatusEnum(payment_status['subscribe_status'])
@@ -148,7 +148,7 @@ class PaymentService:
 
     async def unsubscribe(self, bg_tasks: BackgroundTasks, host: str, unsubscription: dtos.UnsubscribeRequestDTO) -> (None):
         role_id = unsubscription.role_id
-        json_data = await self.__bind_registration_email(unsubscription.dict(), role_id)
+        json_data = await self.__bind_registration_email(unsubscription.model_dump(), role_id)
         payment_status = await self.__refresh_payment_status(host, role_id)
 
         subscribe_status = SubscribeStatusEnum(payment_status['subscribe_status'])

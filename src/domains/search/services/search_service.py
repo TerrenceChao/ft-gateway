@@ -34,7 +34,10 @@ class SearchService:
             params=query.fine_dict(),
         )
 
-        return search_t.SearchResumeListVO.parse_obj(data).init()  # data
+        # 使用 Pydantic 模型验证和序列化数据
+        resume_list_vo = search_t.SearchResumeListVO.model_validate(data)
+        initialized_vo = resume_list_vo.init()
+        return initialized_vo  # 返回 JSON 序列化的数据
 
     '''
     TODO:
@@ -51,7 +54,7 @@ class SearchService:
             data = await self.__public_resume_vo(url)
             if await self.__resume_closed(data):
                 return (None, 'resume closed')
-            return (data, 'ok')
+            return (data.model_dump(), 'ok')  # JSON 序列化返回
 
         except Exception as e:
             log.error(f"get_resume_by_id >> \
@@ -60,17 +63,20 @@ class SearchService:
 
     async def __public_resume_vo(self, url: str) -> (match_t.TeacherProfileAndResumeVO):
         resp = await self.req.simple_get(url)
-        data = match_t.TeacherProfileAndResumeVO.parse_obj(resp)
+        data = match_t.TeacherProfileAndResumeVO.model_validate(resp)
         return data.public_info()
 
     async def __resume_closed(self, data: match_t.TeacherProfileAndResumeVO) -> (bool):
         return not data.resume or not data.resume.enable
 
-    async def get_resume_tags(self, search_host: str) -> (search_public.ResumeTagsVO):
+    async def get_resume_tags(self, search_host: str):
         data = await self.cache.get(RESUME_TAGS)
         if data is None:
             url = f'{search_host}/resumes-info/tags'
-            data = await self.req.simple_get(url)
+            raw_data = await self.req.simple_get(url)
+            # 验证并序列化数据
+            tags_vo = search_public.ResumeTagsVO.model_validate(raw_data)
+            data = tags_vo.model_dump()
             await self.cache.set(RESUME_TAGS, data, SHORT_TERM_TTL)
 
         return data
@@ -82,7 +88,10 @@ class SearchService:
             params=query.fine_dict(),
         )
 
-        return search_c.SearchJobListVO.parse_obj(data).init()  # data
+        # 使用 Pydantic 模型验证和序列化数据
+        job_list_vo = search_c.SearchJobListVO.model_validate(data)
+        initialized_vo = job_list_vo.init()
+        return initialized_vo 
 
     '''
     TODO:
@@ -99,7 +108,7 @@ class SearchService:
             data = await self.__public_job_vo(url)
             if await self.__job_closed(data):
                 return (None, 'job closed')
-            return (data, 'ok')
+            return (data.model_dump(), 'ok')  # JSON 序列化返回
 
         except Exception as e:
             log.error(f"get_job_by_id >> \
@@ -108,35 +117,44 @@ class SearchService:
 
     async def __public_job_vo(self, url: str) -> (match_c.CompanyProfileAndJobVO):
         resp = await self.req.simple_get(url)
-        data = match_c.CompanyProfileAndJobVO.parse_obj(resp)
+        data = match_c.CompanyProfileAndJobVO.model_validate(resp)
         return data.public_info()
 
     async def __job_closed(self, data: match_c.CompanyProfileAndJobVO) -> (bool):
         return not data.job or not data.job.enable
 
-    async def get_continents(self, search_host: str) -> (search_public.ContinentListVO):
+    async def get_continents(self, search_host: str):
         data = await self.cache.get(CONTINENTS)
         if data is None:
             url = f'{search_host}/jobs-info/continents'
-            data = await self.req.simple_get(url)
+            raw_data = await self.req.simple_get(url)
+            # 验证并序列化数据
+            continents_vo = search_public.ContinentListVO.model_validate(raw_data)
+            data = continents_vo.model_dump()
             await self.cache.set(CONTINENTS, data, SHORT_TERM_TTL)
 
         return data
 
-    async def get_all_continents_and_countries(self, search_host: str) -> (List[search_public.CountryListVO]):
+    async def get_all_continents_and_countries(self, search_host: str):
         data = await self.cache.get(CONTINENT_ALL)
         if data is None:
             url = f'{search_host}/jobs-info/continents/all/countries'
-            data = await self.req.simple_get(url)
+            raw_data = await self.req.simple_get(url)
+            # 验证并序列化数据列表
+            country_list = [search_public.CountryListVO.model_validate(item).model_dump() for item in raw_data]
+            data = country_list
             await self.cache.set(CONTINENT_ALL, data, SHORT_TERM_TTL)
 
         return data
 
-    async def get_countries(self, search_host: str, continent_code: str) -> (List[search_public.CountryListVO]):
+    async def get_countries(self, search_host: str, continent_code: str):
         data = await self.cache.get(f'{CONTINENT_}{continent_code}')
         if data is None:
             url = f'{search_host}/jobs-info/continents/{continent_code}/countries'
-            data = await self.req.simple_get(url)
+            raw_data = await self.req.simple_get(url)
+            # 验证并序列化数据列表
+            country_list = [search_public.CountryListVO.model_validate(item).model_dump() for item in raw_data]
+            data = country_list
             await self.cache.set(
                 f'{CONTINENT_}{continent_code}',
                 data,

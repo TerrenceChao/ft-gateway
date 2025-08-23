@@ -87,7 +87,7 @@ def upsert_follow_job_check_job(
     job_info: BaseJobVO = Body(...),
 ) -> (Dict):
     # job_info.jid = job_id
-    return job_info.dict()
+    return job_info.model_dump()
 
 def apply_job_check(register_region: str = Header(...),
                     current_region: str = Header(...),

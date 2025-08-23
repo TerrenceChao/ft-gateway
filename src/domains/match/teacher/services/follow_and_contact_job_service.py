@@ -21,10 +21,10 @@ class FollowJobService(StarTrackerService):
     async def upsert_follow_job(self, host: str, teacher_id: int, job_id: int, job_info: teach_vo.BaseJobVO):
         data = await self.req.simple_put(
             url=f"{host}/teachers/{teacher_id}/follow/jobs/{job_id}",
-            json=job_info.dict()
+            json=job_info.model_dump()
         )
 
-        follow_job = teach_vo.FollowJobVO.parse_obj(data)
+        follow_job = teach_vo.FollowJobVO.model_validate(data)
         await self.add_followed_star(self.role, teacher_id, follow_job.jid)
         return follow_job.init() # data
 
@@ -36,7 +36,7 @@ class FollowJobService(StarTrackerService):
                 "next_ts": next_ts,
             })
 
-        followed_job_list = teach_vo.FollowJobListVO.parse_obj(data)
+        followed_job_list = teach_vo.FollowJobListVO.model_validate(data)
         await self.contact_marks(host, self.role, teacher_id, followed_job_list.list)
         return followed_job_list.init() # data
 
@@ -59,7 +59,7 @@ class ContactJobService(StarTrackerService):
             json=body.fine_dict()
         )
 
-        contact_job = teach_vo.ContactJobVO.parse_obj(data)
+        contact_job = teach_vo.ContactJobVO.model_validate(data)
         await self.add_contact_star(self.role, teacher_id, contact_job.jid)
         return contact_job.init() # data
 
@@ -73,7 +73,7 @@ class ContactJobService(StarTrackerService):
                 "next_ts": next_ts
             })
 
-        contact_job_list = teach_vo.ContactJobListVO.parse_obj(data)
+        contact_job_list = teach_vo.ContactJobListVO.model_validate(data)
         await self.followed_marks(host, self.role, teacher_id, contact_job_list.list)
         return contact_job_list.init() # data
 

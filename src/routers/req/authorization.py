@@ -60,11 +60,15 @@ def gen_token(data: dict, fields: List):
 # url_path = "//api/v1/match/teachers/6994696629320454/resumes/0"
 # url_path = "//api/v1/match/teachers/"
 def get_role_id(url_path: str) -> (int):
-    try:
-        return int(url_path.split('/')[6])
-    except Exception as e:
-        log.error(f"cannot get role_id from url path, url_path:{url_path}, err:{e}")
-        raise NotFoundException(msg="'role_id' is not found in url path")
+    for part in url_path.split("/"):
+        if part.isdigit():
+            try:
+                return int(part)
+            except ValueError:
+                log.error(f"cannot convert role_id from url path, url_path:{url_path}, path:{path}")
+        
+    raise NotFoundException(msg="'role_id' is not found in url path")
+
 
 def get_role(url_path: str):
     if "/companies" in url_path or "/company" in url_path:

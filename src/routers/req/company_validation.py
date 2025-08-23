@@ -64,7 +64,7 @@ def upsert_follow_resume_check_resume(
     resume_info: BaseResumeVO = Body(...),
 ) -> (Dict):
     # resume_info.rid = resume_id
-    return resume_info.dict()
+    return resume_info.model_dump()
 
 
 def apply_resume_check(register_region: str = Header(...),

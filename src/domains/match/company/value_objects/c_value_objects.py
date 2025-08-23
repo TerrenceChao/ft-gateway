@@ -12,7 +12,7 @@ class _BaseResumeData(BaseModel):
 
     def init(self):
         if self.resume_info != None:
-            resume = BaseResumeVO.parse_obj(self.resume_info)
+            resume = BaseResumeVO.model_validate(self.resume_info)
             self.url_path = f'{SEARCH_RESUME_URL_PATH}/{resume.region}/{resume.tid}/{resume.rid}'
         return self
 
@@ -26,8 +26,8 @@ class ContactResumeVO(_BaseResumeData, MarkVO):
     resume_info: Optional[Dict] = None
     created_at: Optional[int] = None
 
-    def id(self) -> (int):
-        return self.rid
+    def id(self) -> int:
+        return self.rid or 0
 
 
 class ContactResumeListVO(BaseModel):
@@ -45,8 +45,8 @@ class FollowResumeVO(_BaseResumeData, MarkVO):
     resume_info: BaseResumeVO
     created_at: Optional[int] = None
 
-    def id(self) -> (int):
-        return self.rid
+    def id(self) -> int:
+        return self.rid or 0
 
 
 class FollowResumeListVO(BaseModel):
@@ -178,7 +178,7 @@ class ApplyResumeVO(BaseModel):
     job_info: JobIndexVO
 
     def fine_dict(self):
-        dictionary = self.dict()
+        dictionary = self.model_dump()
         dictionary["my_status"] = self.my_status.value
         return dictionary
 
