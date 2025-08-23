@@ -6,7 +6,8 @@ from src.domains.service_api import IServiceApi
 from src.domains.cache import ICache
 from src.configs.exceptions import *
 from src.configs.constants import PATHS
-from src.configs.region_hosts import get_auth_region_v2_host, get_match_region_host
+from src.configs.region_hosts import get_match_region_host
+from src.configs.conf import REGION_HOST_AUTH
 import logging as log
 import json
 
@@ -26,12 +27,12 @@ class ISSOAuthService(AuthService):
         if not (current_region := state_d.get('region', '')):
             raise ServerException(msg="no region") 
         
-        auth_host = get_auth_region_v2_host(current_region)
+        auth_host = REGION_HOST_AUTH
         match_host = get_match_region_host(current_region)
 
         (auth_res, region) = await self.__req_login_or_register_region(auth_host, match_host, sso_login_vo)
         if auth_res is None:
-            auth_host = get_auth_region_v2_host(region)
+            auth_host = REGION_HOST_AUTH
             match_host = get_match_region_host(region)
             auth_res = await self.req_get_login(auth_host, match_host, sso_login_vo)
 

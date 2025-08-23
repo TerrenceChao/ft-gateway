@@ -18,7 +18,7 @@ from ...apps.resources.adapters import service_client, gw_cache
 from ...configs.conf import \
     MY_STATUS_OF_TEACHER_APPLY, STATUS_OF_TEACHER_APPLY, MY_STATUS_OF_TEACHER_REACTION, STATUS_OF_TEACHER_REACTION
 from ...configs.constants import Apply
-from ...configs.region_hosts import get_match_region_host
+from ...configs.conf import REGION_HOST_MATCH
 from ...configs.exceptions import ClientException, \
     NotFoundException, \
     ServerException
@@ -38,8 +38,8 @@ router = APIRouter(
 )
 
 
-def get_match_host(current_region: str = Header(...)):
-    return get_match_region_host(region=current_region)
+def get_match_host():
+    return REGION_HOST_MATCH
 
 
 TEACHER = 'teacher'

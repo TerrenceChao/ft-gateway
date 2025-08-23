@@ -22,7 +22,7 @@ from ...configs.conf import \
     MY_STATUS_OF_COMPANY_APPLY, STATUS_OF_COMPANY_APPLY, MY_STATUS_OF_COMPANY_REACTION, STATUS_OF_COMPANY_REACTION
 from ...configs.constants import Apply
 from ...domains.payment.configs.constants import PAYMENT_PERIOD
-from ...configs.region_hosts import *
+from ...configs.conf import REGION_HOST_MATCH, REGION_HOST_AUTH, REGION_HOST_PAYMENT
 from ...configs.exceptions import ClientException, \
     NotFoundException, \
     ServerException
@@ -42,14 +42,14 @@ router = APIRouter(
 )
 
 
-def get_match_host(current_region: str = Header(...)):
-    return get_match_region_host(region=current_region)
+def get_match_host():
+    return REGION_HOST_MATCH
 
-def get_payment_host(current_region: str = Header(...)):
-    return get_payment_region_host(region=current_region)
+def get_payment_host():
+    return REGION_HOST_PAYMENT
 
-def get_auth_host(register_region: str = Header(...)):
-    return get_auth_region_host(region=register_region)
+def get_auth_host():
+    return REGION_HOST_AUTH
 
 
 COMPANY = 'company'

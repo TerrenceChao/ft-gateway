@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, Header, Query
 from fastapi.responses import RedirectResponse
 from ..res.response import res_success
-from ...configs.region_hosts import get_auth_region_v2_host, get_match_region_host
+from ...configs.region_hosts import get_match_region_host
+from ...configs.conf import REGION_HOST_AUTH
 from src.domains.user.services.sso_auth_service import FBAuthService, GoogleAuthService
 from ...apps.resources.adapters import service_client, gw_cache
 from src.domains.user.value_objects.auth_vo import SSOLoginVO
@@ -29,11 +30,11 @@ router = APIRouter(
 )
 
 
-def get_auth_host_for_signup(region: str = Header(...)):
-    return get_auth_region_v2_host(region=region)
+def get_auth_host_for_signup():
+    return REGION_HOST_AUTH
 
-def get_auth_host(current_region: str = Header(...)):
-    return get_auth_region_v2_host(region=current_region)
+def get_auth_host():
+    return REGION_HOST_AUTH
 
 def get_match_host(current_region: str = Header(...)):
     return get_match_region_host(region=current_region)

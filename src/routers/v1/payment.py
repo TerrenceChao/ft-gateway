@@ -11,7 +11,7 @@ from ...domains.payment.models.stripe import stripe_dtos, stripe_vos
 from ...domains.payment.services.payment_service import PaymentService, PaymentPlanService
 from ...apps.resources.adapters import service_client, gw_cache
 from ...configs.conf import *
-from ...configs.region_hosts import get_payment_region_host
+
 import logging
 
 
@@ -34,8 +34,8 @@ router = APIRouter(
 )
 
 
-async def get_payment_host(current_region: str = Header(...)):
-    return get_payment_region_host(current_region)
+async def get_payment_host():
+    return REGION_HOST_PAYMENT
 
 
 @router.get('/plans', responses=idempotent_response('plans', List[stripe_vos.StripePlanVO]))
