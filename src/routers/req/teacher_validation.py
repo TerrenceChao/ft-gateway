@@ -20,7 +20,7 @@ def __parse_resume_sections(teacher_id, resume_id, sections):
 # def create_resume_check_profile(
 #     teacher_id: int = Path(...),
 #     profile: UpdateTeacherProfileVO = Body(None, embed=True),  # Nullable
-# ) -> (UpdateTeacherProfileVO):
+# ) -> UpdateTeacherProfileVO:
 #     # if profile:
 #     #     profile.tid = teacher_id
 #     return profile
@@ -30,7 +30,7 @@ def create_resume_check_resume(
     register_region: str = Header(...), # TODO: vary important!!
     teacher_id: int = Path(...),
     resume: ResumeVO = Body(..., embed=True)
-) -> (ResumeVO):
+) -> ResumeVO:
     # resume.tid = teacher_id
     resume.region = register_region
     if len(resume.tags) > MAX_TAGS:
@@ -43,7 +43,7 @@ def create_resume_check_resume(
 # def update_resume_check_profile(
 #     teacher_id: int = Path(...),
 #     profile: UpdateTeacherProfileVO = Body(None, embed=True),  # Nullable
-# ) -> (UpdateTeacherProfileVO):
+# ) -> UpdateTeacherProfileVO:
 #     # if profile:
 #     #     profile.tid = teacher_id
 #     return profile
@@ -53,7 +53,7 @@ def update_resume_check_resume(
     teacher_id: int = Path(...),
     resume_id: int = Path(...),
     resume: UpdateResumeVO = Body(None, embed=True),  # Nullable
-) -> (UpdateResumeVO):
+) -> UpdateResumeVO:
     if resume:
         # resume.tid = teacher_id
         # resume.rid = resume_id
@@ -85,7 +85,7 @@ def upsert_resume_section_check(
 def upsert_follow_job_check_job(
     job_id: int = Path(...),
     job_info: BaseJobVO = Body(...),
-) -> (Dict):
+) -> Dict:
     # job_info.jid = job_id
     return job_info.model_dump()
 

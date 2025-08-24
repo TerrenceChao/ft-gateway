@@ -61,12 +61,12 @@ class SearchService:
                 url:{url}, response_data:{data}, error:{e}")
             raise ClientException(msg='teacher or resume not found')
 
-    async def __public_resume_vo(self, url: str) -> (match_t.TeacherProfileAndResumeVO):
+    async def __public_resume_vo(self, url: str) -> match_t.TeacherProfileAndResumeVO:
         resp = await self.req.simple_get(url)
         data = match_t.TeacherProfileAndResumeVO.model_validate(resp)
         return data.public_info()
 
-    async def __resume_closed(self, data: match_t.TeacherProfileAndResumeVO) -> (bool):
+    async def __resume_closed(self, data: match_t.TeacherProfileAndResumeVO) -> bool:
         return not data.resume or not data.resume.enable
 
     async def get_resume_tags(self, search_host: str):
@@ -115,12 +115,12 @@ class SearchService:
                 url:{url}, response_data:{data}, error:{e}")
             raise ClientException(msg='company or job not found')
 
-    async def __public_job_vo(self, url: str) -> (match_c.CompanyProfileAndJobVO):
+    async def __public_job_vo(self, url: str) -> match_c.CompanyProfileAndJobVO:
         resp = await self.req.simple_get(url)
         data = match_c.CompanyProfileAndJobVO.model_validate(resp)
         return data.public_info()
 
-    async def __job_closed(self, data: match_c.CompanyProfileAndJobVO) -> (bool):
+    async def __job_closed(self, data: match_c.CompanyProfileAndJobVO) -> bool:
         return not data.job or not data.job.enable
 
     async def get_continents(self, search_host: str):

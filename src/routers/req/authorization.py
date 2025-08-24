@@ -59,7 +59,7 @@ def gen_token(data: dict, fields: List):
 
 # url_path = "//api/v1/match/teachers/6994696629320454/resumes/0"
 # url_path = "//api/v1/match/teachers/"
-def get_role_id(url_path: str) -> (int):
+def get_role_id(url_path: str) -> int:
     for part in url_path.split("/"):
         if part.isdigit():
             try:
@@ -200,7 +200,7 @@ async def verify_token(request: Request):
 
 
 class AuthRoute(APIRoute):
-    def get_route_handler(self) -> (Callable):
+    def get_route_handler(self) -> Callable:
         original_route_handler = super().get_route_handler()
 
         async def custom_route_handler(request: Request) -> Response:

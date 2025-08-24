@@ -40,7 +40,7 @@ class FollowJobService(StarTrackerService):
         await self.contact_marks(host, self.role, teacher_id, followed_job_list.list)
         return followed_job_list.init() # data
 
-    async def delete_followed_job(self, host: str, teacher_id: int, job_id: int) -> (bool):
+    async def delete_followed_job(self, host: str, teacher_id: int, job_id: int) -> bool:
         data = await self.req.simple_delete(
             url=f"{host}/teachers/{teacher_id}/follow/jobs/{job_id}")
 
@@ -77,7 +77,7 @@ class ContactJobService(StarTrackerService):
         await self.followed_marks(host, self.role, teacher_id, contact_job_list.list)
         return contact_job_list.init() # data
 
-    async def delete_any_contacted_job(self, host: str, teacher_id: int, job_id: int) -> (bool):
+    async def delete_any_contacted_job(self, host: str, teacher_id: int, job_id: int) -> bool:
         data = await self.req.simple_delete(
             url=f"{host}/teachers/{teacher_id}/contact/jobs/{job_id}")
 

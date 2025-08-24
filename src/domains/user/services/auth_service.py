@@ -242,7 +242,7 @@ class AuthService:
         return (None, "successfully logged out")
     
     @staticmethod
-    async def is_login(cache: ICache, visitor: BaseAuthDTO = None) -> (bool):
+    async def is_login(cache: ICache, visitor: BaseAuthDTO = None) -> bool:
         if visitor is None:
             return False
 

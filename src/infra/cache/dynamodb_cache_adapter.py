@@ -17,7 +17,7 @@ class DynamoDbCacheAdapter(ICache):
         self.aio_db = async_db_resource
 
 
-    def is_json_obj(self, val: Any) -> (bool):
+    def is_json_obj(self, val: Any) -> bool:
         return (val[0] == "{" and val[-1] == "}") or \
             (val[0] == "[" and val[-1] == "]")
 
@@ -82,7 +82,7 @@ class DynamoDbCacheAdapter(ICache):
                       key, e.__str__())
             raise ServerException(msg="d2_server_error")
 
-    async def smembers(self, key: str) -> (Optional[Set[Any]]):
+    async def smembers(self, key: str) -> Optional[Set[Any]]:
         values = await self.get(key)
         if values is None:
             return None
@@ -92,14 +92,14 @@ class DynamoDbCacheAdapter(ICache):
         
         return set(values)
 
-    async def sismember(self, key: str, value: Any) -> (bool):
+    async def sismember(self, key: str, value: Any) -> bool:
         set_members = await self.smembers(key)
         if set_members is None:
             return False
         
         return value in set_members
 
-    async def sadd(self, key: str, values: List[Any], ex: int = None) -> (int):
+    async def sadd(self, key: str, values: List[Any], ex: int = None) -> int:
         if not isinstance(values, list):
             raise ServerException(msg="invalid input type, values should be list")
 
@@ -117,7 +117,7 @@ class DynamoDbCacheAdapter(ICache):
         update_count = len(values)
         return update_count
 
-    async def srem(self, key: str, value: Any, ex: int = None) -> (int):
+    async def srem(self, key: str, value: Any, ex: int = None) -> int:
         update_count = 0
         set_members = await self.smembers(key)
         if set_members is None:

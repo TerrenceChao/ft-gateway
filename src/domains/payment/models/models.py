@@ -32,7 +32,7 @@ class PaymentRecordModel(PaymentStatusModel):
     amount: Optional[str]
     currency: Optional[str]
         
-    def base_user_payment(self) -> (BaseUserPayment):
+    def base_user_payment(self) -> BaseUserPayment:
         return BaseUserPayment(
             role_id=self.role_id,
             payment_type=self.payment_type,

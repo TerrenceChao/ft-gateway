@@ -41,7 +41,7 @@ class FollowResumeService(StarTrackerService):
         await self.contact_marks(host, self.role, company_id, followed_resume_list.list)
         return followed_resume_list.init() # data
 
-    async def delete_followed_resume(self, host: str, company_id: int, resume_id: int) -> (bool):
+    async def delete_followed_resume(self, host: str, company_id: int, resume_id: int) -> bool:
         data = await self.req.simple_delete(
             url=f"{host}/companies/{company_id}/follow/resumes/{resume_id}")
 
@@ -83,7 +83,7 @@ class ContactResumeService(StarTrackerService):
         it's free to contact
     '''
     @staticmethod
-    def is_proactive(contact_resume: Optional[com_vo.ContactResumeVO]) -> (bool):
+    def is_proactive(contact_resume: Optional[com_vo.ContactResumeVO]) -> bool:
         proactive = True
         # need to pay, the company is trying to contact the teacher first
         if contact_resume is None:
@@ -96,7 +96,7 @@ class ContactResumeService(StarTrackerService):
         return proactive
 
 
-    async def get_contact_resume(self, host: str, company_id: int, resume_id: int) -> (Optional[com_vo.ContactResumeVO]):
+    async def get_contact_resume(self, host: str, company_id: int, resume_id: int) -> Optional[com_vo.ContactResumeVO]:
         url=f"{host}/companies/{company_id}/contact/resumes/{resume_id}"
         contact_resume = await self.req.simple_get(url=url)
         if contact_resume is None:
@@ -104,7 +104,7 @@ class ContactResumeService(StarTrackerService):
         
         return com_vo.ContactResumeVO.model_validate(contact_resume)
 
-    async def is_proactive_require(self, host: str, company_id: int, resume_id: int) -> (bool):
+    async def is_proactive_require(self, host: str, company_id: int, resume_id: int) -> bool:
         # if not contact yet, it's proactive
         contact_id_set = await self.contact_id_set(host, self.role, company_id)
         if not resume_id in contact_id_set:
@@ -143,7 +143,7 @@ class ContactResumeService(StarTrackerService):
         await self.followed_marks(host, self.role, company_id, contact_resume_list.list)
         return contact_resume_list.init() # data
 
-    async def delete_any_contacted_resume(self, host: str, company_id: int, resume_id: int) -> (bool):
+    async def delete_any_contacted_resume(self, host: str, company_id: int, resume_id: int) -> bool:
         data = await self.req.simple_delete(
             url=f"{host}/companies/{company_id}/contact/resumes/{resume_id}")
 
