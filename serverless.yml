@@ -65,6 +65,8 @@ provider:
 custom:
   pythonRequirements:
     dockerizePip: true
+    dockerPlatform: linux/amd64
+    dockerImage: public.ecr.aws/sam/build-python3.10:latest-x86_64
     layer:
       name: ft-gateway
       description: ForeignTeacher -> Gateway
