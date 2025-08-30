@@ -22,26 +22,26 @@ class PaymentService:
         self.cache = cache
         self.sign_header = 'Stripe-Signature'
 
-    async def __get_cache(self, role_id: int) -> (Optional[Dict]):
+    async def __get_cache(self, role_id: int) -> Optional[Dict]:
         return await self.cache.get(key=f'pay:{role_id}')
 
-    async def __set_cache(self, role_id: int, payment_status: Dict) -> (bool):
+    async def __set_cache(self, role_id: int, payment_status: Dict) -> bool:
         return await self.cache.set(key=f'pay:{role_id}', val=payment_status, ex=SHORT_TERM_TTL)
 
-    async def __delete_cache(self, role_id: int) -> (bool):
+    async def __delete_cache(self, role_id: int) -> bool:
         return await self.cache.delete(key=f'pay:{role_id}')
 
-    async def __get_role_id_by_cus_id(self, customer_id: str) -> (Optional[int]):
+    async def __get_role_id_by_cus_id(self, customer_id: str) -> Optional[int]:
         role_id_str = await self.cache.get(key=f'pay_handling:{customer_id}')
         return int(role_id_str)
 
-    async def __set_role_id_by_cus_id(self, customer_id: str, role_id: int) -> (bool):
+    async def __set_role_id_by_cus_id(self, customer_id: str, role_id: int) -> bool:
         return await self.cache.set(key=f'pay_handling:{customer_id}', val=str(role_id), ex=SHORT_TERM_TTL)
 
-    async def __delete_role_id_by_cus_id(self, customer_id: str) -> (bool):
+    async def __delete_role_id_by_cus_id(self, customer_id: str) -> bool:
         return await self.cache.delete(key=f'pay_handling:{customer_id}')
     
-    async def __bind_registration_email(self, json: Dict, role_id: int) -> (Dict):
+    async def __bind_registration_email(self, json: Dict, role_id: int) -> Dict:
         role_id_key = str(role_id)
         auth_meta = await self.cache.get(key=role_id_key)
         if auth_meta is None or not 'email' in auth_meta:
@@ -50,8 +50,8 @@ class PaymentService:
         json['email'] = auth_meta['email']
         return json
 
-    async def strong_customer_authentication(self, host: str, user_data: dtos.UserDTO) -> (Dict):
-        user_dict = user_data.dict()
+    async def strong_customer_authentication(self, host: str, user_data: dtos.UserDTO) -> Dict:
+        user_dict = user_data.model_dump()
         await self.__bind_registration_email(user_dict, user_data.role_id)
         url = f'{host}/{STRIPE}/strong-customer-authentication'
         return await self.req.simple_put(url=url, json=user_dict)
@@ -67,18 +67,18 @@ class PaymentService:
             1. return payment status (with customer_id)
     '''
 
-    async def payment_method(self, host: str, user_data: stripe_dtos.StripeUserPaymentRequestDTO) -> (vos.PaymentStatusVO):
+    async def payment_method(self, host: str, user_data: stripe_dtos.StripeUserPaymentRequestDTO) -> vos.PaymentStatusVO:
         role_id = user_data.role_id
-        json_data = await self.__bind_registration_email(user_data.dict(), role_id)
+        json_data = await self.__bind_registration_email(user_data.model_dump(), role_id)
 
         # create customer
         url = f'{host}/{STRIPE}/payment-method'
         payment_status = await self.req.simple_put(url=url, json=json_data)
         await self.__cache_payment_status(payment_status, role_id)
 
-        return vos.PaymentStatusVO.parse_obj(payment_status)
+        return vos.PaymentStatusVO.model_validate(payment_status)
 
-    async def __get_latest_cached_payment_status(self, host: str, role_id: int) -> (Dict):
+    async def __get_latest_cached_payment_status(self, host: str, role_id: int) -> Dict:
         url = f'{host}/{STRIPE}/subscribe'
         payment_status = await self.req.simple_get(url=url, params={
             'role_id': role_id,
@@ -106,23 +106,23 @@ class PaymentService:
             1. return payment status
     '''
 
-    async def get_payment_status(self, host: str, role_id: int) -> (vos.PaymentStatusVO):
+    async def get_payment_status(self, host: str, role_id: int) -> vos.PaymentStatusVO:
         await self.__bind_registration_email({}, role_id)
         payment_status = await self.__get_cache(role_id)
         if payment_status is None:
             payment_status = \
                 await self.__get_latest_cached_payment_status(host, role_id)
 
-        return vos.PaymentStatusVO.parse_obj(payment_status)
+        return vos.PaymentStatusVO.model_validate(payment_status)
 
-    async def __bg_processing(self, bg_tasks: BackgroundTasks, url: str, json: Dict, role_id: int) -> (None):
+    async def __bg_processing(self, bg_tasks: BackgroundTasks, url: str, json: Dict, role_id: int) -> None:
         bg_tasks.add_task(self.req.simple_post, url=url, json=json)
         bg_tasks.add_task(log.error, msg=f'role_id:{role_id}, req:{url}')
         bg_tasks.add_task(self.__delete_cache, role_id=role_id)
         bg_tasks.add_task(
             log.error, msg=f'role_id:{role_id}, delete payment cache')
 
-    async def __refresh_payment_status(self, host: str, role_id: int, subscribe: bool = False) -> (Dict):
+    async def __refresh_payment_status(self, host: str, role_id: int, subscribe: bool = False) -> Dict:
         await self.__delete_cache(role_id)
         payment_status = await self.__get_latest_cached_payment_status(host, role_id)
         max_restore = payment_status.pop('max_restore', 2)
@@ -134,9 +134,9 @@ class PaymentService:
             )
         return payment_status
 
-    async def subscribe(self, bg_tasks: BackgroundTasks, host: str, subscription: stripe_dtos.StripeSubscribeRequestDTO) -> (None):
+    async def subscribe(self, bg_tasks: BackgroundTasks, host: str, subscription: stripe_dtos.StripeSubscribeRequestDTO) -> None:
         role_id = subscription.role_id
-        json_data = await self.__bind_registration_email(subscription.dict(), role_id)
+        json_data = await self.__bind_registration_email(subscription.model_dump(), role_id)
         payment_status = await self.__refresh_payment_status(host, role_id, True)
 
         subscribe_status = SubscribeStatusEnum(payment_status['subscribe_status'])
@@ -146,9 +146,9 @@ class PaymentService:
         await self.__bg_processing(
             bg_tasks, f'{host}/{STRIPE}/subscribe', json_data, role_id)
 
-    async def unsubscribe(self, bg_tasks: BackgroundTasks, host: str, unsubscription: dtos.UnsubscribeRequestDTO) -> (None):
+    async def unsubscribe(self, bg_tasks: BackgroundTasks, host: str, unsubscription: dtos.UnsubscribeRequestDTO) -> None:
         role_id = unsubscription.role_id
-        json_data = await self.__bind_registration_email(unsubscription.dict(), role_id)
+        json_data = await self.__bind_registration_email(unsubscription.model_dump(), role_id)
         payment_status = await self.__refresh_payment_status(host, role_id)
 
         subscribe_status = SubscribeStatusEnum(payment_status['subscribe_status'])
@@ -161,7 +161,7 @@ class PaymentService:
     '''
     6. Stripe -> gateway -> payment service
     '''
-    async def webhook(self, host: str, req: Request) -> (JSONResponse):
+    async def webhook(self, host: str, req: Request) -> JSONResponse:
         byte_data: Optional[bytes] = None
         try:
             byte_data = await req.body()
@@ -190,7 +190,7 @@ class PaymentService:
                       host, req.headers, byte_data.decode(), e.__str__())
             raise ServerException(msg='internal server error')
 
-    async def __parse_stripe_customer_id(self, byte_data: bytes) -> (str):
+    async def __parse_stripe_customer_id(self, byte_data: bytes) -> str:
         s = byte_data.decode()
         j = json.loads(s)
         return j['data']['object']['customer']
@@ -201,17 +201,17 @@ class PaymentPlanService:
         self.req = req
         self.cache = cache
 
-    async def __get_cache(self) -> (Optional[Dict]):
+    async def __get_cache(self) -> Optional[Dict]:
         return await self.cache.get(key='pay_plans')
 
-    async def __set_cache(self, payment_plans: List[Dict], exipre: int) -> (bool):
+    async def __set_cache(self, payment_plans: List[Dict], exipre: int) -> bool:
         return await self.cache.set(key='pay_plans', val=payment_plans, ex=exipre)
 
     '''
     long term cache: 14 days as default
     '''
 
-    async def list_plans(self, host: str) -> (List[Dict]):
+    async def list_plans(self, host: str) -> List[Dict]:
         plans =  await self.__get_cache()
         if plans is None:
             url = f'{host}/{STRIPE}/plans'

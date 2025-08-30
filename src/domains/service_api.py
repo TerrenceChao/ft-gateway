@@ -5,7 +5,7 @@ from fastapi import Request
 
 class IServiceApi(ABC):
     @abstractmethod
-    async def simple_get(self, url: str, params: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]]):
+    async def simple_get(self, url: str, params: Dict = None, headers: Dict = None) -> Optional[Dict[str, str]]:
         pass
     
     @abstractmethod
@@ -17,11 +17,11 @@ class IServiceApi(ABC):
         pass
     
     @abstractmethod
-    async def simple_post(self, url: str, json: Dict, headers: Dict = None) -> (Optional[Dict[str, str]]):
+    async def simple_post(self, url: str, json: Dict, headers: Dict = None) -> Optional[Dict[str, str]]:
         pass
 
     @abstractmethod
-    async def post_data(self, url: str, byte_data: bytes, headers: Dict = None) -> (Optional[Dict[str, str]]):
+    async def post_data(self, url: str, byte_data: bytes, headers: Dict = None) -> Optional[Dict[str, str]]:
         pass
     
     @abstractmethod
@@ -33,7 +33,7 @@ class IServiceApi(ABC):
         pass
 
     @abstractmethod
-    async def simple_put(self, url: str, json: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]]):
+    async def simple_put(self, url: str, json: Dict = None, headers: Dict = None) -> Optional[Dict[str, str]]:
         pass
     
     @abstractmethod
@@ -45,7 +45,7 @@ class IServiceApi(ABC):
         pass
     
     @abstractmethod
-    async def simple_delete(self, url: str, params: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]]):
+    async def simple_delete(self, url: str, params: Dict = None, headers: Dict = None) -> Optional[Dict[str, str]]:
         pass
 
     @abstractmethod

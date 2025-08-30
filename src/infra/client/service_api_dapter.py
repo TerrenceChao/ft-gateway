@@ -21,7 +21,7 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result
     """
-    async def simple_get(self, url: str, params: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]]):
+    async def simple_get(self, url: str, params: Dict = None, headers: Dict = None) -> Optional[Dict[str, str]]:
         result = None
         response = None
         try:
@@ -101,7 +101,7 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result
     """
-    async def simple_post(self, url: str, json: Dict, headers: Dict = None) -> (Optional[Dict[str, str]]):
+    async def simple_post(self, url: str, json: Dict, headers: Dict = None) -> Optional[Dict[str, str]]:
         result = None
         response = None
         try:
@@ -127,7 +127,7 @@ class ServiceApiAdapter(IServiceApi):
 
         return result
 
-    async def post_data(self, url: str, byte_data: bytes, headers: Dict = None) -> (Optional[Dict[str, str]]):
+    async def post_data(self, url: str, byte_data: bytes, headers: Dict = None) -> Optional[Dict[str, str]]:
         result = None
         response = None
         try:
@@ -207,7 +207,7 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result
     """
-    async def simple_put(self, url: str, json: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]]):
+    async def simple_put(self, url: str, json: Dict = None, headers: Dict = None) -> Optional[Dict[str, str]]:
         result = None
         response = None
         try:
@@ -287,7 +287,7 @@ class ServiceApiAdapter(IServiceApi):
     """
     return result
     """
-    async def simple_delete(self, url: str, params: Dict = None, headers: Dict = None) -> (Optional[Dict[str, str]]):
+    async def simple_delete(self, url: str, params: Dict = None, headers: Dict = None) -> Optional[Dict[str, str]]:
         result = None
         response = None
         try:
@@ -376,7 +376,7 @@ class ServiceApiAdapter(IServiceApi):
         # 处理错误响应
         response_json = response.json()  # 尝试解析 JSON 响应
         msg = response_json.get("msg", "unknow_error")  # 获取错误消息
-        data = response_json.get("data", None)  # 获取数据
+        data = response_json.get("data", response_json.get("detail", None))  # 获取数据
 
         log.error(f"service request fail, [%s]: %s, body:%s, params:%s, headers:%s, status_code:%s, msg:%s, \n response:%s", 
                 method, url, body, params, headers, status_code, msg, response)

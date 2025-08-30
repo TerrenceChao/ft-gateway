@@ -15,7 +15,7 @@ from ...domains.notify.value_objects.email_value_objects import ResumeEmailVO
 # def create_job_check_profile(
 #     company_id: int = Path(...),
 #     profile: UpdateCompanyProfileVO = Body(None, embed=True),  # Nullable
-# ) -> (UpdateCompanyProfileVO):
+# ) -> UpdateCompanyProfileVO:
 #     # if profile:
 #     #     profile.cid = company_id
 #     return profile
@@ -25,7 +25,7 @@ def create_job_check_job(
     register_region: str = Header(...),  # TODO: vary important!!
     company_id: int = Path(...),
     job: JobVO = Body(..., embed=True),
-) -> (JobVO):
+) -> JobVO:
     # job.cid = company_id
     job.region = register_region
     if len(job.tags) > MAX_TAGS:
@@ -38,7 +38,7 @@ def create_job_check_job(
 # def update_job_check_profile(
 #     company_id: int = Path(...),
 #     profile: UpdateCompanyProfileVO = Body(None, embed=True),  # Nullable
-# ) -> (UpdateCompanyProfileVO):
+# ) -> UpdateCompanyProfileVO:
 #     # if profile:
 #     #     profile.cid = company_id
 #     return profile
@@ -48,7 +48,7 @@ def update_job_check_job(
     company_id: int = Path(...),
     job_id: int = Path(...),
     job: UpdateJobVO = Body(None, embed=True),  # Nullable
-) -> (UpdateJobVO):
+) -> UpdateJobVO:
     if job:
         # job.cid = company_id
         # job.jid = job_id
@@ -62,9 +62,9 @@ def update_job_check_job(
 def upsert_follow_resume_check_resume(
     resume_id: int = Path(...),
     resume_info: BaseResumeVO = Body(...),
-) -> (Dict):
+) -> Dict:
     # resume_info.rid = resume_id
-    return resume_info.dict()
+    return resume_info.model_dump()
 
 
 def apply_resume_check(register_region: str = Header(...),
@@ -78,6 +78,6 @@ def apply_resume_check(register_region: str = Header(...),
 def contact_teacher_by_email_check(
     company_id: int = Path(...),
     body: ResumeEmailVO = Body(...),
-) -> (ResumeEmailVO):
+) -> ResumeEmailVO:
     body.sender_id = company_id
     return body

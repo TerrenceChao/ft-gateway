@@ -18,7 +18,7 @@ class StarTrackerService:
         self.req = req
         self.cache = cache
 
-    def __role_target_ids(self, role: str) -> (Tuple[str, str]):
+    def __role_target_ids(self, role: str) -> Tuple[str, str]:
         if role in COM:
             return ('companies', 'resume-ids')
         elif role in TEACH:
@@ -26,7 +26,7 @@ class StarTrackerService:
         else:
             raise ClientException(msg='role is not correct')
 
-    def __shorter(self, role: str, target_ids: str) -> (Tuple[str, str]):
+    def __shorter(self, role: str, target_ids: str) -> Tuple[str, str]:
         if role in COM:
             role = 'com'
         elif role in TEACH:
@@ -41,23 +41,23 @@ class StarTrackerService:
 
     '''follow'''
 
-    def __follow_key(self, role: str, role_id: int, target_ids: str) -> (str):
+    def __follow_key(self, role: str, role_id: int, target_ids: str) -> str:
         role, target_ids = self.__shorter(role, target_ids)
         return f'{role}:{role_id}:follow:{target_ids}'
 
-    async def add_followed_star(self, role: str, role_id: int, target_id: int) -> (bool):
+    async def add_followed_star(self, role: str, role_id: int, target_id: int) -> bool:
         role, target_ids = self.__role_target_ids(role)
         follow_set_key = self.__follow_key(role, role_id, target_ids)
         result = await self.cache.sadd(follow_set_key, [target_id], STAR_TRACKER_TTL)
         return result > 0
 
-    async def remove_followed_star(self, role: str, role_id: int, target_id: int) -> (bool):
+    async def remove_followed_star(self, role: str, role_id: int, target_id: int) -> bool:
         role, target_ids = self.__role_target_ids(role)
         follow_set_key = self.__follow_key(role, role_id, target_ids)
         result = await self.cache.srem(follow_set_key, target_id, STAR_TRACKER_TTL)
         return result > 0
 
-    async def followed_id_set(self, match_host: str, role: str, role_id: int) -> (Set[int]):
+    async def followed_id_set(self, match_host: str, role: str, role_id: int) -> Set[int]:
         role, target_ids = self.__role_target_ids(role)
 
         follow_set_key = self.__follow_key(role, role_id, target_ids)
@@ -87,23 +87,23 @@ class StarTrackerService:
 
     '''contact'''
 
-    def __contact_key(self, role: str, role_id: int, target_ids: str) -> (str):
+    def __contact_key(self, role: str, role_id: int, target_ids: str) -> str:
         role, target_ids = self.__shorter(role, target_ids)
         return f'{role}:{role_id}:contact:{target_ids}'
 
-    async def add_contact_star(self, role: str, role_id: int, target_id: int) -> (bool):
+    async def add_contact_star(self, role: str, role_id: int, target_id: int) -> bool:
         role, target_ids = self.__role_target_ids(role)
         contact_set_key = self.__contact_key(role, role_id, target_ids)
         result = await self.cache.sadd(contact_set_key, [target_id], STAR_TRACKER_TTL)
         return result > 0
 
-    async def remove_contact_star(self, role: str, role_id: int, target_id: int) -> (bool):
+    async def remove_contact_star(self, role: str, role_id: int, target_id: int) -> bool:
         role, target_ids = self.__role_target_ids(role)
         contact_set_key = self.__contact_key(role, role_id, target_ids)
         result = await self.cache.srem(contact_set_key, target_id, STAR_TRACKER_TTL)
         return result > 0
 
-    async def contact_id_set(self, match_host: str, role: str, role_id: int) -> (Set[int]):
+    async def contact_id_set(self, match_host: str, role: str, role_id: int) -> Set[int]:
         role, target_ids = self.__role_target_ids(role)
 
         contact_set_key = self.__contact_key(role, role_id, target_ids)
@@ -132,6 +132,8 @@ class StarTrackerService:
         return target_list
 
     async def all_marks(self, match_host: str, visitor: BaseAuthDTO, target_list: List[MarkVO]):
+        if visitor is None:
+            return target_list
         role = visitor.role
         role_id = visitor.role_id
         followed_id_set = await self.followed_id_set(match_host, role, role_id)

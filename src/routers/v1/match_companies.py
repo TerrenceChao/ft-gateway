@@ -22,7 +22,7 @@ from ...configs.conf import \
     MY_STATUS_OF_COMPANY_APPLY, STATUS_OF_COMPANY_APPLY, MY_STATUS_OF_COMPANY_REACTION, STATUS_OF_COMPANY_REACTION
 from ...configs.constants import Apply
 from ...domains.payment.configs.constants import PAYMENT_PERIOD
-from ...configs.region_hosts import *
+from ...configs.conf import REGION_HOST_MATCH, REGION_HOST_AUTH, REGION_HOST_PAYMENT
 from ...configs.exceptions import ClientException, \
     NotFoundException, \
     ServerException
@@ -42,14 +42,14 @@ router = APIRouter(
 )
 
 
-def get_match_host(current_region: str = Header(...)):
-    return get_match_region_host(region=current_region)
+def get_match_host():
+    return REGION_HOST_MATCH
 
-def get_payment_host(current_region: str = Header(...)):
-    return get_payment_region_host(region=current_region)
+def get_payment_host():
+    return REGION_HOST_PAYMENT
 
-def get_auth_host(register_region: str = Header(...)):
-    return get_auth_region_host(region=register_region)
+def get_auth_host():
+    return REGION_HOST_AUTH
 
 
 COMPANY = 'company'
@@ -137,8 +137,8 @@ async def create_job(company_id: int,
 @router.get("/{company_id}/brief-jobs",
             responses=idempotent_response(f'{COMPANY}.get_brief_jobs', vo.JobListVO))
 async def get_brief_jobs(company_id: int,
-                   size: int = Query(None),
-                   job_id: int = Query(None),
+                   size: int = Query(10),
+                   job_id: int = Query(0),
                    match_host=Depends(get_match_host),
                    ):
     data = await _company_job_service.get_brief_jobs(
@@ -225,8 +225,8 @@ async def upsert_follow_resume(company_id: int,
 @router.get("/{company_id}/resume-follows",
             responses=idempotent_response(f'{COMPANY}.get_followed_resume_list', vo.FollowResumeListVO))
 async def get_followed_resume_list(company_id: int,
-                             size: int,
-                             next_ts: int = None,
+                             size: int = Query(10),
+                             next_ts: int = Query(0),
                              match_host=Depends(get_match_host),
                              ):
     data = await _follow_resume_service.get_followed_resume_list(
@@ -311,8 +311,8 @@ async def apply_resume(company_id: int = Path(...),
 @router.get("/{company_id}/resume-contacts",
             responses=idempotent_response(f'{COMPANY}.get_applied_resume_list', vo.ContactResumeListVO))
 async def get_applied_resume_list(company_id: int = Path(...),
-                              size: int = Query(None),
-                              next_ts: int = Query(None),
+                              size: int = Query(10),
+                              next_ts: int = Query(0),
                               match_host=Depends(get_match_host),
                               ):
     # APPLY
@@ -332,8 +332,8 @@ async def get_applied_resume_list(company_id: int = Path(...),
 @router.get("/{company_id}/resume-applications",
             responses=idempotent_response(f'{COMPANY}.get_resume_application_list', vo.ContactResumeListVO))
 async def get_resume_application_list(company_id: int = Path(...),
-                                size: int = Query(None),
-                                next_ts: int = Query(None),
+                                size: int = Query(10),
+                                next_ts: int = Query(0),
                                 match_host=Depends(get_match_host),
                                 ):
     # REACTION
@@ -368,7 +368,7 @@ async def delete_any_contacted_resume(company_id: int,
 @router.get("/{company_id}/follow-and-contact/resumes",
             responses=idempotent_response(f'{COMPANY}.get_follows_and_contacts_at_first', vo.CompanyFollowAndContactVO))
 async def get_follows_and_contacts_at_first(company_id: int,
-                                      size: int = None,
+                                      size: int = Query(10),
                                       match_host=Depends(get_match_host),
                                       ):
     data = await _company_aggregate_service.get_resume_follows_and_contacts(
@@ -380,7 +380,7 @@ async def get_follows_and_contacts_at_first(company_id: int,
 @router.get("/{company_id}/matchdata",
             responses=idempotent_response(f'{COMPANY}.get_matchdata', vo.CompanyMatchDataVO))
 async def get_matchdata(company_id: int,
-                  size: int = None,
+                  size: int = Query(10),
                   match_host=Depends(get_match_host),
                   ):
     data = await _company_aggregate_service.get_matchdata(

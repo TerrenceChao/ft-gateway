@@ -13,7 +13,7 @@ class ContactResume(BaseEntity):
     resume_info: Optional[Dict] = None
 
     def fine_dict(self):
-        dictionary = self.dict()
+        dictionary = self.model_dump()
         dictionary["status"] = self.status.value
         dictionary["my_status"] = self.my_status.value
         return dictionary

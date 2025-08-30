@@ -17,6 +17,7 @@ from ...domains.search.services.search_service import SearchService
 from ...domains.match.star_tracker_service import StarTrackerService
 from ...domains.user.services.auth_service import AuthService
 from ...domains.user.value_objects.auth_vo import BaseAuthDTO
+from ...configs.conf import *
 import logging
 
 
@@ -31,12 +32,12 @@ router = APIRouter(
 )
 
 
-async def get_search_host(current_region: str = Header(...)):
-    return get_search_region_host(region=current_region)
+async def get_search_host():
+    return REGION_HOST_SEARCH
 
 
-async def get_match_host(region: str = Header(...)):
-    return get_match_region_host(region=region)
+async def get_match_host():
+    return REGION_HOST_MATCH
 
 
 SEARCH = 'search'
@@ -72,16 +73,16 @@ async def get_resumes(
         tags=tags,
     )
     data = await _search_service.get_resumes(search_host, query)
-    if AuthService.is_login(gw_cache, visitor):
+    if len(data.items) and AuthService.is_login(gw_cache, visitor):
         data.items = await _star_tracker_service.all_marks(
             match_host,
             visitor,
             data.items,
         )
-    return res_success(data=data)
+    return res_success(data=data.model_dump())
 
 
-@router.get("/resumes/{region}/{tid}/{rid}",
+@router.get("/resumes/{tid}/{rid}",
             responses=idempotent_response(f'{SEARCH}.get_resume_by_id', match_t.TeacherProfileAndResumeVO))
 async def get_resume_by_id(
     tid: int,
@@ -125,16 +126,16 @@ async def get_jobs(
         country_code=country_code,
     )
     data = await _search_service.get_jobs(search_host, query)
-    if AuthService.is_login(gw_cache, visitor):
+    if len(data.items) and AuthService.is_login(gw_cache, visitor):
         data.items = await _star_tracker_service.all_marks(
             match_host,
             visitor,
             data.items,
         )
-    return res_success(data=data)
+    return res_success(data=data.model_dump())  # 返回 JSON 序列化的数据
 
 
-@router.get("/jobs/{region}/{cid}/{jid}",
+@router.get("/jobs/{cid}/{jid}",
             responses=idempotent_response(f'{SEARCH}.get_job_by_id', match_c.CompanyProfileAndJobVO))
 async def get_job_by_id(
     cid: int,

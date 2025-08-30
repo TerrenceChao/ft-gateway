@@ -18,7 +18,7 @@ from ...apps.resources.adapters import service_client, gw_cache
 from ...configs.conf import \
     MY_STATUS_OF_TEACHER_APPLY, STATUS_OF_TEACHER_APPLY, MY_STATUS_OF_TEACHER_REACTION, STATUS_OF_TEACHER_REACTION
 from ...configs.constants import Apply
-from ...configs.region_hosts import get_match_region_host
+from ...configs.conf import REGION_HOST_MATCH
 from ...configs.exceptions import ClientException, \
     NotFoundException, \
     ServerException
@@ -32,14 +32,14 @@ log = logging.getLogger(__name__)
 router = APIRouter(
     prefix="/match/teachers",
     tags=["Match Teachers"],
-    dependencies=[Depends(token_required)],
-    route_class=AuthRoute,
+    # dependencies=[Depends(token_required)],
+    # route_class=AuthRoute,
     responses={404: {"description": "Not found"}},
 )
 
 
-def get_match_host(current_region: str = Header(...)):
-    return get_match_region_host(region=current_region)
+def get_match_host():
+    return REGION_HOST_MATCH
 
 
 TEACHER = 'teacher'
@@ -242,8 +242,8 @@ async def upsert_follow_job(teacher_id: int,
 @router.get("/{teacher_id}/job-follows",
             responses=idempotent_response(f'{TEACHER}.get_followed_job_list', vo.FollowJobListVO))
 async def get_followed_job_list(teacher_id: int,
-                          size: int,
-                          next_ts: int = None,
+                          size: int = Query(10),
+                          next_ts: int = Query(0),
                           match_host=Depends(get_match_host),
                           ):
     data = await _follow_job_service.get_followed_job_list(
@@ -283,8 +283,8 @@ async def apply_job(teacher_id: int = Path(...),
 @router.get("/{teacher_id}/job-applications",
             responses=idempotent_response(f'{TEACHER}.get_applied_job_list', vo.ContactJobListVO))
 async def get_applied_job_list(teacher_id: int = Path(...),
-                         size: int = Query(None),
-                         next_ts: int = Query(None),
+                         size: int = Query(10),
+                         next_ts: int = Query(0),
                          match_host=Depends(get_match_host),
                          ):
     # APPLY
@@ -304,8 +304,8 @@ async def get_applied_job_list(teacher_id: int = Path(...),
 @router.get("/{teacher_id}/job-positions",
             responses=idempotent_response(f'{TEACHER}.get_job_position_list', vo.ContactJobListVO))
 async def get_job_position_list(teacher_id: int = Path(...),
-                          size: int = Query(None),
-                          next_ts: int = Query(None),
+                          size: int = Query(10),
+                          next_ts: int = Query(0),
                           match_host=Depends(get_match_host),
                           ):
     # REACTION
@@ -340,7 +340,7 @@ async def delete_any_contacted_job(teacher_id: int,
 @router.get("/{teacher_id}/follow-and-application/jobs",
             responses=idempotent_response(f'{TEACHER}.get_follows_and_applications_at_first', vo.TeacherFollowAndContactVO))
 async def get_follows_and_applications_at_first(teacher_id: int,
-                                          size: int = None,
+                                          size: int = Query(10),
                                           match_host=Depends(get_match_host),
                                           ):
     data = await _teacher_aggregate_service.get_job_follows_and_contacts(
@@ -352,7 +352,7 @@ async def get_follows_and_applications_at_first(teacher_id: int,
 @router.get("/{teacher_id}/matchdata",
             responses=idempotent_response(f'{TEACHER}.get_matchdata', vo.TeacherMatchDataVO))
 async def get_matchdata(teacher_id: int,
-                  size: int = None,
+                  size: int = Query(10),
                   match_host=Depends(get_match_host),
                   ):
     data = await _teacher_aggregate_service.get_matchdata(

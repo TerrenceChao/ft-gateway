@@ -19,8 +19,8 @@ class TeacherResumeService:
         data = await self.req.simple_post(
             url=f"{host}/teachers/{teacher_id}/resumes",
             json={
-                "profile": None if profile is None else profile.dict(),
-                "resume": resume.dict(),
+                "profile": None if profile is None else profile.model_dump(),
+                "resume": resume.model_dump(),
             })
 
         return data
@@ -46,8 +46,8 @@ class TeacherResumeService:
         data = await self.req.simple_put(
             url=f"{host}/teachers/{teacher_id}/resumes/{resume_id}",
             json={
-                "profile": None if profile is None else profile.dict(),
-                "resume": resume.dict(),
+                "profile": None if profile is None else profile.model_dump(),
+                "resume": resume.model_dump(),
             })
 
         return data
@@ -69,7 +69,7 @@ class TeacherResumeService:
         resume_id = resume_section.rid
         data = await self.req.simple_put(
             url=f"{host}/teachers/{teacher_id}/resumes/{resume_id}/sections",
-            json=resume_section.dict())
+            json=resume_section.model_dump())
 
         return data
     

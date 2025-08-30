@@ -8,7 +8,8 @@ from ..req.auth_validation import *
 from ..res.response import *
 from ...domains.user.services.auth_service import AuthService
 from ...apps.resources.adapters import service_client, gw_cache
-from ...configs.region_hosts import get_auth_region_host, get_match_region_host
+from ...configs.region_hosts import get_match_region_host
+from ...configs.conf import REGION_HOST_AUTH
 import logging
 
 
@@ -36,12 +37,12 @@ router = APIRouter(
 )
 
 
-async def get_auth_host_for_signup(region: str = Header(...)):
-    return get_auth_region_host(region=region)
+async def get_auth_host_for_signup():
+    return REGION_HOST_AUTH
 
 
-async def get_auth_host(current_region: str = Header(...)):
-    return get_auth_region_host(region=current_region)
+async def get_auth_host():
+    return REGION_HOST_AUTH
 
 
 async def get_match_host(current_region: str = Header(...)):

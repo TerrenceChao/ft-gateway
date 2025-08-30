@@ -12,7 +12,7 @@ class _BaseJobData(BaseModel):
 
     def init(self):
         if self.job_info != None:
-            job = BaseJobVO.parse_obj(self.job_info)
+            job = BaseJobVO.model_validate(self.job_info)
             self.url_path = f'{SEARCH_JOB_URL_PATH}/{job.region}/{job.cid}/{job.jid}'
         return self
 
@@ -26,8 +26,8 @@ class ContactJobVO(_BaseJobData, MarkVO):
     job_info: Optional[BaseJobVO] = None
     created_at: Optional[int] = None
 
-    def id(self) -> (int):
-        return self.jid
+    def id(self) -> int:
+        return self.jid or 0
 
 
 class ContactJobListVO(BaseModel):
@@ -45,8 +45,8 @@ class FollowJobVO(_BaseJobData, MarkVO):
     job_info: BaseJobVO
     created_at: Optional[int] = None
 
-    def id(self) -> (int):
-        return self.jid
+    def id(self) -> int:
+        return self.jid or 0
 
 
 class FollowJobListVO(BaseModel):
@@ -195,7 +195,7 @@ class ApplyJobVO(BaseModel):
     resume_info: ResumeIndexVO
 
     def fine_dict(self):
-        dictionary = self.dict()
+        dictionary = self.model_dump()
         dictionary["my_status"] = self.my_status.value
         return dictionary
 

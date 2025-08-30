@@ -37,8 +37,8 @@ class BaseResumeVO(BaseModel):
 
 
 class MarkVO(BaseModel):
-    followed: Optional[bool]
-    contacted: Optional[bool]
+    followed: Optional[bool] = False
+    contacted: Optional[bool] = False
     
-    def id(self) -> (int):
-        pass
+    def id(self) -> int:
+        return 0  # Default implementation, should be overridden by subclasses

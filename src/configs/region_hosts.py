@@ -8,45 +8,45 @@ log = logging.getLogger(__name__)
 
 
 auth_region_hosts = {
-    # "default": os.getenv("REGION_HOST_AUTH", "http://localhost:8082/auth/api/v1/auth-nosql"),
-    "jp": os.getenv("JP_REGION_HOST_AUTH", "http://localhost:8082/auth/api/v1/auth-nosql"),
-    "ge": os.getenv("GE_REGION_HOST_AUTH", "http://localhost:8082/auth/api/v1/auth-nosql"),
-    "us": os.getenv("US_REGION_HOST_AUTH", "http://localhost:8082/auth/api/v1/auth-nosql"),
+    # "default": os.getenv("REGION_HOST_AUTH", "https://xxt0dba048.execute-api.ap-northeast-1.amazonaws.com/dev/auth/api/v1/auth-nosql"),
+    "jp": os.getenv("JP_REGION_HOST_AUTH", "https://xxt0dba048.execute-api.ap-northeast-1.amazonaws.com/dev/auth/api/v1/auth-nosql"),
+    "ge": os.getenv("GE_REGION_HOST_AUTH", "https://xxt0dba048.execute-api.ap-northeast-1.amazonaws.com/dev/auth/api/v1/auth-nosql"),
+    "us": os.getenv("US_REGION_HOST_AUTH", "https://xxt0dba048.execute-api.ap-northeast-1.amazonaws.com/dev/auth/api/v1/auth-nosql"),
 }
 
 auth_region_v2_hosts = {
-    # "default": os.getenv("REGION_HOST_AUTH", "http://localhost:8082/auth/api/v2/auth-nosql"),
-    "jp": os.getenv("JP_REGION_HOST_AUTH", "http://localhost:8082/auth/api/v2/auth-nosql"),
-    "ge": os.getenv("GE_REGION_HOST_AUTH", "http://localhost:8082/auth/api/v2/auth-nosql"),
-    "us": os.getenv("US_REGION_HOST_AUTH", ""),
+    # "default": os.getenv("REGION_HOST_AUTH", "https://xxt0dba048.execute-api.ap-northeast-1.amazonaws.com/dev/auth/api/v1/auth-nosql"),
+    "jp": os.getenv("JP_REGION_HOST_AUTH", "https://xxt0dba048.execute-api.ap-northeast-1.amazonaws.com/dev/auth/api/v1/auth-nosql"),
+    "ge": os.getenv("GE_REGION_HOST_AUTH", "https://xxt0dba048.execute-api.ap-northeast-1.amazonaws.com/dev/auth/api/v1/auth-nosql"),
+    "us": os.getenv("US_REGION_HOST_AUTH", "https://xxt0dba048.execute-api.ap-northeast-1.amazonaws.com/dev/auth/api/v1/auth-nosql"),
 }
 
 match_region_hosts = {
-    # "default": os.getenv("REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/match-nosql"),
-    "jp": os.getenv("JP_REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/match-nosql"),
-    "ge": os.getenv("GE_REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/match-nosql"),
-    "us": os.getenv("US_REGION_HOST_MATCH", "http://localhost:8083/match/api/v1/match-nosql"),
+    # "default": os.getenv("REGION_HOST_MATCH", "https://yq272r6dy4.execute-api.ap-northeast-1.amazonaws.com/dev/match/api/v1/match-nosql"),
+    "jp": os.getenv("JP_REGION_HOST_MATCH", "https://yq272r6dy4.execute-api.ap-northeast-1.amazonaws.com/dev/match/api/v1/match-nosql"),
+    "ge": os.getenv("GE_REGION_HOST_MATCH", "https://yq272r6dy4.execute-api.ap-northeast-1.amazonaws.com/dev/match/api/v1/match-nosql"),
+    "us": os.getenv("US_REGION_HOST_MATCH", "https://yq272r6dy4.execute-api.ap-northeast-1.amazonaws.com/dev/match/api/v1/match-nosql"),
 }
 
 search_region_hosts = {
-    # "default": os.getenv("REGION_HOST_SEARCH", "http://localhost:8084/search/api/v1"),
-    "jp": os.getenv("JP_REGION_HOST_SEARCH", "http://localhost:8084/search/api/v1"),
-    "ge": os.getenv("GE_REGION_HOST_SEARCH", "http://localhost:8084/search/api/v1"),
-    "us": os.getenv("US_REGION_HOST_SEARCH", "http://localhost:8084/search/api/v1"),
+    # "default": os.getenv("REGION_HOST_SEARCH", "https://13gg4t7v6b.execute-api.ap-northeast-1.amazonaws.com/dev/search/api/v1"),
+    "jp": os.getenv("JP_REGION_HOST_SEARCH", "https://13gg4t7v6b.execute-api.ap-northeast-1.amazonaws.com/dev/search/api/v1"),
+    "ge": os.getenv("GE_REGION_HOST_SEARCH", "https://13gg4t7v6b.execute-api.ap-northeast-1.amazonaws.com/dev/search/api/v1"),
+    "us": os.getenv("US_REGION_HOST_SEARCH", "https://13gg4t7v6b.execute-api.ap-northeast-1.amazonaws.com/dev/search/api/v1"),
 }
 
 media_region_hosts = {
-    "default": os.getenv("REGION_HOST_MEDIA", "http://localhost:8085/media/api/v1"),
-    "jp": os.getenv("JP_REGION_HOST_MEDIA", "http://localhost:8085/media/api/v1"),
-    "ge": os.getenv("GE_REGION_HOST_MEDIA", "http://localhost:8085/media/api/v1"),
-    "us": os.getenv("US_REGION_HOST_MEDIA", "http://localhost:8085/media/api/v1"),
+    "default": os.getenv("REGION_HOST_MEDIA", "https://mf7ys8cuyh.execute-api.ap-northeast-1.amazonaws.com/dev/media/api/v1"),
+    "jp": os.getenv("JP_REGION_HOST_MEDIA", "https://mf7ys8cuyh.execute-api.ap-northeast-1.amazonaws.com/dev/media/api/v1"),
+    "ge": os.getenv("GE_REGION_HOST_MEDIA", "https://mf7ys8cuyh.execute-api.ap-northeast-1.amazonaws.com/dev/media/api/v1"),
+    "us": os.getenv("US_REGION_HOST_MEDIA", "https://mf7ys8cuyh.execute-api.ap-northeast-1.amazonaws.com/dev/media/api/v1"),
 }
 
 payment_region_hosts = {
-    "default": os.getenv("REGION_HOST_PAYMENT", "http://localhost:8086/payment/api/v1"),
-    "jp": os.getenv("JP_REGION_HOST_PAYMENT", "http://localhost:8086/payment/api/v1"),
-    "ge": os.getenv("GE_REGION_HOST_PAYMENT", "http://localhost:8086/payment/api/v1"),
-    "us": os.getenv("US_REGION_HOST_PAYMENT", "http://localhost:8086/payment/api/v1"),
+    "default": os.getenv("REGION_HOST_PAYMENT", "https://ogfvx02vgd.execute-api.ap-northeast-1.amazonaws.com/dev/payment/api/v1"),
+    "jp": os.getenv("JP_REGION_HOST_PAYMENT", "https://ogfvx02vgd.execute-api.ap-northeast-1.amazonaws.com/dev/payment/api/v1"),
+    "ge": os.getenv("GE_REGION_HOST_PAYMENT", "https://ogfvx02vgd.execute-api.ap-northeast-1.amazonaws.com/dev/payment/api/v1"),
+    "us": os.getenv("US_REGION_HOST_PAYMENT", "https://ogfvx02vgd.execute-api.ap-northeast-1.amazonaws.com/dev/payment/api/v1"),
 }
 
 

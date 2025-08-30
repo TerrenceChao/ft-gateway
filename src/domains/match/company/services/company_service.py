@@ -20,7 +20,7 @@ class CompanyProfileService:
 
     async def create_profile(self, host: str, company_id: int, profile: com_vo.CompanyProfileVO):
         url = f"{host}/companies/{company_id}"
-        data = await self.req.simple_post(url=url, json=profile.dict())
+        data = await self.req.simple_post(url=url, json=profile.model_dump())
         
         return data
 
@@ -32,7 +32,7 @@ class CompanyProfileService:
 
     async def update_profile(self, host: str, company_id: int, profile: com_vo.UpdateCompanyProfileVO):
         url = f"{host}/companies/{company_id}"
-        data = await self.req.simple_put(url=url, json=profile.dict())
+        data = await self.req.simple_put(url=url, json=profile.model_dump())
 
         return data
 
@@ -52,7 +52,7 @@ class CompanyAggregateService(StarTrackerService):
             }
         )
         
-        data = com_vo.CompanyFollowAndContactVO.parse_obj(data).init()
+        data = com_vo.CompanyFollowAndContactVO.model_validate(data).init()
         data.followed = await self.contact_marks(host, 'company', company_id, data.followed)
         data.contact = await self.followed_marks(host, 'company', company_id, data.contact)
         return data
@@ -68,7 +68,7 @@ class CompanyAggregateService(StarTrackerService):
             }
         )
         
-        data = com_vo.CompanyMatchDataVO.parse_obj(data).init()
+        data = com_vo.CompanyMatchDataVO.model_validate(data).init()
         data.followed = await self.contact_marks(host, 'company', company_id, data.followed)
         data.contact = await self.followed_marks(host, 'company', company_id, data.contact)
         return data

@@ -1,12 +1,22 @@
 import os
 from functools import lru_cache
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 from typing import Set
 from .constants import Apply
 
 # stage
 TESTING = os.getenv("TESTING", "dev")
 STAGE = os.getenv("STAGE", "dev")
+
+# microservice region hosts
+REGION_HOST_AUTH = os.getenv("REGION_HOST_AUTH", "https://xxt0dba048.execute-api.ap-northeast-1.amazonaws.com/dev/auth/api/v1/auth-nosql")
+REGION_HOST_MATCH = os.getenv("REGION_HOST_MATCH", "https://4nlwd3bvz3.execute-api.ap-northeast-1.amazonaws.com/dev/match/api/v1/match-nosql")
+# REGION_HOST_MATCH = os.getenv("REGION_HOST_MATCH", "http://127.0.0.1:8004/match/api/v1/match-nosql")
+
+REGION_HOST_SEARCH = os.getenv("REGION_HOST_SEARCH", "https://13gg4t7v6b.execute-api.ap-northeast-1.amazonaws.com/dev/search/api/v1")
+REGION_HOST_MEDIA = os.getenv("REGION_HOST_MEDIA", "https://mf7ys8cuyh.execute-api.ap-northeast-1.amazonaws.com/dev/media/api/v1")
+REGION_HOST_PAYMENT = os.getenv("REGION_HOST_PAYMENT", "https://ogfvx02vgd.execute-api.ap-northeast-1.amazonaws.com/dev/payment/api/v1")
+
 
 # connection
 # http
@@ -17,7 +27,7 @@ HTTP_KEEPALIVE_EXPIRY = float(os.getenv("KEEPALIVE_EXPIRY", 30.0))
 
 # cache
 # dynamodb
-DDB_PREFIX = os.getenv('DDB_PREFIX', '')
+DDB_PREFIX = os.getenv('DDB_PREFIX', 'ft_dev_')
 TABLE_CACHE = DDB_PREFIX + os.getenv("TABLE_CACHE", "cache")
 DDB_CONNECT_TIMEOUT=int(os.getenv("DDB_CONNECT_TIMEOUT", 10))
 DDB_READ_TIMEOUT=int(os.getenv("DDB_READ_TIMEOUT", 30))
@@ -63,21 +73,21 @@ AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", None)
 # company apply status (my_status, status)
 MY_STATUS_OF_COMPANY_APPLY = os.getenv("MY_STATUS_OF_COMPANY_APPLY", "confirm")
 STATUS_OF_COMPANY_APPLY = os.getenv("STATUS_OF_COMPANY_APPLY", None)
-MY_STATUS_OF_COMPANY_REACTION = os.getenv("MY_STATUS_OF_COMPANY_REACTION", "confirm,pending")
+MY_STATUS_OF_COMPANY_REACTION = os.getenv("MY_STATUS_OF_COMPANY_REACTION", "confirm;pending")
 STATUS_OF_COMPANY_REACTION = os.getenv("STATUS_OF_COMPANY_REACTION", "confirm")
 
 
 # teacher apply status (my_status, status)
 MY_STATUS_OF_TEACHER_APPLY = os.getenv("MY_STATUS_OF_TEACHER_APPLY", "confirm")
 STATUS_OF_TEACHER_APPLY = os.getenv("STATUS_OF_TEACHER_APPLY", None)
-MY_STATUS_OF_TEACHER_REACTION = os.getenv("MY_STATUS_OF_TEACHER_REACTION", "confirm,pending")
+MY_STATUS_OF_TEACHER_REACTION = os.getenv("MY_STATUS_OF_TEACHER_REACTION", "confirm;pending")
 STATUS_OF_TEACHER_REACTION = os.getenv("STATUS_OF_TEACHER_REACTION", "confirm")
 
 def parse_list(statuses: str):
     if statuses is None or statuses.strip() == "":
         return []
     
-    apply_enums: Set[Apply] = set([Apply(s.lower().strip()) for s in statuses.split(",") if s.strip() != ""])
+    apply_enums: Set[Apply] = set([Apply(s.lower().strip()) for s in statuses.split(";") if s.strip() != ""])
     return list({ a.value for a in apply_enums })
     
 MY_STATUS_OF_COMPANY_APPLY = parse_list(MY_STATUS_OF_COMPANY_APPLY)
@@ -93,9 +103,10 @@ STATUS_OF_TEACHER_REACTION = parse_list(STATUS_OF_TEACHER_REACTION)
 
 # check README.md for more details
 class Settings(BaseSettings):
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8"
+    }
 
 
 @lru_cache

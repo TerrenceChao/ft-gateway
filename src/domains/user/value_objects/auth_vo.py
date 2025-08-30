@@ -1,6 +1,6 @@
 import json
 from typing import Any, Dict, List, Optional, Union
-from pydantic import BaseModel, EmailStr, validator
+from pydantic import BaseModel, EmailStr, field_validator, ConfigDict
 from ....configs.constants import VALID_ROLES
 from ....configs.exceptions import *
 from ...match.company.value_objects.c_value_objects import CompanyMatchDataVO
@@ -36,12 +36,14 @@ class SignupVO(BaseModel):
     pubkey: str = None
     meta: str
 
-    @validator('meta')
-    def check_meta(cls, v, values, **kwargs):
-        return meta_validator(v, values['pubkey'])
+    @field_validator('meta')
+    @classmethod
+    def check_meta(cls, v, info):
+        pubkey = info.data.get('pubkey') if info.data else None
+        return meta_validator(v, pubkey)
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra = {
             "example": {
                 "email": "user@example.com",
                 "pubkey": "the-pubkey",
@@ -49,6 +51,7 @@ class SignupVO(BaseModel):
             },
             "description": "ignore 'pubkey' in the body",
         }
+    )
 
 
 class SignupConfirmVO(BaseModel):
@@ -56,8 +59,8 @@ class SignupConfirmVO(BaseModel):
     confirm_code: str
     pubkey: str = None
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra = {
             "example": {
                 "email": "user@example.com",
                 "confirm_code": "106E7B",
@@ -65,6 +68,7 @@ class SignupConfirmVO(BaseModel):
             },
             "description": "ignore 'pubkey' in the body",
         }
+    )
 
 
 class LoginVO(BaseModel):
@@ -74,8 +78,8 @@ class LoginVO(BaseModel):
     meta: str
     prefetch: int = None
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra = {
             "example": {
                 "email": "user@example.com",
                 "pubkey": "the-pubkey",
@@ -84,6 +88,7 @@ class LoginVO(BaseModel):
             },
             "description": "ignore 'current_region' in the body, it will be set in headers; ignore 'pubkey' in the body",
         }
+    )
 
 class ResetPasswordVO(BaseModel):
     register_email: EmailStr
@@ -121,6 +126,6 @@ class SSOLoginVO(BaseModel):
     sso_type: Optional[str]
 
     def fine_dict(self):
-        d = super().dict()
+        d = super().model_dump()
         d.pop('sso_type', None)
         return d

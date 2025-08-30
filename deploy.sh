@@ -46,6 +46,7 @@ sls deploy --config $BACKUP_FILE --region $REGION --stage $BACKUP_ENV  # apply r
 rm "$BACKUP_FILE"
 
 # config env variables
-if [ "$BACKUP_ENV" == "dev" ]; then
-    sh dev-env-deploy.sh
+if [ -f "$BACKUP_ENV-env-deploy.sh" ]; then
+    echo "Deploying env params..."
+    sh $BACKUP_ENV-env-deploy.sh
 fi

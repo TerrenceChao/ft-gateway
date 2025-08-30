@@ -192,7 +192,7 @@ class AuthService:
 
     async def __req_login(self, auth_host: str, body: LoginVO):
         return await self.req.simple_post(
-            f"{auth_host}/login", json=body.dict())
+            f"{auth_host}/login", json=body.model_dump())
         
 
     async def cache_auth_res(self, role_id_key: str, auth_res: Dict):
@@ -242,7 +242,7 @@ class AuthService:
         return (None, "successfully logged out")
     
     @staticmethod
-    async def is_login(cache: ICache, visitor: BaseAuthDTO = None) -> (bool):
+    async def is_login(cache: ICache, visitor: BaseAuthDTO = None) -> bool:
         if visitor is None:
             return False
 
@@ -337,8 +337,8 @@ class AuthService:
 
     async def __req_update_password(self, auth_host: str, body: UpdatePasswordVO):
         return await self.req.simple_put(
-            f"{auth_host}/password/update", json=body.dict())
+            f"{auth_host}/password/update", json=body.model_dump())
 
     async def __req_reset_password(self, auth_host: str, body: ResetPasswordVO):
         return await self.req.simple_put(
-            f"{auth_host}/password/update", json=body.dict()) 
+            f"{auth_host}/password/update", json=body.model_dump()) 

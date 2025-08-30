@@ -64,18 +64,18 @@ class RedisCacheAdapter(ICache):
                       key, e.__str__())
             raise ServerException(msg="r_server_error") 
 
-    async def smembers(self, key: str) -> (Optional[Set[Any]]):
+    async def smembers(self, key: str) -> Optional[Set[Any]]:
         # TODO: implement
         return set()
 
-    async def sismember(self, key: str, value: Any) -> (bool):
+    async def sismember(self, key: str, value: Any) -> bool:
         # TODO: implement
         return False
 
-    async def sadd(self, key: str, values: List[Any], ex: int = None) -> (int):
+    async def sadd(self, key: str, values: List[Any], ex: int = None) -> int:
         # TODO: implement
         return 0
 
-    async def srem(self, key: str, value: Any, ex: int = None) -> (int):
+    async def srem(self, key: str, value: Any, ex: int = None) -> int:
         # TODO: implement
         return 0

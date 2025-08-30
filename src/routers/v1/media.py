@@ -10,7 +10,7 @@ from ...domains.cache import ICache
 from ...domains.media.services.media_service import MediaService
 from ...apps.resources.adapters import service_client, gw_cache
 from ...configs.constants import PATHS
-from ...configs.region_hosts import get_media_region_host
+from ...configs.conf import REGION_HOST_MEDIA
 from ...configs.exceptions import ClientException
 from ...infra.utils.util import get_serial_num
 import logging
@@ -29,8 +29,8 @@ router = APIRouter(
 )
 
 
-async def get_media_host(current_region: str = Header(...)):
-    return get_media_region_host(region=current_region)
+async def get_media_host():
+    return REGION_HOST_MEDIA
 
 
 _media_service = MediaService(service_client)
