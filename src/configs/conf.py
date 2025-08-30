@@ -10,7 +10,7 @@ STAGE = os.getenv("STAGE", "dev")
 
 # microservice region hosts
 REGION_HOST_AUTH = os.getenv("REGION_HOST_AUTH", "https://xxt0dba048.execute-api.ap-northeast-1.amazonaws.com/dev/auth/api/v1/auth-nosql")
-REGION_HOST_MATCH = os.getenv("REGION_HOST_MATCH", "https://yq272r6dy4.execute-api.ap-northeast-1.amazonaws.com/dev/match/api/v1/match-nosql")
+REGION_HOST_MATCH = os.getenv("REGION_HOST_MATCH", "https://4nlwd3bvz3.execute-api.ap-northeast-1.amazonaws.com/dev/match/api/v1/match-nosql")
 # REGION_HOST_MATCH = os.getenv("REGION_HOST_MATCH", "http://127.0.0.1:8004/match/api/v1/match-nosql")
 
 REGION_HOST_SEARCH = os.getenv("REGION_HOST_SEARCH", "https://13gg4t7v6b.execute-api.ap-northeast-1.amazonaws.com/dev/search/api/v1")

@@ -56,6 +56,7 @@ class HttpResourceHandler(ResourceHandler):
             client = self.domain_clients.get(domain, None)
 
         if not client or client.is_closed:
+            await self.__init_lock(domain)  # 确保锁存在
             client = await self.__init_client(domain)
 
         return client
@@ -92,6 +93,10 @@ class HttpResourceHandler(ResourceHandler):
                 self.locks.update({domain: asyncio.Lock()}) # 新增 lock 給新的 domain
 
     async def __init_client(self, domain: str) -> httpx.AsyncClient:
+        # 确保锁存在
+        if domain not in self.locks:
+            await self.__init_lock(domain)
+        
         async with self.locks[domain]:  # 使用锁来防止竞争
             client = self.domain_clients.get(domain, None)
             if not client or client.is_closed:

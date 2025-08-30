@@ -2,9 +2,10 @@ from typing import Optional, Any, Dict
 from pydantic import create_model, BaseModel
 from fastapi import status
 from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 
 # ref: https://github.com/tiangolo/fastapi/issues/3737
-def idempotent_response(route: str, model: Any) -> (Dict):
+def idempotent_response(route: str, model: Any) -> Dict:
     responses: Dict = {
         200: {
             'model': create_model(route, code=(str, ...), msg=(str, ...), data=(model, ...))
@@ -13,7 +14,7 @@ def idempotent_response(route: str, model: Any) -> (Dict):
     return responses
 
 
-def post_response(route: str, model: Any) -> (Dict):
+def post_response(route: str, model: Any) -> Dict:
     responses: Dict = {
         201: {
             'model': create_model(route, code=(str, ...), msg=(str, ...), data=(model, ...))
@@ -25,21 +26,21 @@ def post_response(route: str, model: Any) -> (Dict):
 def post_success(data=None, msg="ok", code="0"):
     return JSONResponse(
         status_code=status.HTTP_201_CREATED,
-        content={
+        content=jsonable_encoder({
             "code": code,
             "msg": msg,
             "data": data,
-    })
+    }))
 
 
 def res_success(data=None, msg="ok", code="0"):
     return JSONResponse(
         status_code=status.HTTP_200_OK,
-        content={
+        content=jsonable_encoder({
             "code": code,
             "msg": msg,
             "data": data,
-    })
+    }))
 
 
 def res_err(data=None, msg="error", code="1"):
