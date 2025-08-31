@@ -22,10 +22,10 @@ auth_region_v2_hosts = {
 }
 
 match_region_hosts = {
-    # "default": os.getenv("REGION_HOST_MATCH", "https://yq272r6dy4.execute-api.ap-northeast-1.amazonaws.com/dev/match/api/v1/match-nosql"),
-    "jp": os.getenv("JP_REGION_HOST_MATCH", "https://yq272r6dy4.execute-api.ap-northeast-1.amazonaws.com/dev/match/api/v1/match-nosql"),
-    "ge": os.getenv("GE_REGION_HOST_MATCH", "https://yq272r6dy4.execute-api.ap-northeast-1.amazonaws.com/dev/match/api/v1/match-nosql"),
-    "us": os.getenv("US_REGION_HOST_MATCH", "https://yq272r6dy4.execute-api.ap-northeast-1.amazonaws.com/dev/match/api/v1/match-nosql"),
+    # "default": os.getenv("REGION_HOST_MATCH", "https://4nlwd3bvz3.execute-api.ap-northeast-1.amazonaws.com/dev/match/api/v1/match-nosql"),
+    "jp": os.getenv("JP_REGION_HOST_MATCH", "https://4nlwd3bvz3.execute-api.ap-northeast-1.amazonaws.com/dev/match/api/v1/match-nosql"),
+    "ge": os.getenv("GE_REGION_HOST_MATCH", "https://4nlwd3bvz3.execute-api.ap-northeast-1.amazonaws.com/dev/match/api/v1/match-nosql"),
+    "us": os.getenv("US_REGION_HOST_MATCH", "https://4nlwd3bvz3.execute-api.ap-northeast-1.amazonaws.com/dev/match/api/v1/match-nosql"),
 }
 
 search_region_hosts = {

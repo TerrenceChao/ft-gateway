@@ -9,7 +9,7 @@ from ..res.response import *
 from ...domains.user.services.auth_service import AuthService
 from ...apps.resources.adapters import service_client, gw_cache
 from ...configs.region_hosts import get_match_region_host
-from ...configs.conf import REGION_HOST_AUTH
+from ...configs.conf import REGION_HOST_AUTH, REGION_HOST_MATCH
 import logging
 
 
@@ -45,8 +45,8 @@ async def get_auth_host():
     return REGION_HOST_AUTH
 
 
-async def get_match_host(current_region: str = Header(...)):
-    return get_match_region_host(region=current_region)
+async def get_match_host():
+    return REGION_HOST_MATCH
 
 
 # TODO: deprecated
