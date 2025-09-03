@@ -143,18 +143,18 @@ class AuthService:
         await self.cache_auth_res(role_id_key, auth_res)
         auth_res = self.apply_token(auth_res)
 
-        # request match data
-        role_path = PATHS[auth_res["role"]]
-        match_res = await self.req_match_data(
-            match_host,
-            role_path,
-            role_id_key,
-            body.prefetch
-        )
+        # # request match data
+        # role_path = PATHS[auth_res["role"]]
+        # match_res = await self.req_match_data(
+        #     match_host,
+        #     role_path,
+        #     role_id_key,
+        #     body.prefetch
+        # )
 
         return {
             "auth": auth_res,
-            "match": match_res,
+            # "match": match_res,
         }
         
     # async def __req_login_or_register_region(self, auth_host: str, match_host: str, body: LoginVO):
