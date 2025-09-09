@@ -32,8 +32,8 @@ log = logging.getLogger(__name__)
 router = APIRouter(
     prefix="/match/teachers",
     tags=["Match Teachers"],
-    # dependencies=[Depends(token_required)],
-    # route_class=AuthRoute,
+    dependencies=[Depends(token_required)],
+    route_class=AuthRoute,
     responses={404: {"description": "Not found"}},
 )
 
